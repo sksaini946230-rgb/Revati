@@ -90,15 +90,17 @@ personal information is sent elsewhere only in these cases:
   let only your own signed-in account read or change them. They are encrypted
   in transit (TLS) and encrypted at rest by Google.
 - **Asking the AI — only when you send a question.** Your question is sent to
-  Google's Firebase AI Logic, which uses Gemini models, to compose a reply. If a
-  Kundali is open on screen, that person's name, date of birth and ascendant
-  (lagna) are sent with it so the answer can refer to them. The time and place
-  of birth are not sent. Google processes the question under its own terms for
+  Google's Firebase AI Logic, which uses Gemini models, to compose a reply. If
+  you have calculated numerology, the name, date of birth and the numbers worked
+  out from them are sent with it; if a Kundali is open on screen, that person's
+  name, date of birth and ascendant (lagna) are sent too — so the answer can
+  refer to them. The time and place of birth are not sent. Google processes the question under its own terms for
   Firebase AI Logic and the Gemini API. Revati does not keep a history of your
   questions, but do not type anything into the question box that you would not
   want a third-party service to process.
-- **Rashifal insights.** When you tap for an AI insight on a Rashifal, only the
-  name of the rashi is sent — nothing about you.
+- **Rashifal insights.** When you tap for an AI insight on a Rashifal, the name
+  of the rashi, the period and that period's reading from the app are sent —
+  nothing about you.
 - **Astro news.** The highlights on the More tab are requested from the same
   service and carry no personal information.
 - **Exporting your profiles.** When you export saved profiles, the app creates a

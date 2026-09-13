@@ -129,12 +129,14 @@ fun PremiumDialog(
                     FeatureRow(com.example.util.LanguageManager.getString(
                         "अंकों पर आधारित ज्योतिष परामर्श — प्रतिदिन ${com.example.util.AiRateLimiter.DEFAULT_MAX_PER_DAY} प्रश्न तक",
                         "Guidance based on your numbers — up to ${com.example.util.AiRateLimiter.DEFAULT_MAX_PER_DAY} questions a day"))
+                    // Only what a free user does not already have. This list also
+                    // offered "unlimited saved birth charts" and "the full 120-year
+                    // Vimshottari Dasha" — both free for everyone, with no limit in
+                    // the code — and "PDF reports", which are free too, behind an
+                    // optional ad. Promising someone paying ₹199 what they already
+                    // had is the claim a refund request quotes back.
                     FeatureRow(com.example.util.LanguageManager.getString(
-                        "कुण्डली एवं गुण मिलान की PDF रिपोर्ट", "Kundali and Guna Milan reports as PDF"))
-                    FeatureRow(com.example.util.LanguageManager.getString(
-                        "असीमित सहेजी गई कुण्डलियाँ", "Unlimited saved birth charts"))
-                    FeatureRow(com.example.util.LanguageManager.getString(
-                        "120 वर्ष की पूर्ण विंशोत्तरी दशा", "The full 120-year Vimshottari Dasha timeline"))
+                        "PDF रिपोर्ट बिना विज्ञापन के", "PDF reports without the ad"))
                 }
                 Spacer(modifier = Modifier.height(18.dp))
 

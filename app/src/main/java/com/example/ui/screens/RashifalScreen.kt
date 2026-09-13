@@ -204,6 +204,7 @@ fun RashifalScreen(viewModel: MainViewModel) {
             val aiLoadingFor by viewModel.rashifalAiLoadingFor.collectAsState()
             val aiErrorFor by viewModel.rashifalAiErrorFor.collectAsState()
             val isPro by viewModel.isProUser.collectAsState()
+            val aiRefusal by viewModel.rashifalAiRefusal.collectAsState()
             val sign = currentHoroscope.rashiNameEn
             val key = viewModel.insightKey(sign, selectedPeriod)
 
@@ -211,6 +212,7 @@ fun RashifalScreen(viewModel: MainViewModel) {
                 insight = aiInsights[key].orEmpty(),
                 isLoading = aiLoadingFor == key,
                 failed = aiErrorFor == key,
+                failureMessage = aiRefusal,
                 locked = !isPro,
                 period = selectedPeriod,
                 onFetchInsight = {

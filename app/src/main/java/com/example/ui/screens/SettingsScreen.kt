@@ -307,10 +307,16 @@ fun SettingsScreen(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        // The same four as PremiumDialog, in the same words. This
+                        // list promised the 120-year dasha and the matching PDF, which
+                        // every user already has, and "unlimited" guidance, which the
+                        // daily cap makes untrue.
                         ProBenefitRow(text = LanguageManager.getString("🚫 100% विज्ञापन रहित अनुभव", "🚫 Completely ad-free"))
-                        ProBenefitRow(text = LanguageManager.getString("📜 विस्तृत 120 वर्ष महादशा एवं कुण्डली फलादेश", "📜 Full 120-year Mahadasha timeline and chart reading"))
-                        ProBenefitRow(text = LanguageManager.getString("💖 अष्टकूट 36 गुण मिलान रिपोर्ट PDF", "💖 Ashtakoot 36-Guna matching report as PDF"))
-                        ProBenefitRow(text = LanguageManager.getString("✨ असीमित ज्योतिष परामर्श", "✨ Unlimited astrological guidance"))
+                        ProBenefitRow(text = LanguageManager.getString("✨ AI व्यक्तिगत राशिफल — दैनिक, साप्ताहिक, मासिक", "✨ AI personalised horoscope — daily, weekly, monthly"))
+                        ProBenefitRow(text = LanguageManager.getString(
+                            "🔢 अंकों पर आधारित ज्योतिष परामर्श — प्रतिदिन ${com.example.util.AiRateLimiter.DEFAULT_MAX_PER_DAY} प्रश्न तक",
+                            "🔢 Guidance based on your numbers — up to ${com.example.util.AiRateLimiter.DEFAULT_MAX_PER_DAY} questions a day"))
+                        ProBenefitRow(text = LanguageManager.getString("💖 PDF रिपोर्ट बिना विज्ञापन के", "💖 PDF reports without the ad"))
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))

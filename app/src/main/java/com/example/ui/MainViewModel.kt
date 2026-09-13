@@ -1038,6 +1038,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val rashifalAiErrorFor: StateFlow<String?> = _rashifalAiErrorFor.asStateFlow()
 
     /**
+     * Why the last insight was refused by the rate limiter, when that was the
+     * reason. Null for a network failure. Without it a subscriber who had used
+     * the day's allowance was told to check their internet connection.
+     */
+    private val _rashifalAiRefusal = MutableStateFlow<String?>(null)
+    val rashifalAiRefusal: StateFlow<String?> = _rashifalAiRefusal.asStateFlow()
+
+    /**
      * The key an insight is kept under: sign, period and the day it was asked.
      *
      * It was the sign alone, and the question always said "daily" — so the
@@ -1062,9 +1070,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val key = insightKey(rashiName, period)
         if (_aiRashifalInsights.value.containsKey(key)) return
         if (_rashifalAiLoadingFor.value != null) return
-        if (aiRefusalMessage() != null) {
-            // The card already offers a retry; refusing quietly is the right
-            // shape here, since the user pressed a button rather than typed.
+        aiRefusalMessage()?.let { refusal ->
+            _rashifalAiRefusal.value = refusal
             _rashifalAiErrorFor.value = key
             return
         }
@@ -1072,6 +1079,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _rashifalAiLoadingFor.value = key
             _rashifalAiErrorFor.value = null
+            _rashifalAiRefusal.value = null
             try {
                 val span = when (period) {
                     "WEEK" -> "this week"
@@ -1152,9 +1160,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         "Bhagyank (destiny number): ${n.bhagyank}. Name number: ${n.nameNumber}. " +
                         "Friendly numbers: ${n.friendlyNumbers.joinToString()}. Unfriendly numbers: ${n.enemyNumbers.joinToString()}."
                 }
+                // Name, date of birth and lagna, and nothing more from the chart:
+                // that is what docs/PRIVACY_POLICY.md says the AI receives, and it
+                // says in so many words that the time and place of birth are not
+                // sent. The first draft of this change sent both.
                 _generatedKundali.value?.let { c ->
-                    parts += "Birth chart: ${c.personName}, born ${c.dateOfBirth} ${c.timeOfBirth} at ${c.placeOfBirth}; " +
-                        "Lagna ${c.ascendantRashiEn}, Moon sign ${c.moonRashiEn}, Nakshatra ${c.moonNakshatraEn}."
+                    parts += "Birth chart: ${c.personName}, born ${c.dateOfBirth}; Lagna ${c.ascendantRashiEn}."
                 }
                 if (parts.size == 1) {
                     parts += "No numerology or birth chart has been calculated yet; answer in general terms and say that the numbers would make it specific."

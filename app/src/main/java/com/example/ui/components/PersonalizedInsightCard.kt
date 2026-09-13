@@ -28,7 +28,9 @@ fun PersonalizedInsightCard(
      */
     locked: Boolean = false,
     /** "TODAY", "WEEK" or "MONTH", so the button names what it will fetch. */
-    period: String = "TODAY"
+    period: String = "TODAY",
+    /** The rate limiter's own words when it was the limiter, not the network. */
+    failureMessage: String? = null
 ) {
     GlassCard(modifier = modifier.fillMaxWidth()) {
         Column(
@@ -63,7 +65,7 @@ fun PersonalizedInsightCard(
                 // Saying the reading could not be fetched beats printing generic
                 // text under a heading that promises a personalised one.
                 Text(
-                    text = com.example.util.LanguageManager.getString(
+                    text = failureMessage ?: com.example.util.LanguageManager.getString(
                         "अभी विश्लेषण नहीं मिल सका। इंटरनेट जांचें और दोबारा प्रयास करें।",
                         "Could not fetch the insight. Check your connection and try again."
                     ),
