@@ -1003,10 +1003,23 @@ next release will carry, beyond the notes elsewhere in this file:
 - more ad inventory
 - a tab bar that does not float 36dp off the bottom
 
-Two of those want a look on a device before the release goes up: the ad
-frequency (never yet seen serving — the test phone's hotspot blackholes
-`googleads.g.doubleclick.net`, see the reference memory) and the Muhurat screen,
-which now starts empty and fills from `Dispatchers.IO`.
+The ad frequency was checked on the device on 13 Sep 2026, on a debug build
+over ordinary WiFi, and the check found two faults, both fixed before the
+release was built:
+
+- **The interstitial asked the live unit for ads on a debug build.** It read
+  `BuildConfig.ADMOB_INTERSTITIAL_ID` directly instead of going through
+  `AdIds.resolve`, so development traffic went to the real unit — the thing
+  `AdIds` exists to prevent — and came back `code=3 No fill`, because the
+  `.debug` package does not own that unit. Through `AdIds` it loads the test
+  unit and appears on the first sub-tab change past 30 seconds and not on one
+  at 16. `AdIdsTest` now fails on any placement that reads an ad unit any
+  other way.
+- **The banner was refreshed twice.** See the banner line in the ad-formats
+  table below.
+
+The Muhurat screen, which now starts empty and fills from `Dispatchers.IO`,
+still wants a look.
 
 **`versionCode` is derived, never typed.** It is `git rev-list --count HEAD` —
 the number of commits on the branch — resolved in `app/build.gradle.kts`. That
@@ -1193,7 +1206,7 @@ Two code faults were found afterwards and fixed, both the same mistake:
 Banner and interstitial were the only ones; App Open and Rewarded were added on
 the owner's instruction after he created the units.
 
-    banner        anchored adaptive, refreshes every 45s while on screen
+    banner        anchored adaptive; refresh is the AD UNIT's setting (AdMob, 45s)
     interstitial  tab AND sub-tab change, 30s / 75s / 8 per session
     app open      return to the foreground after 30s away, never on a cold start
     rewarded      opt-in, in front of the Guna Milan PDF
@@ -1222,6 +1235,15 @@ disruptive-ads policy or AdMob's own guidance:
 The banner sits at 45s rather than AdMob's 30s minimum for the same reason: a
 banner asking as fast as it is allowed to is what invalid-traffic detection
 looks for, and the extra impressions are worth less than the account.
+
+**That 45 seconds lives in the AdMob console, not in the code, since 13 Sep
+2026.** `AdBanner` used to ask for a new ad every 45 seconds itself, and the
+SDK refreshes a loaded banner on its own on whatever interval the ad unit
+carries. The two stacked: the device logged six banner loads in three minutes,
+two of them 13 seconds apart. The code timer is gone and only a *failed* load
+is retried from code. The banner unit's *Automatic refresh* must be set to
+Custom, 45 seconds — if it is ever found Disabled, the banner will not refresh
+at all, which is the safe way round.
 
 The next real increase is not another turn of these dials — it is **more
 rewarded placements**, which the user opts into and which carry no policy risk
@@ -1318,13 +1340,11 @@ so every request fails and it looks like the integration is broken. `adb shell
 ping pagead2.googlesyndication.com` answers in 0.1ms when this is happening.
 Switch the phone to normal WiFi before concluding anything about ads.
 
-**Interstitials are wired to tab switches and are meant to be sparse.**
-`onBottomNavTabSelected` triggers one on every real tab change, but
-`MainActivity.showInterstitialAd` will not show one until the session is 90
-seconds old, keeps 3 minutes between them, and stops after 3 in a session. This
-is deliberate — a Panchang app is opened for ten seconds to read a tithi — so
-"I switched tabs and got no ad" is the design working, not a fault. To see one,
-use the app for over 90 seconds first.
+**Interstitials are wired to tab and sub-tab switches and are meant to be
+sparse.** `MainActivity.showInterstitialAd` will not show one until the session
+is 30 seconds old, keeps 75 seconds between them, and stops after 8 in a
+session (see the ad-formats table above). "I switched tabs and got no ad" inside
+the first 30 seconds is the design working, not a fault.
 
 **The "native debug symbols" warning on upload cannot be fixed here.** Play warns
 that the bundle has native code with no symbols. This app has no native code of
@@ -1388,11 +1408,14 @@ Deliberately left alone by the September 2026 audit, with reasons:
   fails as "No Google account found on this device" — the same misleading
   message a certificate mismatch produced in production once.
 
-  **Still to do, and it needs the phone:** install the debug build (it goes on
-  beside the release one), read the App Check debug token out of logcat, and
-  register it under App Check in `revati-debug`. Until then the debug build's AI
-  question falls back to the offline bulletins, exactly as a side-loaded release
-  build does.
+  **Done on 13 Sep 2026:** the debug build is installed on the test phone and
+  its App Check debug token (`Nova2-debug`) is registered in `revati-debug`;
+  the owner checked the AI answer and Google Sign-In on it. The token never
+  appears in this phone's logcat — Firebase logs it below E, which this device
+  drops — so it was read from the app's own storage instead:
+  `adb shell run-as com.aistudio.astroveda.kpvqzm.debug cat shared_prefs/com.google.firebase.appcheck.debug.store.*.xml`.
+  In the console, `revati-debug` is under a different signed-in Google account
+  from `astroveda-7126b`.
 - **The Room database is unencrypted**, and holds names, exact birth times and
   coordinates. Backup and device transfer already exclude it, so this needs
   physical device access. SQLCipher with the key in the Android Keystore is the

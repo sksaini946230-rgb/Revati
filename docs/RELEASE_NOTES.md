@@ -62,6 +62,44 @@ Thank you for using Revati.
 
 ## Said so far
 
+### Next release / 2.1
+
+**Not uploaded yet.** Built on 13 Sep 2026 from the commit that added this
+entry's parent; the versionCode is whatever `git rev-list --count HEAD` said at
+build time. Muhurat leads because it was wrong for everyone outside Jaipur, on a
+screen people use to decide when to begin something.
+
+```
+<en-US>
+Namaste 🙏
+
+Muhurat and horoscope are now truly for you:
+
+• Shubh Muhurat is worked out for your own city, not Jaipur
+• Daily horoscope now changes every day, not once a week
+• Abhijit and Brahma muhurta follow the real length of the day
+• Adhika (extra) lunar months are now labelled
+• Privacy policy and terms follow dark mode
+• Smaller, lighter app
+
+Thank you for using Revati.
+</en-US>
+<hi-IN>
+नमस्ते 🙏
+
+मुहूर्त और राशिफल अब सचमुच आपके लिए:
+
+• शुभ मुहूर्त अब आपके अपने शहर के अनुसार, जयपुर के नहीं
+• दैनिक राशिफल अब हर दिन बदलता है, हफ़्ते में एक बार नहीं
+• अभिजित व ब्रह्म मुहूर्त दिन की असली लंबाई से
+• अधिक मास का नाम अब साफ़ लिखा आता है
+• गोपनीयता नीति व नियम डार्क मोड में भी
+• ऐप पहले से छोटा व हल्का
+
+रेवती चुनने के लिए धन्यवाद।
+</hi-IN>
+```
+
 ### versionCode 156 / 2.0
 
 **Uploaded** by the owner on 8 Sep 2026, together with a new set of eight
