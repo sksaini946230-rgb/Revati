@@ -542,6 +542,25 @@ which is the thing that costs money. The API key restriction in Cloud Console
 is still worth adding as defence in depth; it is not the only thing standing
 there.
 
+**The two AI features are PRO-only, since 13 Sep 2026, and so is their cost
+ceiling.** Rashifal's AI insight and Numerology's question box open the PRO
+dialog for a free user and never reach the model; the buttons stay visible and
+say PRO, because that is how anyone finds out they exist. Until the merchant
+account and the subscription exist, **nobody can use either** — that was the
+owner's call, made knowing it. The subscription is to be ₹199 a month (raised
+from ₹99 the same day); the price is set in Play Console and read from Play, and
+no string in the app carries it.
+
+AiRateLimiter's daily cap (50) is persisted in SharedPreferences, unlike the gap
+and hourly cap, because a paid call with no server in front needs a ceiling that
+swiping the app away does not reset. PremiumDialog states the number.
+
+The insight is keyed by sign, period and date. It was the sign alone, with a
+prompt that always said "daily", so the weekly and monthly tabs showed the day's
+insight. The question box sends the calculated numerology — it used to send only
+a Kundali, or the words "General Vedic Chart", on the numerology screen — and
+the answer follows the app language rather than always Hindi.
+
 **PRO cannot be defended against a patched APK, and does not need to be yet.**
 Entitlement is a boolean in SharedPreferences, so anyone with root can set it.
 What stops that mattering is `queryPurchases()`: Play is asked on every launch
