@@ -8,6 +8,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -182,18 +183,32 @@ fun NorthIndianChart(
                 .clip(RoundedCornerShape(20.dp))
                 .background(ElevatedSurface)
                 .border(1.dp, GlassCardBorder, RoundedCornerShape(20.dp))
-                // At rest the chart claims no gestures at all, so a swipe that
-                // starts on it scrolls the page like anywhere else — panZoomLock
-                // alone still left detectTransformGestures consuming the drag,
-                // and the page stopped dead under the finger. Only once the user
-                // has pinched in does panning belong to the chart; a double tap
-                // is what gets them back out.
+                // At rest the chart claims nothing but a pinch, so a swipe that
+                // starts on it scrolls the page like anywhere else. Only once the
+                // user has pinched in does panning belong to the chart; a double
+                // tap is what gets them back out.
+                //
+                // This used to run detectTransformGestures at rest too, under a
+                // comment saying the chart claimed no gestures. It consumes every
+                // pointer change once a one-finger pan passes touch slop, zoom
+                // or not, so the page still stopped dead under the finger — seen
+                // on the device on 13 Sep 2026, seven swipes on the daily Lagna
+                // chart moving the Panchang not at all. One finger is never
+                // consumed now; two are, and only while they are actually zooming.
                 .pointerInput(userScale > 1f) {
                     if (userScale <= 1f) {
-                        detectTransformGestures(panZoomLock = true) { _, _, zoom, _ ->
-                            if (zoom != 1f) {
-                                userScale = (userScale * zoom).coerceIn(1f, 3.5f)
-                            }
+                        awaitEachGesture {
+                            awaitFirstDown(requireUnconsumed = false)
+                            do {
+                                val event = awaitPointerEvent()
+                                if (event.changes.count { it.pressed } >= 2) {
+                                    val zoom = event.calculateZoom()
+                                    if (zoom != 1f) {
+                                        userScale = (userScale * zoom).coerceIn(1f, 3.5f)
+                                        event.changes.forEach { it.consume() }
+                                    }
+                                }
+                            } while (event.changes.any { it.pressed })
                         }
                         return@pointerInput
                     }
