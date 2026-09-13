@@ -1,6 +1,8 @@
 package com.example.service
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import java.io.File
 import org.junit.Test
 
 /**
@@ -72,5 +74,26 @@ class AdIdsTest {
         // A cheap trip-wire: if these ever matched, every release id would be
         // silently discarded and every placement would go empty.
         assertEquals(false, realUnit.startsWith("ca-app-pub-3940256099942544"))
+    }
+
+    /**
+     * Every placement must go through [AdIds.resolve]. The interstitial and the
+     * banner once read BuildConfig themselves, and the interstitial's version
+     * sent a debug build's requests to the LIVE unit — found on 13 Sep 2026 as
+     * `code=3 No fill` on a debug build where the test unit always fills.
+     */
+    @Test
+    fun `every ad unit read goes through AdIds`() {
+        val offenders = File("src/main/java/com/example").walkTopDown()
+            .filter { it.isFile && it.extension == "kt" && it.name != "AdIds.kt" }
+            .filter { f ->
+                val src = f.readText()
+                src.contains("3940256099942544") ||
+                    (Regex("""BuildConfig\.ADMOB_(BANNER|INTERSTITIAL|APP_OPEN|REWARDED)_ID""")
+                        .containsMatchIn(src) && !src.contains("AdIds.resolve("))
+            }
+            .map { it.name }
+            .toList()
+        assertTrue("placements bypassing AdIds: $offenders", offenders.isEmpty())
     }
 }

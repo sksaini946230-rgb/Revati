@@ -1,5 +1,6 @@
 package com.example.ui.components
 
+import com.example.service.AdIds
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -48,22 +49,18 @@ fun AdBanner(
     modifier: Modifier = Modifier
 ) {
     val bannerId = remember {
-        // A debug build never asks for a real ad. Google's policy is explicit
-        // that development traffic must use the test units, and a device that
-        // spends a day requesting live ads and never clicking one is exactly
-        // what invalid-traffic enforcement looks for — the risk is the AdMob
-        // account, not a wasted impression. Test units also always fill, so a
-        // blank banner on debug means our integration is broken rather than
-        // demand being thin.
-        if (app.revati.jyotish.BuildConfig.DEBUG) {
-            TEST_BANNER_ID
-        } else {
+        // Through AdIds, like every other placement: debug always asks for the
+        // test unit, and release refuses a test id, the NOT_CONFIGURED sentinel
+        // and anything malformed. This used to carry its own copy of the debug
+        // half and none of the release half.
+        AdIds.resolve(
             try {
-                app.revati.jyotish.BuildConfig.ADMOB_BANNER_ID.takeIf { it.isNotBlank() } ?: ""
+                app.revati.jyotish.BuildConfig.ADMOB_BANNER_ID
             } catch (e: Throwable) {
-                ""
-            }
-        }
+                null
+            },
+            AdIds.TEST_BANNER
+        )
     }
 
     val adsReady by AdsInitState.ready.collectAsState()
@@ -201,7 +198,6 @@ fun AdBanner(
     )
 }
 
-private const val TEST_BANNER_ID = "ca-app-pub-3940256099942544/6300978111"
 private const val RETRY_BASE_MS = 4_000L
 private val BACKOFF = longArrayOf(1, 3, 9)
 

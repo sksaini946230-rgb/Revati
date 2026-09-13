@@ -444,14 +444,20 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun loadInterstitialAd() {
-        val interstitialId = try {
-            val id = app.revati.jyotish.BuildConfig.ADMOB_INTERSTITIAL_ID
-            if (id.isNotBlank()) id
-            else if (app.revati.jyotish.BuildConfig.DEBUG) "ca-app-pub-3940256099942544/1033173712"
-            else ""
-        } catch (e: Throwable) {
-            if (app.revati.jyotish.BuildConfig.DEBUG) "ca-app-pub-3940256099942544/1033173712" else ""
-        }
+        // Through AdIds, like every other placement. This used to take the
+        // BuildConfig value whenever it was non-blank — so a debug build asked
+        // the LIVE interstitial unit for ads, the development traffic AdIds
+        // exists to prevent, and answered code=3 No fill because the .debug
+        // package is not the app that unit belongs to. It also let a release
+        // pass the NOT_CONFIGURED sentinel straight to the SDK.
+        val interstitialId = com.example.service.AdIds.resolve(
+            try {
+                app.revati.jyotish.BuildConfig.ADMOB_INTERSTITIAL_ID
+            } catch (e: Throwable) {
+                null
+            },
+            com.example.service.AdIds.TEST_INTERSTITIAL
+        )
 
         if (interstitialId.isBlank()) return
 
