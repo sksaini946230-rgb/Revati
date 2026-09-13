@@ -62,7 +62,46 @@ Thank you for using Revati.
 
 ## Said so far
 
-### Next release / 2.1
+### Next release / 2.2
+
+**Not uploaded yet, and it supersedes 2.1**, which was built on 13 Sep 2026 and
+never went up. Anyone updating from 156 gets both, so these notes carry both.
+Encryption leads because it is the one change about the user's own data.
+
+```
+<en-US>
+Namaste 🙏
+
+Your saved kundlis are now encrypted on your phone.
+
+• Shubh Muhurat for your own city, not Jaipur
+• Daily horoscope changes every day
+• Nakshatra progress bar shows the real Moon position
+• Abhijit and Brahma muhurta follow the real day length
+• Adhika months labelled
+• Smoother screens; charts no longer stop scrolling
+• Privacy policy follows dark mode
+
+Thank you for using Revati.
+</en-US>
+<hi-IN>
+नमस्ते 🙏
+
+आपकी सहेजी गई कुण्डलियां अब फ़ोन पर एन्क्रिप्ट रहती हैं।
+
+• शुभ मुहूर्त आपके अपने शहर के अनुसार
+• दैनिक राशिफल अब हर दिन बदलता है
+• नक्षत्र पट्टी चन्द्रमा की असली स्थिति दिखाती है
+• अभिजित व ब्रह्म मुहूर्त दिन की असली लंबाई से
+• अधिक मास का नाम साफ़ लिखा
+• स्क्रीन पहले से सहज; कुण्डली पर स्क्रॉल नहीं अटकता
+• गोपनीयता नीति डार्क मोड में
+
+रेवती चुनने के लिए धन्यवाद।
+</hi-IN>
+```
+
+### 2.1 (built, never uploaded — superseded by 2.2)
 
 **Not uploaded yet.** Built on 13 Sep 2026 from the commit that added this
 entry's parent; the versionCode is whatever `git rev-list --count HEAD` said at

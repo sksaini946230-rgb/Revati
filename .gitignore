@@ -37,3 +37,4 @@ debug.keystore
 # device captures; both the captures and the finished tiles are large binaries
 # that can be regenerated, so only the config is tracked.
 goldie/out/
+goldie/hi/out/

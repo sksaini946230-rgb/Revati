@@ -870,9 +870,20 @@ capture show up in the finished tiles when they are got wrong:
   and birth time, and the Kundali form's Recent Searches chips display them.
   The tiles use "Aarav Sharma", "Rahul & Priya" and Jaipur.
 
-Only `en-US` is rendered so far. A Hindi set needs the raw screens re-captured
-with the app in Hindi — goldie renders every locale from the same captures, and
-only the copy changes.
+**The Hindi set exists since 13 Sep 2026**, and it has its own config:
+`goldie/hi/goldie.config.ts`, rendering to `goldie/hi/out/screenshots/pixel-10-pro/hi-IN/`.
+goldie renders every locale from ONE set of raw captures, so the Hindi tiles
+cannot be a second locale in the English config — they need screens captured
+with the app in Hindi, and a config in its own directory gets its own `out/raw`.
+
+Two things about it that are not obvious. **The font:** Montserrat has no
+Devanagari and goldie's canvas never falls back to system fonts on its own, so
+`--font system` renders every headline as tofu boxes. The Hindi config's stack
+is `Montserrat, "Kohinoor Devanagari"` — macOS's own Devanagari face — and the
+canvas falls through per glyph. **The captures** were taken from the debug build
+with the network off, so the header carries the "ऑफलाइन" chip; the English set
+predates that chip. Kundali uses a saved sample profile rather than the form,
+because the geocoder needs the network that is switched off.
 
 **The privacy policy is one text in two places.** `docs/PRIVACY_POLICY.md` is
 the URL on the Play listing and is what a reviewer reads — Play Console →
@@ -1357,12 +1368,16 @@ will stay. It is advisory and does not block a release.
 
 Deliberately left alone by the September 2026 audit, with reasons:
 
-- **The four screen composables are still one function each** — `PanchangScreen`
-  is 896 lines, `KundaliScreen` 875, `MatchingScreen` 621, `RashifalScreen` 568.
-  Splitting them is the single biggest recomposition win available, and it is
-  also a large blind refactor of screens whose bugs, by this file's own account,
-  are found on a device rather than by reading code. Worth doing deliberately,
-  with a device in hand, not in a sweep.
+- ~~**The four screen composables are still one function each.**~~ **Done, 13
+  Sep 2026.** Panchang, Kundali, Guna Milan and Rashifal are split into
+  sections that take only the values they draw; KundaliScreen's date and time
+  fields, which existed twice, are one `BirthPickerField`. Panchang and Kundali
+  were checked on the device section by section. Doing it found two real bugs,
+  both fixed: the nakshatra progress bar was a constant 65%
+  (`nakshatraProgressPercent`, derived from the stored Moon, no migration), and
+  a swipe starting on any `NorthIndianChart` stopped the page dead — the chart
+  ran `detectTransformGestures` at rest under a comment saying it claimed no
+  gestures there, and that detector consumes a one-finger pan past touch slop.
 - ~~**Debug still shares the production Firebase project.**~~ **Done, 13 Sep
   2026 — `revati-debug`.** Debug builds sign in
   against the live Auth user pool and read and write the live Firestore. The
@@ -1416,10 +1431,22 @@ Deliberately left alone by the September 2026 audit, with reasons:
   `adb shell run-as com.aistudio.astroveda.kpvqzm.debug cat shared_prefs/com.google.firebase.appcheck.debug.store.*.xml`.
   In the console, `revati-debug` is under a different signed-in Google account
   from `astroveda-7126b`.
-- **The Room database is unencrypted**, and holds names, exact birth times and
-  coordinates. Backup and device transfer already exclude it, so this needs
-  physical device access. SQLCipher with the key in the Android Keystore is the
-  real answer; it is a migration of its own and wants its own pass.
+- ~~**The Room database is unencrypted.**~~ **Done, 13 Sep 2026 — SQLCipher.**
+  `data/local/DatabaseEncryption.kt`. A random passphrase wrapped with AES-GCM
+  under an Android Keystore key, in `revati_db_key.xml`, which is excluded from
+  backup like the database. An existing plaintext database is converted on first
+  launch with `sqlcipher_export` and replaced by an atomic rename only after the
+  copy opens with the key and every table's row count and `user_version` match;
+  anything short of that opens the plaintext file as before and tries again next
+  launch. **The failure path has already been exercised for real:** the first
+  device run failed on the ATTACH (the connection lacked `CREATE_IF_NECESSARY`,
+  which an attached database inherits), fell back, and lost nothing. Verified
+  after the fix on a debug database seeded with two profiles and a 350 KB WAL.
+  **sqlcipher-android is pinned at 4.17.0** — 4.18.0 onward require compileSdk
+  37 — and its `.so` files are 16 KB aligned, which Play requires. If the
+  Keystore key is ever lost, the encrypted file cannot be read; it is renamed to
+  `.unreadable` so the app starts, and cloud backup is the only way back. That is
+  the trade SQLCipher is.
 
 Decided rather than pending:
 

@@ -53,6 +53,13 @@ To re-capture, four things matter and each of them shows up in the tiles:
   produced **ten** images for eight scenes, because its panorama layout splits
   one screen across two tiles — right for a strip someone scrolls, wrong for a
   Play listing that has to be eight self-contained screenshots.
-- Only `en-US` is rendered. A `hi-IN` set needs the raw screens re-captured
-  with the app in Hindi, since goldie renders every locale from the same
-  captures and only the copy changes.
+- `hi-IN` has its own config in `goldie/hi/`, because goldie renders every
+  locale from one set of captures and the Hindi tiles need Hindi screens:
+
+  ```bash
+  GOLDIE_CONFIG=$PWD/goldie/hi/goldie.config.ts goldie frame
+  GOLDIE_CONFIG=$PWD/goldie/hi/goldie.config.ts goldie verify
+  ```
+
+  Output: `goldie/hi/out/screenshots/pixel-10-pro/hi-IN/`. Its font stack ends in
+  "Kohinoor Devanagari"; without it every headline is tofu.
