@@ -997,22 +997,38 @@ Android developer verification for the Msunjay Enterprises account is done —
 the owner confirmed it on 11 Sep 2026, ahead of Play's 30 Sep deadline, so the
 "apps not registered will be removed" notification can be ignored if it lingers.
 
-**Twenty-five commits of unreleased work sit on top of 156, and some of it is
-the sort a user notices.** Nothing is built and waiting to go up — the tree's own
-number is just its commit count — but the gap is no longer cosmetic. What the
-next release will carry, beyond the notes elsewhere in this file:
+**Release 2.2 / versionCode 191 is built and waiting for the owner to upload
+it** (13 Sep 2026). It supersedes 2.1 / 185, which was built the same morning and
+never went up — do not upload 185. Everything since 156 is in 191:
 
 - the daily Rashifal changing daily rather than weekly, and not throwing on a
   duplicate key after a language switch
 - Muhurat computed for the reader's own city rather than Jaipur, and off the
   main thread
-- Adhika months labelled
-- Abhijit and Brahma muhurta as real muhurtas rather than a flat 48 minutes
+- Adhika months labelled; Abhijit and Brahma muhurta as real muhurtas
 - a birth-year bound that does not expire on 1 January 2027
 - the legal pages following the system theme
 - the onboarding funnel recorded
-- more ad inventory
+- more ad inventory, with the interstitial and banner faults below fixed
 - a tab bar that does not float 36dp off the bottom
+- the four big screens split into sections, the nakshatra bar made real, and
+  charts no longer swallowing the page's scroll
+- the Room database encrypted with SQLCipher
+- lighter images (WebP, drawable-nodpi)
+
+The release APK was side-loaded once and opened without a crash — R8 and the
+SQLCipher native library both fine — then uninstalled so the Play install is
+clean. **What only a Play install can show, and should be checked on the first
+one:** an update from 156 keeping its saved profiles (the plaintext-to-encrypted
+migration on real data), the AI box answering, and Google Sign-In's picker.
+
+The notes Play gets are three warm lines in each language, on the owner's
+request; see `docs/RELEASE_NOTES.md`.
+
+**Three commits from 13 Sep were not on GitHub at the end of that day** — every
+push from `19cd1b8` onward came back `remote unpack failed: index-pack failed`
+while the local objects were all intact, on the tethered connection. If
+`git status` says ahead, push first.
 
 The ad frequency was checked on the device on 13 Sep 2026, on a debug build
 over ordinary WiFi, and the check found two faults, both fixed before the
