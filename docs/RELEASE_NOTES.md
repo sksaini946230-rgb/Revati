@@ -62,7 +62,27 @@ Thank you for using Revati.
 
 ## Said so far
 
-### Next release / 2.2
+### Next release / 2.3
+
+**Not uploaded yet.** 2.2 / 191 is on Play (installed from Play on the test
+phone on 13 Sep 2026). Short and warm again, on the owner's standing request.
+It says nothing about PRO: the subscription does not exist yet, and notes may
+not promise what cannot be bought.
+
+```
+<en-US>
+Namaste 🙏 Revati just got smarter!
+AI insights now cover your week and month too, and every answer is built around your own numbers and comes in your language.
+Thank you for being with us 💛
+</en-US>
+<hi-IN>
+नमस्ते 🙏 रेवती अब और समझदार!
+AI विश्लेषण अब सप्ताह और महीने के लिए भी, और हर उत्तर आपके अपने अंकों पर आधारित और आपकी भाषा में।
+हमारे साथ बने रहने के लिए धन्यवाद 💛
+</hi-IN>
+```
+
+### 2.2 / 191 — on Play
 
 **Not uploaded yet, and it supersedes 2.1**, which was built on 13 Sep 2026 and
 never went up. The owner asked for two or three short, warm lines rather than a

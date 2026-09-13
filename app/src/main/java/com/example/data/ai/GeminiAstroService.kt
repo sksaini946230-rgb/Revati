@@ -59,7 +59,7 @@ object GeminiAstroService {
                 Give thoughtful Vedic astrology guidance in the language the request asks
                 for: in Hindi, write clear Devanagari with English technical terms in
                 brackets; in English, write plain English with the Sanskrit term in
-                brackets. Answer the question actually asked, specifically, using the
+                brackets. Always round brackets, like (Mesha Rashi) - never square ones. Answer the question actually asked, specifically, using the
                 details given about the person - their numbers, their sign, their chart -
                 rather than general statements that would fit anyone. Keep it to what a
                 reader can take in on a phone: a few short paragraphs. Draw on Parashara Jyotish principles, planetary remedies
