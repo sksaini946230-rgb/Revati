@@ -40,6 +40,24 @@ data class PanchangData(
     val planets: List<PlanetPosition> = emptyList()
 )
 
+/**
+ * How far the Moon is through the current nakshatra at sunrise, 0 to 100, or
+ * null when the planet list does not carry the Moon.
+ *
+ * The Panchang's nakshatra bar used to be `progress = { 0.65f }` — a constant,
+ * under a tithi bar beside it that was real, so it read as information. It is
+ * derived from the Moon already stored in [PanchangData.planets] rather than
+ * from a new field, because the whole object is cached in Room and a new column
+ * is a schema migration for a progress bar.
+ */
+val PanchangData.nakshatraProgressPercent: Float?
+    get() {
+        val moon = planets.firstOrNull { it.planetNameEn == "Moon" } ?: return null
+        val longitude = (moon.rashiNumber - 1) * 30.0 + moon.degree
+        val span = 360.0 / 27.0
+        return ((longitude % span) / span * 100.0).toFloat().coerceIn(0f, 100f)
+    }
+
 data class CityLocation(
     val cityName: String,
     val cityNameHindi: String,

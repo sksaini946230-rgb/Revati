@@ -97,6 +97,7 @@ import com.example.ui.MainViewModel
 import com.example.data.model.ChoghadiyaSlot
 import com.example.data.model.CityLocation
 import com.example.data.model.PanchangData
+import com.example.data.model.nakshatraProgressPercent
 import com.example.ui.components.CelestialBackground
 import com.example.ui.components.DailyPanchangCard
 import com.example.ui.components.GlassBadge
@@ -770,9 +771,10 @@ private fun CorePanchangElementsCard(panchang: PanchangData) {
                     text = panchang.nakshatraEndTime,
                     style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurface, fontSize = 13.sp)
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-                LinearProgressIndicator(
-                    progress = { 0.65f },
+                val nakshatraProgress = panchang.nakshatraProgressPercent
+                if (nakshatraProgress != null) Spacer(modifier = Modifier.height(8.dp))
+                if (nakshatraProgress != null) LinearProgressIndicator(
+                    progress = { nakshatraProgress / 100f },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(6.dp)
