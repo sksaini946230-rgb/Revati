@@ -141,8 +141,9 @@ abstract class AppDatabase : RoomDatabase() {
                 INSTANCE ?: Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "astroveda_database"
+                    DatabaseEncryption.DATABASE_NAME
                 )
+                    .apply { encryptionFactory(context.applicationContext)?.let { openHelperFactory(it) } }
                     // This used to be fallbackToDestructiveMigration(dropAllTables
                     // = true): every schema change silently dropped the user's
                     // saved profiles, their reports and their recent searches.
@@ -158,6 +159,51 @@ abstract class AppDatabase : RoomDatabase() {
                     .fallbackToDestructiveMigrationOnDowngrade(dropAllTables = true)
                     .build()
                     .also { INSTANCE = it }
+            }
+        }
+
+        /**
+         * The SQLCipher open helper, or null to open the database unencrypted.
+         *
+         * Null only when encryption cannot be set up without risking the data:
+         * the key could not be created or unwrapped, or an existing plaintext
+         * database did not convert and verify. The plaintext file is then opened
+         * as it always was and the conversion is tried again on the next launch.
+         * See [DatabaseEncryption].
+         */
+        private fun encryptionFactory(context: Context): androidx.sqlite.db.SupportSQLiteOpenHelper.Factory? {
+            return try {
+                val dbFile = context.getDatabasePath(DatabaseEncryption.DATABASE_NAME)
+                val key = DatabaseEncryption.keyOrNull(context)
+                if (key == null) {
+                    if (dbFile.exists() && !DatabaseEncryption.isPlaintextSqlite(dbFile)) {
+                        // Encrypted under a key that no longer exists. Nothing can
+                        // read it; set it aside rather than crash on every launch.
+                        dbFile.renameTo(java.io.File(dbFile.path + ".unreadable"))
+                        com.example.util.AstroAnalytics.recordNonFatal(
+                            IllegalStateException("database key lost; encrypted database set aside"),
+                            "AppDatabase.encryption"
+                        )
+                    }
+                    return null
+                }
+                System.loadLibrary("sqlcipher")
+                if (!DatabaseEncryption.encryptExistingIfNeeded(context, key)) {
+                    com.example.util.AstroAnalytics.recordNonFatal(
+                        IllegalStateException("plaintext database did not convert; opened unencrypted"),
+                        "AppDatabase.encryption"
+                    )
+                    return null
+                }
+                net.zetetic.database.sqlcipher.SupportOpenHelperFactory(key)
+            } catch (e: Throwable) {
+                com.example.util.AstroAnalytics.recordNonFatal(e, "AppDatabase.encryption")
+                // A plaintext file is still readable without a factory; an
+                // encrypted one is not, and opening it bare would crash, so
+                // only fall back when the file on disk really is plaintext.
+                val dbFile = context.getDatabasePath(DatabaseEncryption.DATABASE_NAME)
+                if (dbFile.exists() && !DatabaseEncryption.isPlaintextSqlite(dbFile)) throw e
+                null
             }
         }
     }

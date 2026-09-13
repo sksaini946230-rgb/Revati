@@ -286,6 +286,11 @@ dependencies {
   implementation(libs.androidx.navigation.compose)
   implementation(libs.androidx.room.ktx)
   implementation(libs.androidx.room.runtime)
+  // SQLCipher for the Room database; see data/local/DatabaseEncryption.kt.
+  // 4.17.0, not newer: 4.18.0 onward require compileSdk 37. Its native
+  // libraries are 16 KB page aligned, which Play requires.
+  implementation("net.zetetic:sqlcipher-android:4.17.0@aar")
+  implementation("androidx.sqlite:sqlite:2.5.1")
   implementation(libs.firebase.ai)
   implementation(libs.firebase.crashlytics)
   implementation(libs.firebase.analytics)

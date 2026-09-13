@@ -11,4 +11,6 @@
     <exclude domain="sharedpref" path="astroveda_prefs.xml" />
     <!-- LanguageManager's separate file, missed by the original list. -->
     <exclude domain="sharedpref" path="astro_prefs.xml" />
+    <!-- The wrapped SQLCipher passphrase; useless off this device, and not worth carrying. -->
+    <exclude domain="sharedpref" path="revati_db_key.xml" />
 </full-backup-content>

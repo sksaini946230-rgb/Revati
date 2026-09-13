@@ -135,3 +135,8 @@
 -keepclasseswithmembers class com.google.firebase.ai.** {
     kotlinx.serialization.KSerializer serializer(...);
 }
+
+# SQLCipher's classes are reached from its native library through JNI, so R8
+# cannot see them used. The project's own documentation asks for this keep.
+-keep class net.zetetic.database.** { *; }
+-keep class net.zetetic.database.sqlcipher.** { *; }
