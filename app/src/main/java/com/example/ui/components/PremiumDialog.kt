@@ -122,8 +122,13 @@ fun PremiumDialog(
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     FeatureRow(com.example.util.LanguageManager.getString(
                         "पूरी तरह विज्ञापन रहित", "Completely ad-free"))
+                    // Not "unlimited": AiRateLimiter caps a day at DEFAULT_MAX_PER_DAY,
+                    // and a paid claim the app then refuses is the worst kind.
                     FeatureRow(com.example.util.LanguageManager.getString(
-                        "ज्योतिष परामर्श — असीमित प्रश्न", "Astrological guidance — unlimited questions"))
+                        "AI व्यक्तिगत राशिफल — दैनिक, साप्ताहिक, मासिक", "AI personalised horoscope — daily, weekly, monthly"))
+                    FeatureRow(com.example.util.LanguageManager.getString(
+                        "अंकों पर आधारित ज्योतिष परामर्श — प्रतिदिन ${com.example.util.AiRateLimiter.DEFAULT_MAX_PER_DAY} प्रश्न तक",
+                        "Guidance based on your numbers — up to ${com.example.util.AiRateLimiter.DEFAULT_MAX_PER_DAY} questions a day"))
                     FeatureRow(com.example.util.LanguageManager.getString(
                         "कुण्डली एवं गुण मिलान की PDF रिपोर्ट", "Kundali and Guna Milan reports as PDF"))
                     FeatureRow(com.example.util.LanguageManager.getString(

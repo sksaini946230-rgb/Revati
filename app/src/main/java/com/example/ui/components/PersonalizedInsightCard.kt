@@ -1,5 +1,8 @@
 package com.example.ui.components
 
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.platform.testTag
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
@@ -18,7 +21,14 @@ fun PersonalizedInsightCard(
     onFetchInsight: () -> Unit,
     modifier: Modifier = Modifier,
     /** Set when the last fetch for THIS sign failed; offers a retry rather than filler. */
-    failed: Boolean = false
+    failed: Boolean = false,
+    /**
+     * True for a user without PRO. The button still shows — it is how they find
+     * out the feature exists — and pressing it opens the PRO dialog.
+     */
+    locked: Boolean = false,
+    /** "TODAY", "WEEK" or "MONTH", so the button names what it will fetch. */
+    period: String = "TODAY"
 ) {
     GlassCard(modifier = modifier.fillMaxWidth()) {
         Column(
@@ -68,9 +78,22 @@ fun PersonalizedInsightCard(
             } else if (insight.isEmpty()) {
                 Button(
                     onClick = onFetchInsight,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth().testTag("ai_insight_button")
                 ) {
-                    Text(com.example.util.LanguageManager.getString("आज का AI विश्लेषण देखें", "Get Daily AI Insight"))
+                    if (locked) {
+                        Icon(
+                            imageVector = Icons.Default.Lock,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                    }
+                    val label = when (period) {
+                        "WEEK" -> com.example.util.LanguageManager.getString("इस सप्ताह का AI विश्लेषण देखें", "Get this week's AI insight")
+                        "MONTH" -> com.example.util.LanguageManager.getString("इस महीने का AI विश्लेषण देखें", "Get this month's AI insight")
+                        else -> com.example.util.LanguageManager.getString("आज का AI विश्लेषण देखें", "Get today's AI insight")
+                    }
+                    Text(if (locked) "$label · PRO" else label)
                 }
             } else {
                 Text(

@@ -104,4 +104,20 @@ class AiRateLimiterTest {
         assertEquals(2, l.minutesFrom(60_001))
         assertEquals(5, l.minutesFrom(5 * 60_000L))
     }
+
+    @Test
+    fun `the daily cap holds across a new limiter sharing the same store`() {
+        val store = AiRateLimiter.DailyStore.InMemory()
+        var clock = 1_000_000L
+        val first = AiRateLimiter(minGapMs = 0, maxPerHour = 100, maxPerDay = 3, dailyStore = store, now = { clock })
+        repeat(3) { org.junit.Assert.assertEquals(AiRateLimiter.Decision.Allow, first.tryAcquire()); clock += 10 }
+        org.junit.Assert.assertEquals(AiRateLimiter.Decision.DailyCapReached, first.tryAcquire())
+
+        // A process restart builds a new limiter; the day's count must survive it.
+        val afterRestart = AiRateLimiter(minGapMs = 0, maxPerHour = 100, maxPerDay = 3, dailyStore = store, now = { clock })
+        org.junit.Assert.assertEquals(AiRateLimiter.Decision.DailyCapReached, afterRestart.tryAcquire())
+
+        clock += 25L * 60 * 60 * 1000
+        org.junit.Assert.assertEquals(AiRateLimiter.Decision.Allow, afterRestart.tryAcquire())
+    }
 }

@@ -982,7 +982,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      * there needs to be one at all — there is no server between this app and
      * the bill.
      */
-    private val aiRateLimiter = com.example.util.AiRateLimiter()
+    private val aiRateLimiter = com.example.util.AiRateLimiter(
+        dailyStore = object : com.example.util.AiRateLimiter.DailyStore {
+            override fun count(dayKey: String) =
+                if (sharedPrefs.getString("ai_calls_day", null) == dayKey) sharedPrefs.getInt("ai_calls_count", 0) else 0
+            override fun setCount(dayKey: String, count: Int) {
+                sharedPrefs.edit().putString("ai_calls_day", dayKey).putInt("ai_calls_count", count).apply()
+            }
+        }
+    )
 
     /**
      * Turns a refusal into something worth reading. Returns null when the call
@@ -1000,6 +1008,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 LanguageManager.getString(
                     "इस घंटे के प्रश्न पूरे हो गए। लगभग ${aiRateLimiter.minutesFrom(d.retryAfterMs)} मिनट बाद पुनः प्रयास करें।",
                     "You have used this hour's questions. Please try again in about ${aiRateLimiter.minutesFrom(d.retryAfterMs)} minutes."
+                )
+            is com.example.util.AiRateLimiter.Decision.DailyCapReached ->
+                LanguageManager.getString(
+                    "आज के प्रश्नों की सीमा पूरी हो गई। कल फिर पूछें।",
+                    "You have reached today's limit. Please ask again tomorrow."
                 )
         }
 
@@ -1024,22 +1037,56 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _rashifalAiErrorFor = MutableStateFlow<String?>(null)
     val rashifalAiErrorFor: StateFlow<String?> = _rashifalAiErrorFor.asStateFlow()
 
-    fun fetchPersonalizedInsight(rashiName: String) {
-        if (_aiRashifalInsights.value.containsKey(rashiName)) return
+    /**
+     * The key an insight is kept under: sign, period and the day it was asked.
+     *
+     * It was the sign alone, and the question always said "daily" — so the
+     * weekly and monthly tabs showed the day's insight under a heading for the
+     * week or the month. The date is in the key so yesterday's reading is not
+     * served today.
+     */
+    fun insightKey(rashiName: String, period: String): String {
+        val c = java.util.Calendar.getInstance()
+        return "$rashiName|$period|${c.get(java.util.Calendar.YEAR)}-${c.get(java.util.Calendar.DAY_OF_YEAR)}"
+    }
+
+    /**
+     * PRO only, since 13 Sep 2026. A free user pressing the button is shown the
+     * PRO dialog instead; nothing is sent to the model.
+     */
+    fun fetchPersonalizedInsight(rashiName: String, period: String, readingEn: String) {
+        if (!_isProUser.value) {
+            showPremiumDialog.value = true
+            return
+        }
+        val key = insightKey(rashiName, period)
+        if (_aiRashifalInsights.value.containsKey(key)) return
         if (_rashifalAiLoadingFor.value != null) return
         if (aiRefusalMessage() != null) {
             // The card already offers a retry; refusing quietly is the right
             // shape here, since the user pressed a button rather than typed.
-            _rashifalAiErrorFor.value = rashiName
+            _rashifalAiErrorFor.value = key
             return
         }
 
         viewModelScope.launch {
-            _rashifalAiLoadingFor.value = rashiName
+            _rashifalAiLoadingFor.value = key
             _rashifalAiErrorFor.value = null
             try {
-                val question = "Provide a personalized daily horoscope insight for $rashiName."
-                val answer = GeminiAstroService.getAiAstrologyInsight(question, "Rashi: $rashiName")
+                val span = when (period) {
+                    "WEEK" -> "this week"
+                    "MONTH" -> "this month"
+                    else -> "today"
+                }
+                val today = java.text.SimpleDateFormat("d MMMM yyyy", java.util.Locale.ENGLISH).format(java.util.Date())
+                val question = "Give a personalised horoscope insight for $rashiName for $span " +
+                    "(today is $today). Build on the reading below rather than repeating it: " +
+                    "one practical focus, one thing to be careful of, and a simple remedy."
+                val details = "Moon sign (rashi): $rashiName. Reading for $span: ${readingEn.take(600)}"
+                val answer = GeminiAstroService.getAiAstrologyInsight(
+                    question, details,
+                    answerLanguage = if (LanguageManager.isHindi) "hi" else "en"
+                )
 
                 // getAiAstrologyInsight falls back to getOfflineVedicResponse when
                 // the model cannot be reached, and that fallback matches on
@@ -1049,21 +1096,35 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 // "AI Personalized Insight" tells the user something untrue, so
                 // it is treated as a failure rather than as an insight.
                 if (answer == GeminiAstroService.getOfflineVedicResponse(question)) {
-                    _rashifalAiErrorFor.value = rashiName
+                    _rashifalAiErrorFor.value = key
                 } else {
-                    _aiRashifalInsights.value = _aiRashifalInsights.value + (rashiName to answer)
+                    _aiRashifalInsights.value = _aiRashifalInsights.value + (key to answer)
                 }
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
             } catch (e: Exception) {
-                _rashifalAiErrorFor.value = rashiName
+                _rashifalAiErrorFor.value = key
             } finally {
                 _rashifalAiLoadingFor.value = null
             }
         }
     }
 
+    /**
+     * The question box on the Numerology tab. PRO only, since 13 Sep 2026.
+     *
+     * It used to send the person's Kundali if one had been generated and
+     * otherwise the words "General Vedic Chart" — never the numerology the user
+     * was looking at, on the numerology screen. So a question under "Moolank 6"
+     * was answered as if nothing about the person were known. It now sends the
+     * calculated numbers, the chart when there is one, and today's date, which
+     * "this year" questions need.
+     */
     fun askAiAstrologer(rawQuestion: String) {
+        if (!_isProUser.value) {
+            showPremiumDialog.value = true
+            return
+        }
         if (_isAiLoading.value) return
 
         // Bounded here rather than only at the text field, so the sample-question
@@ -1083,13 +1144,25 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             _isAiLoading.value = true
             _isAiOffline.value = false
             try {
-                val currentChart = _generatedKundali.value
-                val kundaliDetails = if (currentChart != null) {
-                    "${currentChart.personName}, DOB: ${currentChart.dateOfBirth}, Lagna: ${currentChart.ascendantRashiHi}"
-                } else {
-                    "General Vedic Chart"
+                val today = java.text.SimpleDateFormat("d MMMM yyyy", java.util.Locale.ENGLISH).format(java.util.Date())
+                val parts = mutableListOf("Today is $today.")
+                _numerologyData.value?.let { n ->
+                    parts += "Name: ${n.personName}. Date of birth: ${n.dateOfBirth}. " +
+                        "Moolank (psychic number): ${n.moolank}, ruled by ${n.rulingPlanetEn.ifBlank { n.rulingPlanetHi }}. " +
+                        "Bhagyank (destiny number): ${n.bhagyank}. Name number: ${n.nameNumber}. " +
+                        "Friendly numbers: ${n.friendlyNumbers.joinToString()}. Unfriendly numbers: ${n.enemyNumbers.joinToString()}."
                 }
-                val res = GeminiAstroService.getAiAstrologyInsight(question, kundaliDetails)
+                _generatedKundali.value?.let { c ->
+                    parts += "Birth chart: ${c.personName}, born ${c.dateOfBirth} ${c.timeOfBirth} at ${c.placeOfBirth}; " +
+                        "Lagna ${c.ascendantRashiEn}, Moon sign ${c.moonRashiEn}, Nakshatra ${c.moonNakshatraEn}."
+                }
+                if (parts.size == 1) {
+                    parts += "No numerology or birth chart has been calculated yet; answer in general terms and say that the numbers would make it specific."
+                }
+                val res = GeminiAstroService.getAiAstrologyInsight(
+                    question, parts.joinToString(" "),
+                    answerLanguage = if (LanguageManager.isHindi) "hi" else "en"
+                )
                 _aiResponse.value = res
                 if (res == com.example.data.ai.GeminiAstroService.getOfflineVedicResponse(question)) {
                     _isAiOffline.value = true

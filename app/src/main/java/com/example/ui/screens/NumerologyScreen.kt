@@ -1,5 +1,6 @@
 package com.example.ui.screens
 
+import androidx.compose.material.icons.filled.Lock
 import com.example.ui.components.AstroDisclaimer
 import com.example.ui.components.DisclaimerScope
 import androidx.compose.animation.AnimatedVisibility
@@ -90,6 +91,10 @@ fun NumerologyScreen(viewModel: MainViewModel) {
     var dobError by remember { mutableStateOf<String?>(null) }
 
     var userQuestion by remember { mutableStateOf("") }
+    // The question box is PRO only. It stays visible for everyone — the chips
+    // and the send button are how a free user finds it — and MainViewModel
+    // opens the PRO dialog instead of asking the model.
+    val isPro by viewModel.isProUser.collectAsState()
 
     // "इस वर्ष" rather than a year. The second of these read "2026", which is a
     // suggestion that ages: the same chip would have offered to ask about a year
@@ -325,8 +330,8 @@ fun NumerologyScreen(viewModel: MainViewModel) {
             SectionHeader(
                 titleHi = "ज्योतिष परामर्श",
                 titleEn = "Astrological Guidance",
-                subtitleHi = "व्यक्तिगत ज्योतिष परामर्श",
-                subtitleEn = "Personalised astrological guidance"
+                subtitleHi = if (isPro) "आपके अंकों पर आधारित व्यक्तिगत उत्तर" else "PRO सुविधा — आपके अंकों पर आधारित व्यक्तिगत उत्तर",
+                subtitleEn = if (isPro) "Personal answers based on your numbers" else "PRO feature — personal answers based on your numbers"
             )
         }
 
@@ -403,7 +408,11 @@ fun NumerologyScreen(viewModel: MainViewModel) {
                                     },
                                     modifier = Modifier.testTag("ai_send_button")
                                 ) {
-                                    Icon(imageVector = Icons.AutoMirrored.Filled.Send, contentDescription = "Send", tint = MaterialTheme.colorScheme.primary)
+                                    Icon(
+                                        imageVector = if (isPro) Icons.AutoMirrored.Filled.Send else Icons.Default.Lock,
+                                        contentDescription = if (isPro) LanguageManager.getString("भेजें", "Send") else LanguageManager.getString("PRO से खोलें", "Unlock with PRO"),
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
                                 }
                             }
                         }

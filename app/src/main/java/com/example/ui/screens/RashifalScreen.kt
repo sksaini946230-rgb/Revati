@@ -196,18 +196,26 @@ fun RashifalScreen(viewModel: MainViewModel) {
         }
 
         item {
-            // AI Personalized Insight, per sign. Reading a shared value
-            // here is what made every rashi show the same paragraph.
+            // AI Personalized Insight, per sign AND period. Reading a shared
+            // value here is what made every rashi show the same paragraph, and
+            // keying by sign alone is what put the daily insight under the
+            // weekly and monthly tabs.
             val aiInsights by viewModel.aiRashifalInsights.collectAsState()
             val aiLoadingFor by viewModel.rashifalAiLoadingFor.collectAsState()
             val aiErrorFor by viewModel.rashifalAiErrorFor.collectAsState()
+            val isPro by viewModel.isProUser.collectAsState()
             val sign = currentHoroscope.rashiNameEn
+            val key = viewModel.insightKey(sign, selectedPeriod)
 
             PersonalizedInsightCard(
-                insight = aiInsights[sign].orEmpty(),
-                isLoading = aiLoadingFor == sign,
-                failed = aiErrorFor == sign,
-                onFetchInsight = { viewModel.fetchPersonalizedInsight(sign) }
+                insight = aiInsights[key].orEmpty(),
+                isLoading = aiLoadingFor == key,
+                failed = aiErrorFor == key,
+                locked = !isPro,
+                period = selectedPeriod,
+                onFetchInsight = {
+                    viewModel.fetchPersonalizedInsight(sign, selectedPeriod, currentHoroscope.generalReadingEn)
+                }
             )
         }
 
