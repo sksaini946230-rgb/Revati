@@ -92,6 +92,9 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.sp
 import com.example.data.local.KundaliEntity
 import com.example.ui.MainViewModel
+import androidx.compose.material3.TextFieldColors
+import com.example.data.model.PlanetPosition
+import com.example.data.model.KundaliChartData
 import com.example.ui.components.AstroLoadingIndicator
 import com.example.ui.components.CelestialBackground
 import com.example.ui.components.DashaHorizontalTimeline
@@ -262,13 +265,10 @@ fun KundaliScreen(
 ) {
     val context = LocalContext.current
     val haptics = LocalHapticFeedback.current
-    val coroutineScope = rememberCoroutineScope()
-    var isSharingChart by remember { mutableStateOf(false) }
     val currentSubTab by viewModel.kundaliSubTab.collectAsState()
 
     val kundali by viewModel.generatedKundali.collectAsState()
 
-    var isNorthStyle by remember { mutableStateOf(true) }
     var showForm by remember { mutableStateOf(false) }
 
     // Start with clean empty form inputs unless user fills or loads a profile
@@ -565,208 +565,19 @@ fun KundaliScreen(
                                             // Below the threshold the two stack instead, which
                                             // gives each the full width and keeps the picker
                                             // icon that tells you the field opens something.
-                                            BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-                                                // Measured, not guessed at. A dp threshold cannot
-                                                // see the font scale, and 320dp at 1.3x text is a
-                                                // real combination — so ask how wide the widest
-                                                // value this field ever holds actually renders,
-                                                // and compare it with the room a half-row leaves
-                                                // after the gap, the field's padding and the icon.
-                                                val measurer = rememberTextMeasurer()
-                                                val valueStyle = LocalTextStyle.current.copy(fontSize = 13.sp)
-                                                val widestValue = measurer.measure(
-                                                    AnnotatedString("0000-00-00"), valueStyle
-                                                ).size.width
-                                                val roomPerField = with(LocalDensity.current) {
-                                                    (((maxWidth - 10.dp) / 2) - 66.dp).toPx()
+                                            KundaliDateTimeFields(
+                                                dob = dobInput,
+                                                tob = tobInput,
+                                                colors = tfColors,
+                                                onDateClick = {
+                                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                    showDatePicker = true
+                                                },
+                                                onTimeClick = {
+                                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                    showTimePicker = true
                                                 }
-                                                val stack = widestValue > roomPerField
-                                                if (stack) {
-                                                    Column(
-                                                        modifier = Modifier.fillMaxWidth(),
-                                                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                                                    ) {
-        // Date of Birth Field
-                                                        Box(modifier = Modifier.fillMaxWidth()) {
-                                                            OutlinedTextField(
-                                                                value = dobInput,
-                                                                onValueChange = {
-                                                                    dobInput = it
-                                                                    formValidationError = null
-                                                                },
-                                                                readOnly = true,
-                                                                label = { Text(LanguageManager.getString("तिथि *", "Date *"), maxLines = 1, softWrap = false) },
-                                                                placeholder = { Text("YYYY-MM-DD") },
-                                                                // The value itself used to clip. Two of these sit side by
-                                                                // side, so on a 360dp phone each field is about 159dp; the
-                                                                // default trailing icon and content padding take roughly 80
-                                                                // of that, and "1994-08-25" needs about 95. What the user
-                                                                // saw was "1994-08-2" — the date they had just entered,
-                                                                // missing its last digit, with no way to tell whether the
-                                                                // app had it right. Shrinking the glyphs and the icon buys
-                                                                // back enough room to show all ten characters.
-                                                                textStyle = LocalTextStyle.current.copy(fontSize = 13.sp),
-                                                                trailingIcon = {
-                                                                    Icon(
-                                                                        imageVector = Icons.Default.CalendarMonth,
-                                                                        contentDescription = LanguageManager.getString(
-                                                                            "जन्म तिथि चुनें", "Select date of birth"
-                                                                        ),
-                                                                        tint = MaterialTheme.colorScheme.primary,
-                                                                        modifier = Modifier.size(18.dp)
-                                                                    )
-                                                                },
-                                                                shape = RoundedCornerShape(14.dp),
-                                                                colors = tfColors,
-                                                                singleLine = true,
-                                                                modifier = Modifier
-                                                                    .fillMaxWidth()
-                                                                    .testTag("input_kundali_dob")
-                                                            )
-                                                            Box(
-                                                                modifier = Modifier
-                                                                    .matchParentSize()
-                                                                    .clickable {
-                                                                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                                        showDatePicker = true
-                                                                    }
-                                                            )
-                                                        }
-        // Time of Birth Field
-                                                        Box(modifier = Modifier.fillMaxWidth()) {
-                                                            OutlinedTextField(
-                                                                value = tobInput,
-                                                                onValueChange = {
-                                                                    tobInput = it
-                                                                    formValidationError = null
-                                                                },
-                                                                readOnly = true,
-                                                                label = { Text(LanguageManager.getString("समय *", "Time *"), maxLines = 1, softWrap = false) },
-                                                                placeholder = { Text("HH:MM") },
-                                                                // Matched to the date field beside it — same width, same
-                                                                // treatment, so the pair stays visually even.
-                                                                textStyle = LocalTextStyle.current.copy(fontSize = 13.sp),
-                                                                trailingIcon = {
-                                                                    Icon(
-                                                                        imageVector = Icons.Default.Schedule,
-                                                                        contentDescription = LanguageManager.getString(
-                                                                            "जन्म समय चुनें", "Select time of birth"
-                                                                        ),
-                                                                        tint = MaterialTheme.colorScheme.primary,
-                                                                        modifier = Modifier.size(18.dp)
-                                                                    )
-                                                                },
-                                                                shape = RoundedCornerShape(14.dp),
-                                                                colors = tfColors,
-                                                                singleLine = true,
-                                                                modifier = Modifier
-                                                                    .fillMaxWidth()
-                                                                    .testTag("input_kundali_tob")
-                                                            )
-                                                            Box(
-                                                                modifier = Modifier
-                                                                    .matchParentSize()
-                                                                    .clickable {
-                                                                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                                        showTimePicker = true
-                                                                    }
-                                                            )
-                                                        }
-                                                    }
-                                                } else {
-                                                    Row(
-                                                        modifier = Modifier.fillMaxWidth(),
-                                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                                                    ) {
-        // Date of Birth Field
-                                                        Box(modifier = Modifier.weight(1f)) {
-                                                            OutlinedTextField(
-                                                                value = dobInput,
-                                                                onValueChange = {
-                                                                    dobInput = it
-                                                                    formValidationError = null
-                                                                },
-                                                                readOnly = true,
-                                                                label = { Text(LanguageManager.getString("तिथि *", "Date *"), maxLines = 1, softWrap = false) },
-                                                                placeholder = { Text("YYYY-MM-DD") },
-                                                                // The value itself used to clip. Two of these sit side by
-                                                                // side, so on a 360dp phone each field is about 159dp; the
-                                                                // default trailing icon and content padding take roughly 80
-                                                                // of that, and "1994-08-25" needs about 95. What the user
-                                                                // saw was "1994-08-2" — the date they had just entered,
-                                                                // missing its last digit, with no way to tell whether the
-                                                                // app had it right. Shrinking the glyphs and the icon buys
-                                                                // back enough room to show all ten characters.
-                                                                textStyle = LocalTextStyle.current.copy(fontSize = 13.sp),
-                                                                trailingIcon = {
-                                                                    Icon(
-                                                                        imageVector = Icons.Default.CalendarMonth,
-                                                                        contentDescription = LanguageManager.getString(
-                                                                            "जन्म तिथि चुनें", "Select date of birth"
-                                                                        ),
-                                                                        tint = MaterialTheme.colorScheme.primary,
-                                                                        modifier = Modifier.size(18.dp)
-                                                                    )
-                                                                },
-                                                                shape = RoundedCornerShape(14.dp),
-                                                                colors = tfColors,
-                                                                singleLine = true,
-                                                                modifier = Modifier
-                                                                    .fillMaxWidth()
-                                                                    .testTag("input_kundali_dob")
-                                                            )
-                                                            Box(
-                                                                modifier = Modifier
-                                                                    .matchParentSize()
-                                                                    .clickable {
-                                                                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                                        showDatePicker = true
-                                                                    }
-                                                            )
-                                                        }
-        // Time of Birth Field
-                                                        Box(modifier = Modifier.weight(1f)) {
-                                                            OutlinedTextField(
-                                                                value = tobInput,
-                                                                onValueChange = {
-                                                                    tobInput = it
-                                                                    formValidationError = null
-                                                                },
-                                                                readOnly = true,
-                                                                label = { Text(LanguageManager.getString("समय *", "Time *"), maxLines = 1, softWrap = false) },
-                                                                placeholder = { Text("HH:MM") },
-                                                                // Matched to the date field beside it — same width, same
-                                                                // treatment, so the pair stays visually even.
-                                                                textStyle = LocalTextStyle.current.copy(fontSize = 13.sp),
-                                                                trailingIcon = {
-                                                                    Icon(
-                                                                        imageVector = Icons.Default.Schedule,
-                                                                        contentDescription = LanguageManager.getString(
-                                                                            "जन्म समय चुनें", "Select time of birth"
-                                                                        ),
-                                                                        tint = MaterialTheme.colorScheme.primary,
-                                                                        modifier = Modifier.size(18.dp)
-                                                                    )
-                                                                },
-                                                                shape = RoundedCornerShape(14.dp),
-                                                                colors = tfColors,
-                                                                singleLine = true,
-                                                                modifier = Modifier
-                                                                    .fillMaxWidth()
-                                                                    .testTag("input_kundali_tob")
-                                                            )
-                                                            Box(
-                                                                modifier = Modifier
-                                                                    .matchParentSize()
-                                                                    .clickable {
-                                                                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                                        showTimePicker = true
-                                                                    }
-                                                            )
-                                                        }
-                                                    }
-                                                }
-                                            }
+                                            )
 
                                             // 3. Place of Birth Field
                                             LaunchedEffect(placeInput) {
@@ -910,362 +721,40 @@ fun KundaliScreen(
                             // GENERATED KUNDALI CHART VIEW (When Chart is available)
                             // ─────────────────────────────────────────────────────────────
                             if (currentChart != null) {
-                                // Header Card: Name, Details & Quick Action Buttons
-                                    GlassCard(modifier = Modifier.fillMaxWidth()) {
-                                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                horizontalArrangement = Arrangement.SpaceBetween,
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Column(modifier = Modifier.weight(1f)) {
-                                                    Text(
-                                                        text = currentChart.personName,
-                                                        style = MaterialTheme.typography.titleMedium.copy(
-                                                            color = MaterialTheme.colorScheme.primary,
-                                                            fontWeight = FontWeight.Bold,
-                                                            fontSize = 19.sp
-                                                        )
-                                                    )
-                                                    Text(
-                                                        text = LanguageManager.getString(
-                            "जन्म: ${currentChart.dateOfBirth} | ${currentChart.timeOfBirth} | ${currentChart.placeOfBirth}",
-                            "Born: ${currentChart.dateOfBirth} | ${currentChart.timeOfBirth} | ${currentChart.placeOfBirth}"
-                        ),
-                                                        style = MaterialTheme.typography.bodySmall.copy(
-                                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                            fontSize = 12.sp
-                                                        )
-                                                    )
-                                                }
-
-                                                // Share icon
-                                                Icon(
-                                                    imageVector = Icons.Default.Share,
-                                                    contentDescription = "Share",
-                                                    tint = MaterialTheme.colorScheme.primary,
-                                                    modifier = Modifier
-                                                        .size(24.dp)
-                                                        .clickable {
-                                                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                            val shareText = """
-                                                                ✨ Revati Kundali ✨
-                                                                Name: ${currentChart.personName}
-                                                                DOB: ${currentChart.dateOfBirth} | ${currentChart.timeOfBirth}
-                                                                Place: ${currentChart.placeOfBirth}
-                                                                
-                                                                Lagna (Ascendant): ${currentChart.ascendantRashiHi}
-                                                                Moon Sign (Rashi): ${currentChart.moonRashiHi}
-                                                                Nakshatra: ${currentChart.moonNakshatraHi}
-                                                            """.trimIndent()
-
-                                                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                                                type = "text/plain"
-                                                                putExtra(
-                                                                    Intent.EXTRA_SUBJECT,
-                                                                    LanguageManager.getString("Revati कुण्डली", "Revati Kundali")
-                                                                )
-                                                                putExtra(Intent.EXTRA_TEXT, shareText)
-                                                            }
-                                                            context.startActivity(
-                                                                Intent.createChooser(
-                                                                    shareIntent,
-                                                                    LanguageManager.getString("कुण्डली साझा करें", "Share Kundali")
-                                                                )
-                                                            )
-                                                        }
-                                                )
-                                            }
-
-                                            // The three headline facts of a chart, as bento
-                                            // tiles rather than badges — three long strings on
-                                            // one row could not fit, so they truncated.
-                                            Row(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .height(IntrinsicSize.Min),
-                                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                            ) {
-                                                com.example.ui.components.BentoTile(
-                                                    label = LanguageManager.getString("लग्न", "Lagna"),
-                                                    value = LanguageManager.getString(currentChart.ascendantRashiHi, currentChart.ascendantRashiEn),
-                                                    valueSize = 13,
-                                                    minHeight = 68,
-                                                    modifier = Modifier
-                                                        .weight(1f)
-                                                        .fillMaxHeight()
-                                                )
-                                                com.example.ui.components.BentoTile(
-                                                    label = LanguageManager.getString("चंद्र राशि", "Moon sign"),
-                                                    value = LanguageManager.getString(currentChart.moonRashiHi, currentChart.moonRashiEn),
-                                                    valueSize = 13,
-                                                    minHeight = 68,
-                                                    modifier = Modifier
-                                                        .weight(1f)
-                                                        .fillMaxHeight()
-                                                )
-                                                com.example.ui.components.BentoTile(
-                                                    label = LanguageManager.getString("नक्षत्र", "Nakshatra"),
-                                                    value = LanguageManager.getString(currentChart.moonNakshatraHi, currentChart.moonNakshatraEn),
-                                                    valueSize = 13,
-                                                    minHeight = 68,
-                                                    modifier = Modifier
-                                                        .weight(1f)
-                                                        .fillMaxHeight()
-                                                )
-                                            }
-
-                                            // Action Buttons: New Chart (+), Save Profile
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                            ) {
-                                                // New Chart Button
-                                                OutlinedButton(
-                                                    onClick = {
-                                                        nameInput = ""
-                                                        dobInput = ""
-                                                        tobInput = ""
-                                                        placeInput = ""
-                                                        placeCoords = null
-                                                        showForm = true
-                                                        viewModel.resetKundaliForm()
-                                                    },
-                                                    shape = RoundedCornerShape(12.dp),
-                                                    modifier = Modifier.weight(1f)
-                                                ) {
-                                                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
-                                                    Spacer(modifier = Modifier.width(4.dp))
-                                                    Text(
-                                                        text = LanguageManager.getString("नया (+)", "New (+)"),
-                                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
-                                                    )
-                                                }
-
-                                                // Save Profile Button
-                                                Button(
-                                                    onClick = {
-                                                        viewModel.saveNewProfile(
-                                                            name = currentChart.personName,
-                                                            dob = currentChart.dateOfBirth,
-                                                            tob = currentChart.timeOfBirth,
-                                                            place = currentChart.placeOfBirth
-                                                        )
-                                                        isSaved = true
-                                                        Toast.makeText(
-                                                            context,
-                                                            LanguageManager.getString("प्रोफाइल सफलतापूर्वक सहेजा गया!", "Profile Saved Successfully!"),
-                                                            Toast.LENGTH_SHORT
-                                                        ).show()
-                                                    },
-                                                    shape = RoundedCornerShape(12.dp),
-                                                    colors = ButtonDefaults.buttonColors(
-                                                        containerColor = if (isSaved) ShubhSuccessColor else MaterialTheme.colorScheme.primaryContainer,
-                                                        contentColor = if (isSaved) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onPrimaryContainer
-                                                    ),
-                                                    modifier = Modifier.weight(1f)
-                                                ) {
-                                                    Icon(
-                                                        imageVector = if (isSaved) Icons.Default.Check else Icons.Default.Bookmark,
-                                                        contentDescription = null,
-                                                        modifier = Modifier.size(16.dp)
-                                                    )
-                                                    Spacer(modifier = Modifier.width(4.dp))
-                                                    Text(
-                                                        text = if (isSaved) LanguageManager.getString("सहेजा गया", "Saved") else LanguageManager.getString("सहेजें", "Save"),
-                                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
-                                                    )
-                                                }
-                                            }
-                                        }
+                                KundaliChartHeaderCard(
+                                    chart = currentChart,
+                                    isSaved = isSaved,
+                                    onNewChart = {
+                                        nameInput = ""
+                                        dobInput = ""
+                                        tobInput = ""
+                                        placeInput = ""
+                                        placeCoords = null
+                                        showForm = true
+                                        viewModel.resetKundaliForm()
+                                    },
+                                    onSave = {
+                                        viewModel.saveNewProfile(
+                                            name = currentChart.personName,
+                                            dob = currentChart.dateOfBirth,
+                                            tob = currentChart.timeOfBirth,
+                                            place = currentChart.placeOfBirth
+                                        )
+                                        isSaved = true
                                     }
+                                )
 
-                                // Chart Canvas Section (North & South Indian Styles)
-                                    GlassCard(modifier = Modifier.fillMaxWidth()) {
-                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                horizontalArrangement = Arrangement.SpaceBetween,
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Text(
-                                                    text = LanguageManager.getString("कुण्डली", "Chart"),
-                                                    modifier = Modifier.weight(1f, fill = false),
-                                                    maxLines = 1,
-                                                    overflow = TextOverflow.Ellipsis,
-                                                    style = MaterialTheme.typography.titleSmall.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-                                                )
-                                                // Style Toggle
-                                                Row(
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    modifier = Modifier
-                                                        .clip(RoundedCornerShape(12.dp))
-                                                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                                                        .border(1.dp, GlassCardBorder, RoundedCornerShape(12.dp))
-                                                ) {
-                                                    Box(
-                                                        modifier = Modifier
-                                                            .clickable {
-                                                                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                                                isNorthStyle = true
-                                                            }
-                                                            .background(if (isNorthStyle) MaterialTheme.colorScheme.primary else Color.Transparent)
-                                                            .padding(horizontal = 12.dp, vertical = 6.dp)
-                                                    ) {
-                                                        Text(
-                                                            text = LanguageManager.getString("उत्तर भारतीय", "North Indian"),
-                                                            maxLines = 1,
-                                                            softWrap = false,
-                                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                                color = if (isNorthStyle) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                                                fontWeight = FontWeight.Medium
-                                                            )
-                                                        )
-                                                    }
-                                                    Box(
-                                                        modifier = Modifier
-                                                            .clickable {
-                                                                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                                                isNorthStyle = false
-                                                            }
-                                                            .background(if (!isNorthStyle) MaterialTheme.colorScheme.primary else Color.Transparent)
-                                                            .padding(horizontal = 12.dp, vertical = 6.dp)
-                                                    ) {
-                                                        Text(
-                                                            text = LanguageManager.getString("दक्षिण भारतीय", "South Indian"),
-                                                            maxLines = 1,
-                                                            softWrap = false,
-                                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                                color = if (!isNorthStyle) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                                                fontWeight = FontWeight.Medium
-                                                            )
-                                                        )
-                                                    }
-                                                }
-                                            }
+                                KundaliChartCanvasCard(
+                                    chart = currentChart,
+                                    sharedTransitionScope = sharedTransitionScope,
+                                    animatedVisibilityScope = animatedVisibilityScope
+                                )
 
-                                            Spacer(modifier = Modifier.height(18.dp))
-
-                                            if (isNorthStyle) {
-                                                val chartModifier = if (sharedTransitionScope != null && animatedVisibilityScope != null) {
-                                                    with(sharedTransitionScope) {
-                                                        Modifier.sharedElement(
-                                                            state = rememberSharedContentState(key = "kundali_chart_shared_element"),
-                                                            animatedVisibilityScope = animatedVisibilityScope
-                                                        )
-                                                    }
-                                                } else Modifier
-
-                                                NorthIndianChart(
-                                                    chartData = currentChart,
-                                                    modifier = chartModifier
-                                                )
-
-                                                Spacer(modifier = Modifier.height(16.dp))
-                                                if (isSharingChart) {
-                                                    Row(
-                                                        verticalAlignment = Alignment.CenterVertically,
-                                                        horizontalArrangement = Arrangement.Center,
-                                                        modifier = Modifier.fillMaxWidth()
-                                                    ) {
-                                                        AstroLoadingIndicator(modifier = Modifier.size(20.dp))
-                                                        Spacer(modifier = Modifier.width(8.dp))
-                                                        Text(
-                                                            text = LanguageManager.getString("कुण्डली चित्र तैयार किया जा रहा है...", "Generating chart image..."),
-                                                            style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.primary)
-                                                        )
-                                                    }
-                                                } else {
-                                                    Button(
-                                                        onClick = {
-                                                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                            isSharingChart = true
-                                                            coroutineScope.launch {
-                                                                val uri = KundaliImageGenerator.generateAndShareChart(context, currentChart)
-                                                                isSharingChart = false
-                                                                if (uri != null) {
-                                                                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                                                        type = "image/png"
-                                                                        putExtra(Intent.EXTRA_STREAM, uri)
-                                                                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                                                    }
-                                                                    context.startActivity(
-                                                                        Intent.createChooser(
-                                                                            shareIntent,
-                                                                            LanguageManager.getString(
-                                                                                "जन्म कुण्डली चित्र साझा करें",
-                                                                                "Share Birth Chart Image"
-                                                                            )
-                                                                        )
-                                                                    )
-                                                                } else {
-                                                                    Toast.makeText(
-                                                                        context,
-                                                                        LanguageManager.getString(
-                                                                            "चित्र नहीं बन सका",
-                                                                            "Failed to generate image"
-                                                                        ),
-                                                                        Toast.LENGTH_SHORT
-                                                                    ).show()
-                                                                }
-                                                            }
-                                                        },
-                                                        modifier = Modifier
-                                                            .fillMaxWidth(0.85f)
-                                                            .testTag("share_kundali_image_button"),
-                                                        shape = RoundedCornerShape(12.dp),
-                                                        colors = ButtonDefaults.buttonColors(
-                                                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                                                        )
-                                                    ) {
-                                                        Row(
-                                                            verticalAlignment = Alignment.CenterVertically,
-                                                            horizontalArrangement = Arrangement.Center
-                                                        ) {
-                                                            Icon(
-                                                                imageVector = Icons.Default.Share,
-                                                                contentDescription = "Share Chart Image",
-                                                                modifier = Modifier.size(18.dp)
-                                                            )
-                                                            Spacer(modifier = Modifier.width(8.dp))
-                                                            Text(
-                                                                text = LanguageManager.getString("कुण्डली चित्र शेयर करें", "Share Chart Image"),
-                                                                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Medium)
-                                                            )
-                                                        }
-                                                    }
-                                                }
-                                            } else {
-                                                SouthIndianChart(currentChart)
-                                            }
-                                        }
-                                    }
-
-                                // Planetary Positions Table
-                                    SectionHeader(
-                                        titleHi = "ग्रह स्थिति",
-                                        titleEn = "Planetary Positions"
-                                    )
-                                    GlassCard(modifier = Modifier.fillMaxWidth()) {
-                                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                                            Row(modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp)) {
-                                                Text(text = LanguageManager.getString("ग्रह", "Planet"), style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Normal, fontSize = 13.sp), modifier = Modifier.weight(1f))
-                                                Text(text = LanguageManager.getString("राशि", "Zodiac"), style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Normal, fontSize = 13.sp), modifier = Modifier.weight(1.2f))
-                                                Text(text = LanguageManager.getString("अंश", "Deg"), style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Normal, fontSize = 13.sp), modifier = Modifier.weight(1f))
-                                                Text(text = LanguageManager.getString("भाव", "House"), style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Normal, fontSize = 13.sp), modifier = Modifier.weight(1f))
-                                            }
-
-                                            currentChart.planets.forEach { planet ->
-                                                Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
-                                                    Text(text = LanguageManager.getString(planet.planetNameHi.substringBefore(" "), planet.planetNameEn), style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurface, fontSize = 14.sp), modifier = Modifier.weight(1f))
-                                                    Text(text = LanguageManager.getString(planet.rashiNameHi, planet.rashiNameEn), style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurface, fontSize = 14.sp), modifier = Modifier.weight(1.2f))
-                                                    Text(text = "${planet.degree}°", style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.primary, fontSize = 14.sp, fontWeight = FontWeight.Normal), modifier = Modifier.weight(1f))
-                                                    Text(text = LanguageManager.getString("${planet.houseNumber} भाव", "House ${planet.houseNumber}"), style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp), modifier = Modifier.weight(1f))
-                                                }
-                                            }
-                                        }
-                                    }
+                                SectionHeader(
+                                    titleHi = "ग्रह स्थिति",
+                                    titleEn = "Planetary Positions"
+                                )
+                                KundaliPlanetTable(currentChart.planets)
 
                                 // Horizontal Vimshottari Dasha Timeline
                                     DashaHorizontalTimeline(dashaTimeline = currentChart.dashaTimeline)
@@ -1276,6 +765,490 @@ fun KundaliScreen(
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// The birth chart's sections. KundaliScreen used to be one 1,000-line function
+// holding every one of these inline — the date and time fields twice over, once
+// stacked and once side by side — so typing a letter in the name field
+// recomposed the chart, the planet table and the dasha timeline as well.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Date and time of birth, side by side when both values fit and stacked when
+ * they do not. Both fields are read-only and open a picker.
+ *
+ * The labels are "तिथि"/"समय" rather than "जन्म तिथि"/"जन्म समय": each field is
+ * half a row with a trailing icon, which on a 320dp phone left ~47dp for the
+ * floating label and the longer Hindi clipped to "जन्म ति". The card is already
+ * headed जन्म कुण्डली, so the shorter labels lose nothing.
+ *
+ * The decision to stack is measured, not guessed at. A dp threshold cannot see
+ * the font scale, and 320dp at 1.3x text is a real combination — so this asks
+ * how wide the widest value the field ever holds actually renders, and compares
+ * it with the room a half-row leaves after the gap, the padding and the icon.
+ * Below that the user used to be shown "1994-08-" — the date they had just
+ * picked, missing its end, with nothing to say whether the app had it right.
+ */
+@Composable
+private fun KundaliDateTimeFields(
+    dob: String,
+    tob: String,
+    colors: TextFieldColors,
+    onDateClick: () -> Unit,
+    onTimeClick: () -> Unit
+) {
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        val measurer = rememberTextMeasurer()
+        val valueStyle = LocalTextStyle.current.copy(fontSize = 13.sp)
+        val widestValue = measurer.measure(
+            AnnotatedString("0000-00-00"), valueStyle
+        ).size.width
+        val roomPerField = with(LocalDensity.current) {
+            (((maxWidth - 10.dp) / 2) - 66.dp).toPx()
+        }
+        if (widestValue > roomPerField) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                BirthPickerField(dob, isDate = true, colors = colors, onClick = onDateClick, modifier = Modifier.fillMaxWidth())
+                BirthPickerField(tob, isDate = false, colors = colors, onClick = onTimeClick, modifier = Modifier.fillMaxWidth())
+            }
+        } else {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                BirthPickerField(dob, isDate = true, colors = colors, onClick = onDateClick, modifier = Modifier.weight(1f))
+                BirthPickerField(tob, isDate = false, colors = colors, onClick = onTimeClick, modifier = Modifier.weight(1f))
+            }
+        }
+    }
+}
+
+/**
+ * One read-only birth date or time field with an overlay that opens its picker.
+ *
+ * The value is drawn at 13sp with an 18dp icon. Two of these share a row, so on a
+ * 360dp phone each is about 159dp; the default icon and content padding take
+ * roughly 80 of that and "1994-08-25" needs about 95. At the default size the
+ * user saw "1994-08-2".
+ */
+@Composable
+private fun BirthPickerField(
+    value: String,
+    isDate: Boolean,
+    colors: TextFieldColors,
+    onClick: () -> Unit,
+    modifier: Modifier
+) {
+    Box(modifier = modifier) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = {},
+            readOnly = true,
+            label = {
+                Text(
+                    if (isDate) LanguageManager.getString("तिथि *", "Date *")
+                    else LanguageManager.getString("समय *", "Time *"),
+                    maxLines = 1,
+                    softWrap = false
+                )
+            },
+            placeholder = { Text(if (isDate) "YYYY-MM-DD" else "HH:MM") },
+            textStyle = LocalTextStyle.current.copy(fontSize = 13.sp),
+            trailingIcon = {
+                Icon(
+                    imageVector = if (isDate) Icons.Default.CalendarMonth else Icons.Default.Schedule,
+                    contentDescription = if (isDate) {
+                        LanguageManager.getString("जन्म तिथि चुनें", "Select date of birth")
+                    } else {
+                        LanguageManager.getString("जन्म समय चुनें", "Select time of birth")
+                    },
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(18.dp)
+                )
+            },
+            shape = RoundedCornerShape(14.dp),
+            colors = colors,
+            singleLine = true,
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(if (isDate) "input_kundali_dob" else "input_kundali_tob")
+        )
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .clickable(onClick = onClick)
+        )
+    }
+}
+
+@Composable
+private fun KundaliChartHeaderCard(
+    chart: KundaliChartData,
+    isSaved: Boolean,
+    onNewChart: () -> Unit,
+    onSave: () -> Unit
+) {
+    val context = LocalContext.current
+    val haptics = LocalHapticFeedback.current
+    GlassCard(modifier = Modifier.fillMaxWidth()) {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = chart.personName,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 19.sp
+                        )
+                    )
+                    Text(
+                        text = LanguageManager.getString(
+"जन्म: ${chart.dateOfBirth} | ${chart.timeOfBirth} | ${chart.placeOfBirth}",
+"Born: ${chart.dateOfBirth} | ${chart.timeOfBirth} | ${chart.placeOfBirth}"
+),
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 12.sp
+                        )
+                    )
+                }
+
+                // Share icon
+                Icon(
+                    imageVector = Icons.Default.Share,
+                    contentDescription = "Share",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clickable {
+                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                            val shareText = """
+                                ✨ Revati Kundali ✨
+                                Name: ${chart.personName}
+                                DOB: ${chart.dateOfBirth} | ${chart.timeOfBirth}
+                                Place: ${chart.placeOfBirth}
+
+                                Lagna (Ascendant): ${chart.ascendantRashiHi}
+                                Moon Sign (Rashi): ${chart.moonRashiHi}
+                                Nakshatra: ${chart.moonNakshatraHi}
+                            """.trimIndent()
+
+                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(
+                                    Intent.EXTRA_SUBJECT,
+                                    LanguageManager.getString("Revati कुण्डली", "Revati Kundali")
+                                )
+                                putExtra(Intent.EXTRA_TEXT, shareText)
+                            }
+                            context.startActivity(
+                                Intent.createChooser(
+                                    shareIntent,
+                                    LanguageManager.getString("कुण्डली साझा करें", "Share Kundali")
+                                )
+                            )
+                        }
+                )
+            }
+
+            // The three headline facts of a chart, as bento
+            // tiles rather than badges — three long strings on
+            // one row could not fit, so they truncated.
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Min),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                com.example.ui.components.BentoTile(
+                    label = LanguageManager.getString("लग्न", "Lagna"),
+                    value = LanguageManager.getString(chart.ascendantRashiHi, chart.ascendantRashiEn),
+                    valueSize = 13,
+                    minHeight = 68,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                )
+                com.example.ui.components.BentoTile(
+                    label = LanguageManager.getString("चंद्र राशि", "Moon sign"),
+                    value = LanguageManager.getString(chart.moonRashiHi, chart.moonRashiEn),
+                    valueSize = 13,
+                    minHeight = 68,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                )
+                com.example.ui.components.BentoTile(
+                    label = LanguageManager.getString("नक्षत्र", "Nakshatra"),
+                    value = LanguageManager.getString(chart.moonNakshatraHi, chart.moonNakshatraEn),
+                    valueSize = 13,
+                    minHeight = 68,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                )
+            }
+
+            // Action Buttons: New Chart (+), Save Profile
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // New Chart Button
+                OutlinedButton(
+                    onClick = onNewChart,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = LanguageManager.getString("नया (+)", "New (+)"),
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
+                    )
+                }
+
+                // Save Profile Button
+                Button(
+                    onClick = {
+                        onSave()
+                        Toast.makeText(
+                            context,
+                            LanguageManager.getString("प्रोफाइल सफलतापूर्वक सहेजा गया!", "Profile Saved Successfully!"),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isSaved) ShubhSuccessColor else MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = if (isSaved) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onPrimaryContainer
+                    ),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(
+                        imageVector = if (isSaved) Icons.Default.Check else Icons.Default.Bookmark,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = if (isSaved) LanguageManager.getString("सहेजा गया", "Saved") else LanguageManager.getString("सहेजें", "Save"),
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+private fun KundaliChartCanvasCard(
+    chart: KundaliChartData,
+    sharedTransitionScope: SharedTransitionScope?,
+    animatedVisibilityScope: AnimatedVisibilityScope?
+) {
+    val context = LocalContext.current
+    val haptics = LocalHapticFeedback.current
+    val coroutineScope = rememberCoroutineScope()
+    var isNorthStyle by remember { mutableStateOf(true) }
+    var isSharingChart by remember { mutableStateOf(false) }
+    GlassCard(modifier = Modifier.fillMaxWidth()) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = LanguageManager.getString("कुण्डली", "Chart"),
+                    modifier = Modifier.weight(1f, fill = false),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.titleSmall.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                )
+                // Style Toggle
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .border(1.dp, GlassCardBorder, RoundedCornerShape(12.dp))
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .clickable {
+                                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                isNorthStyle = true
+                            }
+                            .background(if (isNorthStyle) MaterialTheme.colorScheme.primary else Color.Transparent)
+                            .padding(horizontal = 12.dp, vertical = 6.dp)
+                    ) {
+                        Text(
+                            text = LanguageManager.getString("उत्तर भारतीय", "North Indian"),
+                            maxLines = 1,
+                            softWrap = false,
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                color = if (isNorthStyle) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontWeight = FontWeight.Medium
+                            )
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .clickable {
+                                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                isNorthStyle = false
+                            }
+                            .background(if (!isNorthStyle) MaterialTheme.colorScheme.primary else Color.Transparent)
+                            .padding(horizontal = 12.dp, vertical = 6.dp)
+                    ) {
+                        Text(
+                            text = LanguageManager.getString("दक्षिण भारतीय", "South Indian"),
+                            maxLines = 1,
+                            softWrap = false,
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                color = if (!isNorthStyle) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontWeight = FontWeight.Medium
+                            )
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            if (isNorthStyle) {
+                val chartModifier = if (sharedTransitionScope != null && animatedVisibilityScope != null) {
+                    with(sharedTransitionScope) {
+                        Modifier.sharedElement(
+                            state = rememberSharedContentState(key = "kundali_chart_shared_element"),
+                            animatedVisibilityScope = animatedVisibilityScope
+                        )
+                    }
+                } else Modifier
+
+                NorthIndianChart(
+                    chartData = chart,
+                    modifier = chartModifier
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+                if (isSharingChart) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        AstroLoadingIndicator(modifier = Modifier.size(20.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = LanguageManager.getString("कुण्डली चित्र तैयार किया जा रहा है...", "Generating chart image..."),
+                            style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.primary)
+                        )
+                    }
+                } else {
+                    Button(
+                        onClick = {
+                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                            isSharingChart = true
+                            coroutineScope.launch {
+                                val uri = KundaliImageGenerator.generateAndShareChart(context, chart)
+                                isSharingChart = false
+                                if (uri != null) {
+                                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                        type = "image/png"
+                                        putExtra(Intent.EXTRA_STREAM, uri)
+                                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                    }
+                                    context.startActivity(
+                                        Intent.createChooser(
+                                            shareIntent,
+                                            LanguageManager.getString(
+                                                "जन्म कुण्डली चित्र साझा करें",
+                                                "Share Birth Chart Image"
+                                            )
+                                        )
+                                    )
+                                } else {
+                                    Toast.makeText(
+                                        context,
+                                        LanguageManager.getString(
+                                            "चित्र नहीं बन सका",
+                                            "Failed to generate image"
+                                        ),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth(0.85f)
+                            .testTag("share_kundali_image_button"),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Share,
+                                contentDescription = "Share Chart Image",
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = LanguageManager.getString("कुण्डली चित्र शेयर करें", "Share Chart Image"),
+                                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Medium)
+                            )
+                        }
+                    }
+                }
+            } else {
+                SouthIndianChart(chart)
+            }
+        }
+    }
+}
+
+@Composable
+private fun KundaliPlanetTable(planets: List<PlanetPosition>) {
+    SectionHeader(
+        titleHi = "ग्रह स्थिति",
+        titleEn = "Planetary Positions"
+    )
+    GlassCard(modifier = Modifier.fillMaxWidth()) {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp)) {
+                Text(text = LanguageManager.getString("ग्रह", "Planet"), style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Normal, fontSize = 13.sp), modifier = Modifier.weight(1f))
+                Text(text = LanguageManager.getString("राशि", "Zodiac"), style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Normal, fontSize = 13.sp), modifier = Modifier.weight(1.2f))
+                Text(text = LanguageManager.getString("अंश", "Deg"), style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Normal, fontSize = 13.sp), modifier = Modifier.weight(1f))
+                Text(text = LanguageManager.getString("भाव", "House"), style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Normal, fontSize = 13.sp), modifier = Modifier.weight(1f))
+            }
+
+            planets.forEach { planet ->
+                Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = LanguageManager.getString(planet.planetNameHi.substringBefore(" "), planet.planetNameEn), style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurface, fontSize = 14.sp), modifier = Modifier.weight(1f))
+                    Text(text = LanguageManager.getString(planet.rashiNameHi, planet.rashiNameEn), style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurface, fontSize = 14.sp), modifier = Modifier.weight(1.2f))
+                    Text(text = "${planet.degree}°", style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.primary, fontSize = 14.sp, fontWeight = FontWeight.Normal), modifier = Modifier.weight(1f))
+                    Text(text = LanguageManager.getString("${planet.houseNumber} भाव", "House ${planet.houseNumber}"), style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp), modifier = Modifier.weight(1f))
                 }
             }
         }

@@ -67,6 +67,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import android.view.HapticFeedbackConstants
 import com.example.data.model.GunaKootDetail
+import com.example.data.model.GunaMatchingResult
 import com.example.service.MatchingPdfReportService
 import com.example.ui.MainViewModel
 import com.example.ui.components.AstroLoadingIndicator
@@ -422,316 +423,21 @@ fun MatchingScreen(viewModel: MainViewModel) {
 
             val result = gunaResult
             if (result == null) {
-                item {
-                    GlassCard(modifier = Modifier.fillMaxWidth()) {
-                        Column(
-                            modifier = Modifier.fillMaxWidth().padding(16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Text(
-                                text = LanguageManager.getString("✨ वैदिक अष्टकूट मिलान", "✨ Vedic Ashtakoot matching — 36 gunas"),
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontSize = 16.sp
-                                )
-                            )
-                            Text(
-                                text = LanguageManager.getString(
-                                    "वर एवं कन्या का नाम, जन्म तिथि एवं जन्म समय दर्ज करके 'गुण मिलान करें' पर टैप करें। 8 कूट (वर्ण, वश्य, तारा, योनि, ग्रह मैत्री, गण, भकूट, नाड़ी) एवं नाड़ी व भकूट दोष का सम्पूर्ण विश्लेषण प्राप्त होगा।\n\nजन्म समय न देने पर दोपहर 12:00 माना जाता है। चन्द्रमा लगभग एक दिन में नक्षत्र बदलता है और 36 में से 21 गुण नक्षत्र पर ही आधारित हैं — इसलिए सही समय देने पर मिलान अधिक सटीक होता है।",
-                                    "Enter both names, dates of birth and times of birth, then tap 'Calculate 36 Guna' for the full Ashtakoot reading with Nadi Dosha, Bhakoot Dosha and Manglik analysis.\n\nWith no time given, noon is assumed. The Moon changes nakshatra roughly once a day and 21 of the 36 gunas are read from the nakshatra, so an accurate birth time makes a real difference to the result."
-                                ),
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 13.5.sp,
-                                    lineHeight = 19.sp,
-                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                                )
-                            )
-                        }
-                    }
-                }
+                item { MatchingIntroCard() }
             } else {
                 // Score Card Summary
-                item {
-                    val scoreColor = when {
-                        result.totalObtainedGuna >= 25.0 -> ShubhSuccessColor
-                        result.totalObtainedGuna >= 18.0 -> MaterialTheme.colorScheme.primary
-                        else -> RahuKaalDangerColor
-                    }
-
-                    GlassCard(modifier = Modifier.fillMaxWidth()) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                text = "${result.boyName} ♥ ${result.girlName}",
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontSize = 18.sp
-                                )
-                            )
-
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            Text(
-                                text = "${result.totalObtainedGuna} / 36.0",
-                                style = MaterialTheme.typography.displayMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = scoreColor
-                                )
-                            )
-
-                            Text(
-                                text = LanguageManager.getString("कुल प्राप्त गुण", "Total Guna Match Score"),
-                                style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
-                            )
-
-                            Spacer(modifier = Modifier.height(10.dp))
-
-                            LinearProgressIndicator(
-                                progress = { (result.totalObtainedGuna / 36.0).toFloat().coerceIn(0f, 1f) },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(8.dp)
-                                    .clip(RoundedCornerShape(4.dp)),
-                                color = scoreColor,
-                                trackColor = MaterialTheme.colorScheme.surfaceVariant
-                            )
-
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            GlassBadge(
-                                text = LanguageManager.getString(result.compatibilityVerdictHi, result.compatibilityVerdictEn),
-                                backgroundColor = scoreColor.copy(alpha = 0.2f),
-                                textColor = scoreColor,
-                                borderColor = scoreColor
-                            )
-
-                            Spacer(modifier = Modifier.height(14.dp))
-
-                            val context = LocalContext.current
-                            val haptic = LocalHapticFeedback.current
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                                    .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(12.dp))
-                                    .clickable {
-                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        showPdfRewardPrompt = true
-                                    }
-                                    .padding(vertical = 12.dp)
-                                    .testTag("share_pdf_report_button"),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        imageVector = Icons.Default.PictureAsPdf,
-                                        contentDescription = "PDF Report",
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(22.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = LanguageManager.getString("PDF रिपोर्ट शेयर / प्रिंट करें", "Export / Share PDF Report"),
-                                        style = MaterialTheme.typography.titleSmall.copy(
-                                            color = MaterialTheme.colorScheme.primary,
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 15.sp
-                                        )
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
+                item { GunaScoreCard(result, onPdfClick = { showPdfRewardPrompt = true }) }
 
                 // Prominent Doshas Highlight Section (Nadi Dosha & Bhakoot Dosha & Mangal Dosha)
-                item {
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        // 1. Nadi Dosha Card (Most Critical)
-                        GlassCard(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .border(
-                                    width = if (result.hasNadiDosha) 1.5.dp else 1.dp,
-                                    color = if (result.hasNadiDosha) RahuKaalDangerColor.copy(alpha = 0.8f) else ShubhSuccessColor.copy(alpha = 0.4f),
-                                    shape = RoundedCornerShape(16.dp)
-                                )
-                        ) {
-                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(
-                                            imageVector = if (result.hasNadiDosha) Icons.Default.Warning else Icons.Default.CheckCircle,
-                                            contentDescription = "Nadi Dosha",
-                                            tint = if (result.hasNadiDosha) RahuKaalDangerColor else ShubhSuccessColor,
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                        Text(
-                                            text = LanguageManager.getString("नाड़ी दोष विचार", "Nadi Dosha Status"),
-                                            style = MaterialTheme.typography.titleMedium.copy(
-                                                color = if (result.hasNadiDosha) RahuKaalDangerColor else ShubhSuccessColor,
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 15.sp
-                                            )
-                                        )
-                                    }
-                                    GlassBadge(
-                                        text = if (result.hasNadiDosha) LanguageManager.getString("दोष उपस्थित (0/8)", "Dosha Present (0/8)") else LanguageManager.getString("दोष मुक्त (8/8)", "No Dosha (8/8)"),
-                                        textColor = if (result.hasNadiDosha) RahuKaalDangerColor else ShubhSuccessColor,
-                                        borderColor = if (result.hasNadiDosha) RahuKaalDangerColor else ShubhSuccessColor
-                                    )
-                                }
-                                Text(
-                                    text = LanguageManager.getString(result.nadiDoshaStatusHi, result.nadiDoshaStatusEn),
-                                    style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface, fontSize = 13.5.sp, lineHeight = 19.sp)
-                                )
-                            }
-                        }
-
-                        // 2. Bhakoot Dosha Card
-                        GlassCard(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .border(
-                                    width = if (result.hasBhakootDosha) 1.5.dp else 1.dp,
-                                    color = if (result.hasBhakootDosha) RahuKaalDangerColor.copy(alpha = 0.8f) else ShubhSuccessColor.copy(alpha = 0.4f),
-                                    shape = RoundedCornerShape(16.dp)
-                                )
-                        ) {
-                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(
-                                            imageVector = if (result.hasBhakootDosha) Icons.Default.Warning else Icons.Default.CheckCircle,
-                                            contentDescription = "Bhakoot Dosha",
-                                            tint = if (result.hasBhakootDosha) RahuKaalDangerColor else ShubhSuccessColor,
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                        Text(
-                                            text = LanguageManager.getString("भकूट दोष विचार", "Bhakoot Dosha Status"),
-                                            style = MaterialTheme.typography.titleMedium.copy(
-                                                color = if (result.hasBhakootDosha) RahuKaalDangerColor else ShubhSuccessColor,
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 15.sp
-                                            )
-                                        )
-                                    }
-                                    GlassBadge(
-                                        text = if (result.hasBhakootDosha) LanguageManager.getString("दोष उपस्थित (0/7)", "Dosha Present (0/7)") else LanguageManager.getString("दोष मुक्त (7/7)", "No Dosha (7/7)"),
-                                        textColor = if (result.hasBhakootDosha) RahuKaalDangerColor else ShubhSuccessColor,
-                                        borderColor = if (result.hasBhakootDosha) RahuKaalDangerColor else ShubhSuccessColor
-                                    )
-                                }
-                                Text(
-                                    text = LanguageManager.getString(result.bhakootDoshaStatusHi, result.bhakootDoshaStatusEn),
-                                    style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface, fontSize = 13.5.sp, lineHeight = 19.sp)
-                                )
-                            }
-                        }
-
-                        // 3. Mangal Dosha Card
-                        GlassCard(modifier = Modifier.fillMaxWidth()) {
-                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(
-                                            imageVector = Icons.Default.Info,
-                                            contentDescription = "Mangal Dosha",
-                                            tint = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                        Text(
-                                            text = LanguageManager.getString("मंगल दोष विचार", "Mangal Dosha Analysis"),
-                                            style = MaterialTheme.typography.titleMedium.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                                        )
-                                    }
-                                }
-                                Text(
-                                    text = LanguageManager.getString(result.mangalDoshaStatusHi, result.mangalDoshaStatusEn),
-                                    style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface, fontSize = 13.5.sp, lineHeight = 19.sp)
-                                )
-                            }
-                        }
-                    }
-                }
+                item { MatchingDoshaCards(result) }
 
                 item { AstroDisclaimer(scope = DisclaimerScope.MATCHING) }
 
                 // Birth Attributes Comparison Card
-                item {
-                    GlassCard(modifier = Modifier.fillMaxWidth()) {
-                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                            Text(
-                                text = LanguageManager.getString("वर-कन्या ग्रह मिलान विवरण", "Birth Attribute Comparison"),
-                                style = MaterialTheme.typography.titleMedium.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                            )
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f), thickness = 1.dp)
-
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text(text = LanguageManager.getString("तत्व / गुण", "Attribute"), style = MaterialTheme.typography.labelMedium.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold), modifier = Modifier.weight(1f))
-                                Text(text = LanguageManager.getString("वर", "Boy"), style = MaterialTheme.typography.labelMedium.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold), modifier = Modifier.weight(1.2f))
-                                Text(text = LanguageManager.getString("कन्या", "Girl"), style = MaterialTheme.typography.labelMedium.copy(color = MaterialTheme.colorScheme.secondary, fontWeight = FontWeight.Bold), modifier = Modifier.weight(1.2f))
-                            }
-
-                            val attributes = listOf(
-                                Triple(LanguageManager.getString("चन्द्र राशि", "Moon Sign"), result.boyMoonRashi, result.girlMoonRashi),
-                                Triple(LanguageManager.getString("नक्षत्र", "Nakshatra"), result.boyNakshatra, result.girlNakshatra),
-                                Triple(LanguageManager.getString("नाड़ी", "Nadi"), result.boyNadi, result.girlNadi),
-                                Triple(LanguageManager.getString("गण", "Gana"), result.boyGana, result.girlGana),
-                                Triple(LanguageManager.getString("योनि", "Yoni"), result.boyYoni, result.girlYoni),
-                                Triple(LanguageManager.getString("वर्ण", "Varna"), result.boyVarna, result.girlVarna),
-                                Triple(LanguageManager.getString("वश्य", "Vashya"), result.boyVashya, result.girlVashya)
-                            )
-
-                            attributes.forEach { (attr, boyVal, girlVal) ->
-                                Row(
-                                    modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(text = attr, style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp), modifier = Modifier.weight(1f))
-                                    Text(text = boyVal, style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold, fontSize = 13.sp), modifier = Modifier.weight(1.2f))
-                                    Text(text = girlVal, style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold, fontSize = 13.sp), modifier = Modifier.weight(1.2f))
-                                }
-                            }
-                        }
-                    }
-                }
+                item { BirthAttributeComparisonCard(result) }
 
                 // Summary Reading Card
-                item {
-                    GlassCard(modifier = Modifier.fillMaxWidth()) {
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(
-                                text = LanguageManager.getString("विवाह निष्कर्ष रिपोर्ट:", "Summary Report & Guidance:"),
-                                style = MaterialTheme.typography.titleMedium.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                            )
-                            Text(
-                                text = LanguageManager.getString(result.summaryReadingHi, result.summaryReadingEn),
-                                style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface, fontSize = 14.sp, lineHeight = 21.sp)
-                            )
-                        }
-                    }
-                }
+                item { MatchingSummaryCard(result) }
 
                 // Ashtakoot 8 Breakdown Table Header
                 item {
@@ -745,44 +451,7 @@ fun MatchingScreen(viewModel: MainViewModel) {
                 // progress bar and a paragraph, so reading the breakdown meant
                 // eight scrolls. Two per row shows the whole score at once; the
                 // description moves into the tile's sub-line.
-                item {
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        result.kootDetails.chunked(2).forEach { pair ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(IntrinsicSize.Min),
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)
-                            ) {
-                                pair.forEach { koot ->
-                                    val kootColor = when {
-                                        koot.obtainedPoints == koot.maxPoints -> ShubhSuccessColor
-                                        koot.obtainedPoints > 0.0 -> MaterialTheme.colorScheme.primary
-                                        else -> RahuKaalDangerColor
-                                    }
-                                    com.example.ui.components.BentoTile(
-                                        label = LanguageManager.getString(koot.kootNameHi, koot.kootNameEn),
-                                        value = "${koot.obtainedPoints} / ${koot.maxPoints}",
-                                        // The descriptions end in "(Boy: X, Girl: Y)",
-                                        // which the comparison table above already
-                                        // shows; in a tile it only ate the line.
-                                        sub = LanguageManager.getString(koot.descriptionHi, koot.descriptionEn)
-                                            .substringBefore(" (").trim(),
-                                        accent = kootColor,
-                                        valueSize = 20,
-                                        minHeight = 108,
-                                        singleLineValue = true,
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .fillMaxHeight()
-                                    )
-                                }
-                                // Eight is even, but guard a lone tile anyway.
-                                if (pair.size == 1) Spacer(modifier = Modifier.weight(1f))
-                            }
-                        }
-                    }
-                }
+                item { KootBreakdownGrid(result.kootDetails) }
             }
 
             item {
@@ -792,6 +461,361 @@ fun MatchingScreen(viewModel: MainViewModel) {
     }
 }
 
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Guna Milan's result sections. They sat inline in MatchingScreen, so every
+// keystroke in either name field recomposed the score, all three dosha cards,
+// the comparison table and the eight koot tiles below it.
+// ─────────────────────────────────────────────────────────────────────────────
+
+@Composable
+private fun MatchingIntroCard() {
+    GlassCard(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = LanguageManager.getString("✨ वैदिक अष्टकूट मिलान", "✨ Vedic Ashtakoot matching — 36 gunas"),
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontSize = 16.sp
+                )
+            )
+            Text(
+                text = LanguageManager.getString(
+                    "वर एवं कन्या का नाम, जन्म तिथि एवं जन्म समय दर्ज करके 'गुण मिलान करें' पर टैप करें। 8 कूट (वर्ण, वश्य, तारा, योनि, ग्रह मैत्री, गण, भकूट, नाड़ी) एवं नाड़ी व भकूट दोष का सम्पूर्ण विश्लेषण प्राप्त होगा।\n\nजन्म समय न देने पर दोपहर 12:00 माना जाता है। चन्द्रमा लगभग एक दिन में नक्षत्र बदलता है और 36 में से 21 गुण नक्षत्र पर ही आधारित हैं — इसलिए सही समय देने पर मिलान अधिक सटीक होता है।",
+                    "Enter both names, dates of birth and times of birth, then tap 'Calculate 36 Guna' for the full Ashtakoot reading with Nadi Dosha, Bhakoot Dosha and Manglik analysis.\n\nWith no time given, noon is assumed. The Moon changes nakshatra roughly once a day and 21 of the 36 gunas are read from the nakshatra, so an accurate birth time makes a real difference to the result."
+                ),
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontSize = 13.5.sp,
+                    lineHeight = 19.sp,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+            )
+        }
+    }
+}
+
+@Composable
+private fun GunaScoreCard(result: GunaMatchingResult, onPdfClick: () -> Unit) {
+    val scoreColor = when {
+        result.totalObtainedGuna >= 25.0 -> ShubhSuccessColor
+        result.totalObtainedGuna >= 18.0 -> MaterialTheme.colorScheme.primary
+        else -> RahuKaalDangerColor
+    }
+
+    GlassCard(modifier = Modifier.fillMaxWidth()) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = "${result.boyName} ♥ ${result.girlName}",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontSize = 18.sp
+                )
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "${result.totalObtainedGuna} / 36.0",
+                style = MaterialTheme.typography.displayMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = scoreColor
+                )
+            )
+
+            Text(
+                text = LanguageManager.getString("कुल प्राप्त गुण", "Total Guna Match Score"),
+                style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            LinearProgressIndicator(
+                progress = { (result.totalObtainedGuna / 36.0).toFloat().coerceIn(0f, 1f) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp)),
+                color = scoreColor,
+                trackColor = MaterialTheme.colorScheme.surfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            GlassBadge(
+                text = LanguageManager.getString(result.compatibilityVerdictHi, result.compatibilityVerdictEn),
+                backgroundColor = scoreColor.copy(alpha = 0.2f),
+                textColor = scoreColor,
+                borderColor = scoreColor
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            val haptic = LocalHapticFeedback.current
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(12.dp))
+                    .clickable {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onPdfClick()
+                    }
+                    .padding(vertical = 12.dp)
+                    .testTag("share_pdf_report_button"),
+                contentAlignment = Alignment.Center
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.PictureAsPdf,
+                        contentDescription = "PDF Report",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = LanguageManager.getString("PDF रिपोर्ट शेयर / प्रिंट करें", "Export / Share PDF Report"),
+                        style = MaterialTheme.typography.titleSmall.copy(
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp
+                        )
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MatchingDoshaCards(result: GunaMatchingResult) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        // 1. Nadi Dosha Card (Most Critical)
+        GlassCard(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(
+                    width = if (result.hasNadiDosha) 1.5.dp else 1.dp,
+                    color = if (result.hasNadiDosha) RahuKaalDangerColor.copy(alpha = 0.8f) else ShubhSuccessColor.copy(alpha = 0.4f),
+                    shape = RoundedCornerShape(16.dp)
+                )
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = if (result.hasNadiDosha) Icons.Default.Warning else Icons.Default.CheckCircle,
+                            contentDescription = "Nadi Dosha",
+                            tint = if (result.hasNadiDosha) RahuKaalDangerColor else ShubhSuccessColor,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = LanguageManager.getString("नाड़ी दोष विचार", "Nadi Dosha Status"),
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                color = if (result.hasNadiDosha) RahuKaalDangerColor else ShubhSuccessColor,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp
+                            )
+                        )
+                    }
+                    GlassBadge(
+                        text = if (result.hasNadiDosha) LanguageManager.getString("दोष उपस्थित (0/8)", "Dosha Present (0/8)") else LanguageManager.getString("दोष मुक्त (8/8)", "No Dosha (8/8)"),
+                        textColor = if (result.hasNadiDosha) RahuKaalDangerColor else ShubhSuccessColor,
+                        borderColor = if (result.hasNadiDosha) RahuKaalDangerColor else ShubhSuccessColor
+                    )
+                }
+                Text(
+                    text = LanguageManager.getString(result.nadiDoshaStatusHi, result.nadiDoshaStatusEn),
+                    style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface, fontSize = 13.5.sp, lineHeight = 19.sp)
+                )
+            }
+        }
+
+        // 2. Bhakoot Dosha Card
+        GlassCard(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(
+                    width = if (result.hasBhakootDosha) 1.5.dp else 1.dp,
+                    color = if (result.hasBhakootDosha) RahuKaalDangerColor.copy(alpha = 0.8f) else ShubhSuccessColor.copy(alpha = 0.4f),
+                    shape = RoundedCornerShape(16.dp)
+                )
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = if (result.hasBhakootDosha) Icons.Default.Warning else Icons.Default.CheckCircle,
+                            contentDescription = "Bhakoot Dosha",
+                            tint = if (result.hasBhakootDosha) RahuKaalDangerColor else ShubhSuccessColor,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = LanguageManager.getString("भकूट दोष विचार", "Bhakoot Dosha Status"),
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                color = if (result.hasBhakootDosha) RahuKaalDangerColor else ShubhSuccessColor,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp
+                            )
+                        )
+                    }
+                    GlassBadge(
+                        text = if (result.hasBhakootDosha) LanguageManager.getString("दोष उपस्थित (0/7)", "Dosha Present (0/7)") else LanguageManager.getString("दोष मुक्त (7/7)", "No Dosha (7/7)"),
+                        textColor = if (result.hasBhakootDosha) RahuKaalDangerColor else ShubhSuccessColor,
+                        borderColor = if (result.hasBhakootDosha) RahuKaalDangerColor else ShubhSuccessColor
+                    )
+                }
+                Text(
+                    text = LanguageManager.getString(result.bhakootDoshaStatusHi, result.bhakootDoshaStatusEn),
+                    style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface, fontSize = 13.5.sp, lineHeight = 19.sp)
+                )
+            }
+        }
+
+        // 3. Mangal Dosha Card
+        GlassCard(modifier = Modifier.fillMaxWidth()) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "Mangal Dosha",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = LanguageManager.getString("मंगल दोष विचार", "Mangal Dosha Analysis"),
+                            style = MaterialTheme.typography.titleMedium.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                        )
+                    }
+                }
+                Text(
+                    text = LanguageManager.getString(result.mangalDoshaStatusHi, result.mangalDoshaStatusEn),
+                    style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface, fontSize = 13.5.sp, lineHeight = 19.sp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun BirthAttributeComparisonCard(result: GunaMatchingResult) {
+    GlassCard(modifier = Modifier.fillMaxWidth()) {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(
+                text = LanguageManager.getString("वर-कन्या ग्रह मिलान विवरण", "Birth Attribute Comparison"),
+                style = MaterialTheme.typography.titleMedium.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+            )
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f), thickness = 1.dp)
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(text = LanguageManager.getString("तत्व / गुण", "Attribute"), style = MaterialTheme.typography.labelMedium.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold), modifier = Modifier.weight(1f))
+                Text(text = LanguageManager.getString("वर", "Boy"), style = MaterialTheme.typography.labelMedium.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold), modifier = Modifier.weight(1.2f))
+                Text(text = LanguageManager.getString("कन्या", "Girl"), style = MaterialTheme.typography.labelMedium.copy(color = MaterialTheme.colorScheme.secondary, fontWeight = FontWeight.Bold), modifier = Modifier.weight(1.2f))
+            }
+
+            val attributes = listOf(
+                Triple(LanguageManager.getString("चन्द्र राशि", "Moon Sign"), result.boyMoonRashi, result.girlMoonRashi),
+                Triple(LanguageManager.getString("नक्षत्र", "Nakshatra"), result.boyNakshatra, result.girlNakshatra),
+                Triple(LanguageManager.getString("नाड़ी", "Nadi"), result.boyNadi, result.girlNadi),
+                Triple(LanguageManager.getString("गण", "Gana"), result.boyGana, result.girlGana),
+                Triple(LanguageManager.getString("योनि", "Yoni"), result.boyYoni, result.girlYoni),
+                Triple(LanguageManager.getString("वर्ण", "Varna"), result.boyVarna, result.girlVarna),
+                Triple(LanguageManager.getString("वश्य", "Vashya"), result.boyVashya, result.girlVashya)
+            )
+
+            attributes.forEach { (attr, boyVal, girlVal) ->
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = attr, style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp), modifier = Modifier.weight(1f))
+                    Text(text = boyVal, style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold, fontSize = 13.sp), modifier = Modifier.weight(1.2f))
+                    Text(text = girlVal, style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold, fontSize = 13.sp), modifier = Modifier.weight(1.2f))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MatchingSummaryCard(result: GunaMatchingResult) {
+    GlassCard(modifier = Modifier.fillMaxWidth()) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                text = LanguageManager.getString("विवाह निष्कर्ष रिपोर्ट:", "Summary Report & Guidance:"),
+                style = MaterialTheme.typography.titleMedium.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+            )
+            Text(
+                text = LanguageManager.getString(result.summaryReadingHi, result.summaryReadingEn),
+                style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface, fontSize = 14.sp, lineHeight = 21.sp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun KootBreakdownGrid(kootDetails: List<GunaKootDetail>) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        kootDetails.chunked(2).forEach { pair ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Min),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                pair.forEach { koot ->
+                    val kootColor = when {
+                        koot.obtainedPoints == koot.maxPoints -> ShubhSuccessColor
+                        koot.obtainedPoints > 0.0 -> MaterialTheme.colorScheme.primary
+                        else -> RahuKaalDangerColor
+                    }
+                    com.example.ui.components.BentoTile(
+                        label = LanguageManager.getString(koot.kootNameHi, koot.kootNameEn),
+                        value = "${koot.obtainedPoints} / ${koot.maxPoints}",
+                        // The descriptions end in "(Boy: X, Girl: Y)",
+                        // which the comparison table above already
+                        // shows; in a tile it only ate the line.
+                        sub = LanguageManager.getString(koot.descriptionHi, koot.descriptionEn)
+                            .substringBefore(" (").trim(),
+                        accent = kootColor,
+                        valueSize = 20,
+                        minHeight = 108,
+                        singleLineValue = true,
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                    )
+                }
+                // Eight is even, but guard a lone tile anyway.
+                if (pair.size == 1) Spacer(modifier = Modifier.weight(1f))
+            }
+        }
+    }
+}
 
 /**
  * One person's name and date of birth, side by side when they fit and stacked
