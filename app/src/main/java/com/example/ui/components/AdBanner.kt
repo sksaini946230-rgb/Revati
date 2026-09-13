@@ -93,17 +93,14 @@ fun AdBanner(
         attempt++
     }
 
-    // A banner that loaded once and then sits there is one impression for the
-    // whole session. Sixty seconds is the interval Google's own guidance uses
-    // for banner refresh and the floor below which it becomes a policy problem,
-    // so this asks for a new ad every minute for as long as the banner is on
-    // screen — and stops the moment it leaves, because the effect is cancelled
-    // with the composable.
-    LaunchedEffect(loaded, attempt) {
-        if (!loaded) return@LaunchedEffect
-        delay(REFRESH_MS)
-        attempt++
-    }
+    // No refresh timer here, on purpose. There used to be one, asking for a
+    // new ad every 45 seconds — and the AdMob SDK refreshes a loaded banner on
+    // its own, on the interval set against the ad unit in the AdMob console.
+    // The two stacked: on 13 Sep 2026 the device logged six loads in three
+    // minutes, two of them 13 seconds apart, under AdMob's 30-second floor.
+    // Refresh is the unit's setting now (Custom, 45 seconds) and nothing else.
+    // Only a FAILED load is retried from here, because the SDK does not retry
+    // those.
 
     // The SDK finishing initialisation is the most likely reason an early
     // request failed, so it is worth one attempt of its own.
@@ -202,15 +199,12 @@ private const val RETRY_BASE_MS = 4_000L
 private val BACKOFF = longArrayOf(1, 3, 9)
 
 /**
- * One request every 45 seconds, for a refresh and for a retry alike.
- *
- * AdMob's documented range for banner refresh is 30 to 120 seconds and 60 is
- * the default it suggests; 45 sits inside that and buys about a third more
- * impressions per session. Thirty is the floor and is not used — a banner asking
- * as fast as it is allowed to is what invalid-traffic detection looks for, and
- * the extra impressions are worth less than the account. Using the same number
- * for the retry means a banner that cannot fill never asks more often than one
- * that can.
+ * The steady retry interval for a banner that cannot fill, once the fast
+ * cold-start attempts are spent. It matches the ad unit's refresh interval in
+ * the AdMob console (45 seconds), so a banner that cannot fill never asks more
+ * often than one that can. Thirty is AdMob's floor and is not used — a banner
+ * asking as fast as it is allowed to is what invalid-traffic detection looks
+ * for.
  */
 private const val REFRESH_MS = 45_000L
 private val ATTEMPT_TAG = "revati_ad_attempt".hashCode()
