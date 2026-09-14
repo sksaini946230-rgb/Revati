@@ -1018,11 +1018,13 @@ the owner confirmed it on 11 Sep 2026, ahead of Play's 30 Sep deadline, so the
 
 **2.2 / versionCode 191 went up to Play on 13 Sep 2026** — the test phone had it
 installed from Play that evening, and the AI box and Google Sign-In's picker
-were both checked working on that install. **2.3 / versionCode 197 is built and
-waiting for the owner to upload**: the PRO-only AI features, the period-keyed
-insight and the numerology context, all checked on the device. Its
-`uploadCrashlyticsMappingFileRelease` failed on the tethered connection, which
-leaves the AAB intact; only Crashlytics lacks that build's mapping.
+were both checked working on that install. **2.3 / versionCode 199 is built and waiting for the owner to upload** (14 Sep
+2026; it replaces 197, which was never uploaded): the PRO-only AI features, the
+period-keyed insight and the numerology context, all checked on the device. Before
+it, on normal WiFi, the debug build as a free user showed the banner test ad and
+the interstitial on a sub-tab change after 30 seconds, and returned to the app
+when closed. `PLAY_LICENSE_KEY` is still NOT_CONFIGURED in `.env`, so purchase
+signatures are not checked (fail-open) until the key from Play Console goes in.
 
 What 2.2 was, for the record: It supersedes 2.1 / 185, which was built the same morning and
 never went up — do not upload 185. Everything since 156 is in 191:
