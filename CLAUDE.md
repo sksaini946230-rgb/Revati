@@ -547,8 +547,8 @@ ceiling.** Rashifal's AI insight and Numerology's question box open the PRO
 dialog for a free user and never reach the model; the buttons stay visible and
 say PRO, because that is how anyone finds out they exist. Until the merchant
 account and the subscription exist, **nobody can use either** — that was the
-owner's call, made knowing it. The subscription is to be ₹199 a month (raised
-from ₹99 the same day); the price is set in Play Console and read from Play, and
+owner's call, made knowing it. The subscription is ₹199 a YEAR, base plan `yearly`
+(the owner's figure, 13 Sep 2026; it replaced a ₹99-a-month plan never created); the price is set in Play Console and read from Play, and
 no string in the app carries it.
 
 AiRateLimiter's daily cap (50) is persisted in SharedPreferences, unlike the gap
