@@ -15,6 +15,21 @@ release out with only one of them filled in.
 </hi-IN>
 ```
 
+## The everyday notes — for any release
+
+The owner asked (14 Sep 2026) for notes that fit every release, warm, with a
+thank-you, the way other apps write them. Use these when a release has nothing
+a user would notice on its own; write specific ones when it does.
+
+```
+<en-US>
+Namaste 🙏 This update makes Revati faster, smoother and more reliable, with small fixes and improvements all around. Thank you for making Revati part of your day 💛 If you enjoy the app, please leave us a rating, it helps a lot!
+</en-US>
+<hi-IN>
+नमस्ते 🙏 इस अपडेट में रेवती को और तेज़, आसान और भरोसेमंद बनाया गया है, साथ ही कई छोटे सुधार भी किए गए हैं। रेवती को अपने दिन का हिस्सा बनाने के लिए धन्यवाद 💛 ऐप पसंद आए तो रेटिंग ज़रूर दें, इससे हमें बहुत मदद मिलती है!
+</hi-IN>
+```
+
 ## What belongs in them
 
 Release notes are read by someone deciding whether to press Update. They are not
