@@ -1503,10 +1503,14 @@ Decided rather than pending:
   nothing else, so an account is what it now asks for. Signing out leaves the
   user inside the app rather than bouncing them to a login screen.
 - **No age gate, deliberately.** The app is not child-directed and does not
-  declare children in its Play target audience. `MainActivity` already sets
-  `MAX_AD_CONTENT_RATING_G`, `TAG_FOR_CHILD_DIRECTED_TREATMENT_FALSE` and
+  declare children in its Play target audience. `MainActivity` sets
+  `MAX_AD_CONTENT_RATING_T`, `TAG_FOR_CHILD_DIRECTED_TREATMENT_FALSE` and
   `TAG_FOR_UNDER_AGE_OF_CONSENT_FALSE`, which is what Play and AdMob actually
   ask for here. An age gate would be a screen in the way of nothing.
+  **The ad rating is T since 14 Sep 2026; it was G**, and G is the Families
+  rating: Play build 2.3/199 got `code=3 No fill` on every banner on two
+  phones, WiFi and mobile data, while AdMob showed the app Ready, app-ads.txt
+  verified and no policy issue. Do not put it back to G. T still excludes MA.
 
 ---
 

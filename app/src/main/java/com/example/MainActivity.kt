@@ -144,14 +144,16 @@ class MainActivity : ComponentActivity() {
         } catch (_: Throwable) {}
 
         // The app is written for adults reading their own charts, and it is not
-        // in the Families programme. Saying so explicitly keeps ad content at a
-        // general rating and keeps AdMob from having to guess — the Play data
-        // safety and content-rating answers have to match this.
+        // in the Families programme. The ceiling is T, not G: G is the Families
+        // rating, and on this app it left almost no demand — the Play build
+        // answered every banner with code=3 No fill on two phones, on WiFi and
+        // mobile data, while AdMob showed the app Ready and app-ads.txt verified.
+        // T still keeps mature (MA) ads out.
         try {
             MobileAds.setRequestConfiguration(
                 com.google.android.gms.ads.RequestConfiguration.Builder()
                     .setMaxAdContentRating(
-                        com.google.android.gms.ads.RequestConfiguration.MAX_AD_CONTENT_RATING_G
+                        com.google.android.gms.ads.RequestConfiguration.MAX_AD_CONTENT_RATING_T
                     )
                     .setTagForChildDirectedTreatment(
                         com.google.android.gms.ads.RequestConfiguration.TAG_FOR_CHILD_DIRECTED_TREATMENT_FALSE
