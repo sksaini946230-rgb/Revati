@@ -75,6 +75,22 @@ of this app where a wrong answer is invisible until a user notices.
 
 ---
 
+## iPhone — the Expo rebuild (planned, not started)
+
+On 17 Sep 2026 the owner decided Revati goes to the App Store as an **Expo /
+React Native rebuild**, built in the cloud with EAS (no Mac, no Xcode), in a new
+folder `~/Revati-Expo`. The whole plan is `docs/ios-expo/` — start at its
+`README.md`; what the owner must do is `OWNER_CHECKLIST.md`. Nothing is built
+until the owner approves the plan and then the design.
+
+What that means for this repo: **this Kotlin app stays the Play app** and keeps
+shipping. The only planned change here is one test-only file that exports golden
+answers for the TypeScript engine (`docs/ios-expo/ENGINE_PORT.md`). iOS and
+Android looks are kept apart on purpose (`PLATFORM_DESIGN.md`), and nothing is
+taken from the owner's other project except the Expo + EAS approach.
+
+---
+
 ## Things that will bite you
 
 **The ephemeris is real and was wrong once.** `AstroMath.kt` implements Meeus
