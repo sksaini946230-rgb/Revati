@@ -31,14 +31,14 @@ bataunga. Phone par check bhi **aap** karoge.
 
 | # | Kaam | Kaise |
 |---|---|---|
-| B1 | **Naya Expo account** (expo.dev) sirf Revati ke liye banao, taaki builds kisi aur app ke saath na batein | Email aur password aap rakhna, mujhe sirf username batana |
+| B1 | ✅ **Ho gaya** — `astroveda1`. **Naya Expo account** (expo.dev) sirf Revati ke liye banao, taaki builds kisi aur app ke saath na batein | Email aur password aap rakhna, mujhe sirf username batana |
 | B2 | Terminal me `eas login` **aap khud** karna | Main command dunga |
-| B3 | Apple **Team ID** batao | developer.apple.com → Account → Membership details |
+| B3 | ✅ **Ho gaya** — `788G662STK`. Apple **Team ID** batao | developer.apple.com → Account → Membership details |
 | B4 | App Store Connect me **naya app** banao: platform iOS, naam "Revati : Kundli & Panchang", primary language English, Bundle ID (A2), SKU `revati-ios` | Main screen-by-screen bataunga |
 | B5 | App Store Connect **API key** banao (Users and Access → Integrations → App Store Connect API, role "App Manager"). `.p8` file download karke `~/secure-credentials/revati/` me rakho. Key ID aur Issuer ID mujhe batao | Ye `eas submit` ke kaam aayegi |
 | B6 | Jab EAS pehli baar Apple login maange, to **aap khud** login karna (2FA code aapke phone par aayega) | Certificate aur profile EAS khud banayega |
-| B7 | Aapka **iPhone model** aur **iOS version** batao | Liquid Glass ke liye iOS 26 chahiye |
-| B8 | iPhone par **TestFlight** app install karo, aur batao ki kaunsi Apple ID email tester banegi | — |
+| B7 | Aadha ho gaya — iPhone 16. **iOS version abhi batana baaki hai** (Settings → General → About → Software Version) | Liquid Glass ke liye iOS 26 chahiye |
+| B8 | ✅ TestFlight pehle se hai. Batao ki kaunsi Apple ID tester banegi. iPhone par **TestFlight** app install karo, aur batao ki kaunsi Apple ID email tester banegi | — |
 | B9 | Expo par **Billing** page dekh kar batao ki free plan me har mahine kitni iOS builds milti hain | Builds ka hisaab rakhne ke liye |
 
 ## C. Charan 1 — design

@@ -10,6 +10,7 @@ This folder is the whole plan. Read in this order:
 | File | What it answers |
 |---|---|
 | `README.md` (this) | the decision, the rules, the phases, the gates |
+| `ACCOUNTS.md` | the real Expo and Apple identifiers, and what is still missing |
 | `OWNER_CHECKLIST.md` | everything the owner has to do or hand over, and when (Hinglish) |
 | `FEATURE_PARITY.md` | every screen, setting, data path and behaviour of the Kotlin app — the rebuild is not done until every line is ticked |
 | `ENGINE_PORT.md` | how the calculation engine moves to TypeScript without changing a single answer |
