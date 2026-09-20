@@ -4,17 +4,21 @@ Given by the owner, 20 Sep 2026. **Gold is replaced by copper-orange.**
 Every other file reads a token; a literal hex in `src/` outside `theme/`
 fails lint.
 
-## The logo, given 20 Sep 2026 — final
+## The logo, final 20 Sep 2026
 
-`Revati-Expo/assets/brand/logo-1024.png`: a yellow disc, a black **R**, and a
-green diya flame standing in its bowl. Every icon size is derived from that one
-file by `scripts/build-icons.mjs`; none is drawn by hand.
+`Revati-Expo/assets/brand/logo-1024.png`: a **copper** disc, a black **R**, and
+a green diya standing in a green bowl. Every icon size is derived from that one
+file by `npm run icons`; none is drawn by hand.
 
-| Part | Hex |
-|---|---|
-| Disc | `#F3C939` |
-| Letter and bowl | `#000000` |
-| Flame | `#1F5E2F` |
+| Part | Hex | Same as |
+|---|---|---|
+| Disc | `#E8934A` | the palette's **accent** |
+| Letter | `#000000` | — |
+| Flame and bowl | `#2E8B4E` | the palette's **green** |
+
+The mark and the interface now use the *same two colours*, not two warm
+colours that nearly agree. A first version of this logo was yellow
+(`#F3C939`) with a black bowl; the owner replaced it the same day.
 
 This replaces the two-fish mark the Kotlin app still carries. Three things
 about turning it into an app icon are not obvious and are encoded in the
@@ -28,10 +32,9 @@ script rather than remembered:
 - **Apple rejects an app icon with an alpha channel**, and an image can look
   opaque while still carrying one. `icon.png` is flattened and stripped.
 
-The logo's yellow is a brand colour, not a UI token: the app's accent stays
-copper `#E8934A`, which is what the owner specified for the interface. If the
-accent should become the logo's yellow instead, that is one edit in
-`colors.ts` and its test — but it is a decision, not a tidy-up.
+Because the disc *is* the accent, an icon and a button now match exactly.
+Changing `colors.accent` therefore changes what the logo should be — they are
+one decision, not two.
 
 ## The four the owner gave
 
