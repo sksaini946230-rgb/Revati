@@ -121,3 +121,55 @@ Sixty full Panchang computations once ran on the UI thread during start-up. In
 the Expo app the upcoming-muhurat list and any multi-day calculation run
 off the render path (deferred with `InteractionManager` or a worklet) and are
 cached per city + date + language + clock format.
+
+---
+
+## Status: done, 20 September 2026
+
+All twenty files are ported and all twenty are held to a golden fixture at
+**zero differences**. `~/Revati-Expo/src/engine/README.md` has the per-file
+counts; 128 tests, and `npm run preflight` passes all eleven checks.
+
+Three things the plan above did not anticipate, each found by the fixtures
+rather than by reading:
+
+**India's clock is not a constant.** 400 birth charts matched except for
+births in 1941–45, every one of them out by exactly one day. India ran on
+**UTC+6:30 through the war**, and on Madras mean time (+5:21:10) before
+1906. Kotlin's `Calendar` reads the tz database; a fixed +5:30 does not, and
+a dasha period beginning near midnight in 1943 then prints the wrong date.
+`istZone.ts` holds the transitions, measured to the minute and written out
+rather than looked up — the engine may not import a platform API, and
+`Intl` with a named zone is not something to rely on identically across Node
+and Hermes.
+
+**Java's calendar settings are inputs, not details.** `Calendar.getInstance()`
+reads the device's time zone and the locale's first day of the week, and two
+files depended on both: the mid-week Wednesday a weekly reading is fixed to,
+and `WEEK_OF_YEAR`, which the horoscope rotates on. Every Indian locale
+starts the week on Sunday, so the app has always been right by luck. Both
+are written down in the port.
+
+**Anything that reads the clock cannot be tested.** Five entry points took
+"now" from inside — the dasha, the numerology validator, the muhurat scan,
+the festival list and the horoscope. All five now take the instant as an
+argument. Two of them had a bug that only appeared on certain days.
+
+### The one kind of mistake numbers cannot catch
+
+Four files are **generated** from the Kotlin fixtures by `npm run names`:
+`astroNames.ts`, `cities.ts`, `festivalRules.ts` and `rashifalTemplates.ts`
+— together some seven hundred Devanagari and English strings the screen
+shows word for word. A retyped matra looks right in a diff and wrong on a
+phone. One slip did get through, in a hand-written English string: a curly
+apostrophe where Kotlin has a straight one. Only a character-for-character
+comparison found it.
+
+### What the Kotlin repo gained
+
+One file, `app/src/test/java/com/example/astro/GoldenFixtureExportTest.kt`.
+Test-only, asserts nothing, ships in no APK. Three of its exports pin the
+platform before reading it — the transit export fixes the JVM to
+Asia/Kolkata and a Sunday-start week, and the muhurat and rashifal exports
+refuse to write a fixture that straddles midnight, because both read the
+clock.
