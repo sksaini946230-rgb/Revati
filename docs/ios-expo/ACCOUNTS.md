@@ -123,6 +123,13 @@ project's session.
 | App Store Connect app | `6814081148` | `6811940950` |
 | ASC API key | `5M6CRWLM5B` | `M45742P682` |
 
+The slot Revati took was a dead one. It held `NZ42S32BTJ` (serial
+`36B7131CB1DAF56F91DBDB5514FC914`, 17 Sep), which the other project's session
+later traced to profile `DS46LH5VT4` — already **INVALID**. The owner picked
+it themselves after being shown both certificates side by side; Apple's
+"Your Certificate Has Been Revoked" mail that afternoon was that one. The
+other app's `674PM3MSVR` and its ACTIVE profile were never touched.
+
 **Both certificate slots are now full.** Revati's builds must **reuse**
 `SQHMQC5HP4` — in `eas credentials`, "Use an existing certificate", never
 "generate a new one". If any tool says *no free slot, revoke one to continue*:
@@ -136,6 +143,13 @@ entirely. Revati's notifications are **local** (`expo-notifications`,
 scheduled on the device) — no server push, so no APNs key. If remote push is
 ever wanted, one APNs key can serve a whole team, so the route is to reuse —
 but that is the owner's call, asked first.
+
+**Identify a signing artifact by fingerprint, never by filename.** Two `.jks`
+files sat in the Kotlin repo and only one was real; the other project's laptop
+carries nine, several misleadingly named. Revati's Play upload key is
+`77:D9:C2:35:…` (alias `upload`), confirmed against the certificate inside the
+live AAB, not against a filename. The other app's is `F9:3D:84:…` and is not
+ours.
 
 **Identify a certificate by serial, never by name.** Both are called
 "iOS Distribution: Sunil Kumar Saini". Read-only checks with the ASC API key:
