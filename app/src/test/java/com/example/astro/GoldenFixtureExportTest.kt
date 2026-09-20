@@ -217,6 +217,59 @@ class GoldenFixtureExportTest {
         write("moon_position.json", rows)
     }
 
+    /**
+     * Six cities spread across India, chosen so the fixture cannot pass by
+     * accident: the east-west spread is nearly 30° of longitude (Guwahati to
+     * Mumbai is over an hour of true solar time on a single clock), and the
+     * north-south spread crosses 20° of latitude, which is what makes day
+     * length differ by season at all.
+     */
+    private val cities = listOf(
+        Triple("Jaipur", 26.9124, 75.7873),
+        Triple("Guwahati", 26.1445, 91.7362),
+        Triple("Thiruvananthapuram", 8.5241, 76.9366),
+        Triple("Mumbai", 19.0760, 72.8777),
+        Triple("Delhi", 28.6139, 77.2090),
+        Triple("Kolkata", 22.5726, 88.3639),
+    )
+
+    @Test
+    fun exportRiseSet() {
+        // Every third day of three whole years, in six cities. Every third
+        // rather than every fifth so both solstices and both equinoxes are
+        // caught in each year — day length is the thing being checked, and it
+        // turns at exactly those four points.
+        val rows = mutableListOf<Map<String, Any?>>()
+        for (year in listOf(2024, 2026, 2031)) {
+            val start = AstroTime.julianDay(year, 1, 1, 0.0)
+            val end = AstroTime.julianDay(year + 1, 1, 1, 0.0)
+            var jd = start
+            while (jd < end) {
+                for ((name, lat, lng) in cities) {
+                    // The app asks from local midnight, so the fixture does too:
+                    // IST is UTC+5:30, so local midnight is 18:30 UT the day before.
+                    val localMidnight = jd - 5.5 / 24.0
+                    val sun = RiseSetCalculator.sunRiseSet(localMidnight, lat, lng)
+                    val moon = RiseSetCalculator.moonRiseSet(localMidnight, lat, lng)
+                    rows.add(
+                        mapOf(
+                            "jd" to localMidnight,
+                            "city" to name,
+                            "lat" to lat,
+                            "lng" to lng,
+                            "sunriseJd" to sun.riseJd,
+                            "sunsetJd" to sun.setJd,
+                            "moonriseJd" to moon.riseJd,
+                            "moonsetJd" to moon.setJd,
+                        )
+                    )
+                }
+                jd += 3.0
+            }
+        }
+        write("rise_set.json", rows)
+    }
+
     @Test
     fun exportPanchangElements() {
         val rows = denseGrid().map { jd ->
