@@ -11,7 +11,7 @@ Confirmed by the owner on 20 Sep 2026 from the consoles themselves.
 | Account (username) | `astroveda1` |
 | Owner / team | `astroveda1s-team-01` |
 | Project name | `ASTROVEDA01` |
-| Slug | `astroveda01` |
+| Slug | `revati` (renamed from `astroveda01` on 20 Sep 2026, before any build) |
 | Project ID | `1614c31b-65d5-447c-bacd-6788d4802842` |
 | Builds so far | none |
 
@@ -20,10 +20,10 @@ build quota is not shared with the owner's other app. Both `owner` and
 `projectId` go in `app.config.js`; the slug appears in EAS Update URLs and is
 awkward to change once builds exist.
 
-> **Open question:** the slug says `astroveda01` while the product is called
-> Revati. Changing it is free today and annoying later. Asked of the owner.
-> (The `AstroVeda` name is banned for a **GitHub repo** by `CLAUDE.md`; this is
-> Expo, so it is a tidiness question, not that rule.)
+The project was first created as `ASTROVEDA01` / `astroveda01`. The owner
+renamed the slug to `revati` on 20 Sep 2026, while the project still had no
+builds — the slug appears in EAS Update URLs and is awkward to change once
+builds exist.
 
 ## Apple
 
@@ -63,15 +63,24 @@ own device. The app must still look right without it — on an older iPhone, and
 whenever a user turns on Reduce Transparency, every glass surface falls back to
 a solid one. That fallback is tested, not assumed.
 
+## Bundle ID — decided
+
+**`app.revati.jyotish`**, chosen by the owner on 20 Sep 2026. Permanent.
+Everything hangs off it: the App Store record, both Firebase iOS apps (the
+debug one adds `.debug`), the AdMob iOS app, the subscription, Sign in with
+Apple, the App Group for the widget. It is **not** the Android id
+(`com.aistudio.astroveda.kpvqzm`, which stays as it is) — the two stores hold
+separate identifiers and there is no requirement that they match.
+
 ## Still needed
 
 | | |
 |---|---|
-| Bundle ID | proposal `app.revati.jyotish` — **permanent once used**, owner's confirmation pending |
-| Expo slug | `astroveda01` — rename to `revati` while it is free? owner deciding |
-| App Store Connect app record | after the bundle ID |
-| Firebase iOS apps | after the bundle ID |
-| AdMob iOS app + 4 units | after the bundle ID |
+| Apple identifier registered | `app.revati.jyotish` in Certificates, Identifiers & Profiles, with Sign in with Apple |
+| App Store Connect app record | name, primary language English, SKU `revati-ios` |
+| Firebase iOS apps | production `app.revati.jyotish`, debug `app.revati.jyotish.debug` |
+| AdMob iOS app + 4 units | banner, interstitial, app open, rewarded; banner refresh 45 s |
+| App Group (widget) | `group.app.revati.jyotish` — only when widgets are built |
 
 ## A second API key exists, and it is not ours
 

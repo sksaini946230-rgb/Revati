@@ -16,7 +16,7 @@ bataunga. Phone par check bhi **aap** karoge.
 | # | Faisla | Mera sujhav |
 |---|---|---|
 | A1 | Ye poora plan (`README.md`) manzoor hai? | — |
-| A2 | iPhone app ki **Bundle ID**: `app.revati.jyotish`. Ye ek baar lagne ke baad kabhi nahi badalti. | Yahi rakho |
+| A2 | ✅ **Tay ho gaya: `app.revati.jyotish`** (20 Sep 2026). iPhone app ki **Bundle ID**. Ye ek baar lagne ke baad kabhi nahi badalti. | Yahi rakho |
 | A3 | Apple account **Individual** hai, isliye App Store par seller ke roop me **aapka apna naam** dikhega, "Msunjay Enterprises" nahi. Company ka naam chahiye to Organization account (D-U-N-S number ke saath) lena padega. | Abhi Individual se shuru karo, company baad me |
 | A4 | iPhone par bhi **ads** dikhein? | Haan, Android jaise hi |
 | A5 | iPhone par bhi **PRO ₹199/saal**? | Haan |
@@ -35,11 +35,11 @@ bataunga. Phone par check bhi **aap** karoge.
 | B2 | Terminal me `eas login` **aap khud** karna | Main command dunga |
 | B3 | ✅ **Ho gaya** — `788G662STK`. Apple **Team ID** batao | developer.apple.com → Account → Membership details |
 | B4 | App Store Connect me **naya app** banao: platform iOS, naam "Revati : Kundli & Panchang", primary language English, Bundle ID (A2), SKU `revati-ios` | Main screen-by-screen bataunga |
-| B5 | App Store Connect **API key** banao (Users and Access → Integrations → App Store Connect API, role "App Manager"). `.p8` file download karke `~/secure-credentials/revati/` me rakho. Key ID aur Issuer ID mujhe batao | Ye `eas submit` ke kaam aayegi |
+| B5 | ✅ **Ho gaya** — Key ID `5M6CRWLM5B`, file `~/secure-credentials/revati/` me. App Store Connect **API key** banao (Users and Access → Integrations → App Store Connect API, role "App Manager"). `.p8` file download karke `~/secure-credentials/revati/` me rakho. Key ID aur Issuer ID mujhe batao | Ye `eas submit` ke kaam aayegi |
 | B6 | Jab EAS pehli baar Apple login maange, to **aap khud** login karna (2FA code aapke phone par aayega) | Certificate aur profile EAS khud banayega |
 | B7 | Aadha ho gaya — iPhone 16. **iOS version abhi batana baaki hai** (Settings → General → About → Software Version) | Liquid Glass ke liye iOS 26 chahiye |
 | B8 | ✅ TestFlight pehle se hai. Batao ki kaunsi Apple ID tester banegi. iPhone par **TestFlight** app install karo, aur batao ki kaunsi Apple ID email tester banegi | — |
-| B9 | Expo par **Billing** page dekh kar batao ki free plan me har mahine kitni iOS builds milti hain | Builds ka hisaab rakhne ke liye |
+| B9 | Expo slug ✅ `revati` kar diya. Expo par **Billing** page dekh kar batao ki free plan me har mahine kitni iOS builds milti hain | Builds ka hisaab rakhne ke liye |
 
 ## C. Charan 1 — design
 
