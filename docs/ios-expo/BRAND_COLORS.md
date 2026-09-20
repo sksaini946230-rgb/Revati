@@ -4,6 +4,35 @@ Given by the owner, 20 Sep 2026. **Gold is replaced by copper-orange.**
 Every other file reads a token; a literal hex in `src/` outside `theme/`
 fails lint.
 
+## The logo, given 20 Sep 2026 — final
+
+`Revati-Expo/assets/brand/logo-1024.png`: a yellow disc, a black **R**, and a
+green diya flame standing in its bowl. Every icon size is derived from that one
+file by `scripts/build-icons.mjs`; none is drawn by hand.
+
+| Part | Hex |
+|---|---|
+| Disc | `#F3C939` |
+| Letter and bowl | `#000000` |
+| Flame | `#1F5E2F` |
+
+This replaces the two-fish mark the Kotlin app still carries. Three things
+about turning it into an app icon are not obvious and are encoded in the
+script rather than remembered:
+
+- The disc **touches all four sides**, so its anti-aliased edge sits inside any
+  square crop and shows as a faint ring once flattened. The disc is scaled up
+  and centre-cropped so that edge falls outside the frame.
+- iOS trims the icon to a squircle, and at full bleed the **R's lower leg
+  reaches into that corner**. The mark is inset to 86%.
+- **Apple rejects an app icon with an alpha channel**, and an image can look
+  opaque while still carrying one. `icon.png` is flattened and stripped.
+
+The logo's yellow is a brand colour, not a UI token: the app's accent stays
+copper `#E8934A`, which is what the owner specified for the interface. If the
+accent should become the logo's yellow instead, that is one edit in
+`colors.ts` and its test — but it is a decision, not a tidy-up.
+
 ## The four the owner gave
 
 | Role | Hex | Planet |
