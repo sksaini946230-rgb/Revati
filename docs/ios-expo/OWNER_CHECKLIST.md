@@ -25,6 +25,7 @@ bataunga. Phone par check bhi **aap** karoge.
 | A8 | App kin deshon me: sirf **India**, ya poori duniya? | Shuru me India |
 | A9 | App Store category: **Lifestyle** (aur doosri **Reference**)? | Haan |
 | A10 | GitHub par naya **private** repo `Revati-Expo` main bana doon? | Haan bolo, main bana dunga |
+| A11 | Naye app me **gold ki jagah copper-orange `#E8934A`** aayega (aapke diye colours). Android ka Play app abhi bhi gold hai — use bhi copper karna hai ya waisa hi rehne dena hai? | Abhi Android waisa hi; iPhone naye colours par |
 
 ## B. Charan 0 se pehle — accounts (1–2 din)
 

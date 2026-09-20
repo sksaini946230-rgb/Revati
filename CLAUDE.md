@@ -75,7 +75,7 @@ of this app where a wrong answer is invisible until a user notices.
 
 ---
 
-## iPhone — the Expo rebuild (planned, not started)
+## iPhone — the Expo rebuild (approved 20 Sep 2026)
 
 On 17 Sep 2026 the owner decided Revati goes to the App Store as an **Expo /
 React Native rebuild**, built in the cloud with EAS (no Mac, no Xcode), in a new
@@ -88,6 +88,15 @@ shipping. The only planned change here is one test-only file that exports golden
 answers for the TypeScript engine (`docs/ios-expo/ENGINE_PORT.md`). iOS and
 Android looks are kept apart on purpose (`PLATFORM_DESIGN.md`), and nothing is
 taken from the owner's other project except the Expo + EAS approach.
+
+**The owner approved the plan on 20 Sep 2026 and set seven standards**
+(`docs/ios-expo/CODE_STANDARDS.md`): clean structure, no duplicate or dead
+code, every check green before a build, hack-proof, nothing that reads as
+vibe-coded, and the colours they gave — green `#2E8B4E`, copper-orange
+`#E8934A` **in place of gold**, cream `#F0D09A`, background `#0B0E1A`
+(`docs/ios-expo/BRAND_COLORS.md`). Those are build gates in the Expo repo, not
+intentions. **This Kotlin app keeps its gold `#D4A84B`** until the owner asks
+otherwise — do not repaint it as a tidy-up.
 
 ---
 

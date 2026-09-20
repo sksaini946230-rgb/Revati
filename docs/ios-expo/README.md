@@ -17,6 +17,8 @@ This folder is the whole plan. Read in this order:
 | `SERVICES.md` | Firebase, sign-in, App Check, AI, ads, purchases, notifications, widgets — the Expo equivalent of each, and the console work behind it |
 | `APP_STORE.md` | Apple review risks, privacy labels, screenshots, submission |
 | `ANDROID_HANDOVER.md` | whether and how the Play app ever moves to the Expo build without losing anyone's saved profiles |
+| `CODE_STANDARDS.md` | the owner's seven standards, turned into commands that refuse a build |
+| `BRAND_COLORS.md` | the only place hex codes are written down |
 | `LESSONS_CARRIED_OVER.md` | every bug the Kotlin app already shipped once, restated as a rule for the new code |
 
 ---
@@ -64,6 +66,14 @@ reproduce every one of them, and nothing moves on until it does.
    do not click it.
 9. **Phone and browser checks are the owner's.** Report what to look at; the
    owner looks.
+10. **The seven standards in `CODE_STANDARDS.md` are build gates**, not
+    intentions: clean structure, no duplicate or dead code, every check green
+    before a build, hack-proof by the table in §4, nothing that reads as
+    vibe-coded, and the owner's colours. `npm run preflight` is all of them and
+    the build script cannot be reached around it.
+11. **Colours come from `BRAND_COLORS.md` only** — green `#2E8B4E`, copper
+    `#E8934A` (replacing gold), cream `#F0D09A`, background `#0B0E1A`. A
+    literal hex in `src/` outside `theme/` fails lint.
 
 ---
 
