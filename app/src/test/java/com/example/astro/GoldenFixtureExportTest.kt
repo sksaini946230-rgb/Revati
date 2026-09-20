@@ -295,9 +295,17 @@ class GoldenFixtureExportTest {
             mapOf("key" to "DASHA_NAKSHATRA_HI", "values" to VimshottariDashaCalculator.NAKSHATRA_NAMES_HI),
             mapOf("key" to "DASHA_PLANET_HI", "values" to VimshottariDashaCalculator.VIMSHOTTARI_PLANETS.map { it.nameHi }),
             mapOf("key" to "DASHA_PLANET_EN", "values" to VimshottariDashaCalculator.VIMSHOTTARI_PLANETS.map { it.nameEn }),
+            mapOf("key" to "VARA_HI", "values" to AstroNames.VARA_HI),
+            mapOf("key" to "VARA_EN", "values" to AstroNames.VARA_EN),
+            // The karana tables are private and the two lookups fold a movable
+            // cycle together with four fixed karanas, so the whole index range
+            // is exported as a flat table rather than the pieces.
+            mapOf("key" to "KARANA_HI", "values" to (0..59).map { AstroNames.karanaHi(it) }),
+            mapOf("key" to "KARANA_EN", "values" to (0..59).map { AstroNames.karanaEn(it) }),
             mapOf("key" to "SINGLES", "values" to listOf(
                 AstroNames.AMAVASYA_HI, AstroNames.AMAVASYA_EN,
                 AstroNames.RETROGRADE_MARK, AstroNames.SHUKLA_HI, AstroNames.SHUKLA_EN,
+                AstroNames.KRISHNA_HI, AstroNames.KRISHNA_EN,
             )),
         )
         write("names.json", rows)
@@ -990,5 +998,189 @@ class GoldenFixtureExportTest {
         }
         write("numerology_dob_errors.json", rows)
         write("numerology_min_year.json", listOf(mapOf("minYear" to NumerologyValidator.MIN_YEAR)))
+    }
+
+    @Test
+    fun exportPanchang() {
+        // Every day of a whole year in six cities, plus a second year in one,
+        // in both languages and in both clock formats. A year so that every
+        // weekday meets every season: Rahu Kaal and the muhurtas are slices
+        // of the real day length, which is the part a fixed 90-minute slot
+        // would quietly get wrong.
+        val rows = mutableListOf<Map<String, Any?>>()
+
+        fun row(date: java.util.Date, city: com.example.data.model.CityLocation, use24: Boolean): Map<String, Any?> {
+            com.example.util.LanguageManager.setLanguage(com.example.util.AppLanguage.HINDI)
+            val hi = PanchangCalculator.calculatePanchang(date, city, use24)
+            com.example.util.LanguageManager.setLanguage(com.example.util.AppLanguage.ENGLISH)
+            val en = PanchangCalculator.calculatePanchang(date, city, use24)
+            com.example.util.LanguageManager.setLanguage(com.example.util.AppLanguage.HINDI)
+
+            val phaseHi = PanchangCalculator.getMoonPhaseInfo(hi.pakshaHindi, hi.tithiHindi)
+            com.example.util.LanguageManager.setLanguage(com.example.util.AppLanguage.ENGLISH)
+            val phaseEn = PanchangCalculator.getMoonPhaseInfo(hi.pakshaHindi, hi.tithiHindi)
+            com.example.util.LanguageManager.setLanguage(com.example.util.AppLanguage.HINDI)
+
+            return mapOf(
+                "ms" to date.time,
+                "city" to city.cityName,
+                "cityHindi" to city.cityNameHindi,
+                "lat" to city.latitude,
+                "lng" to city.longitude,
+                "use24Hour" to use24,
+                "dateString" to hi.dateString,
+                "dayOfWeek" to hi.dayOfWeek,
+                "dayOfWeekHindi" to hi.dayOfWeekHindi,
+                "vikramSamvat" to hi.vikramSamvat,
+                "sakaSamvat" to hi.sakaSamvat,
+                "masaName" to hi.masaName,
+                "masaNameHindi" to hi.masaNameHindi,
+                "paksha" to hi.paksha,
+                "pakshaHindi" to hi.pakshaHindi,
+                "tithi" to hi.tithi,
+                "tithiHindi" to hi.tithiHindi,
+                "tithiEndTimeHi" to hi.tithiEndTime,
+                "tithiEndTimeEn" to en.tithiEndTime,
+                "tithiProgressPercent" to hi.tithiProgressPercent.toDouble(),
+                "nakshatra" to hi.nakshatra,
+                "nakshatraHindi" to hi.nakshatraHindi,
+                "nakshatraEndTimeHi" to hi.nakshatraEndTime,
+                "nakshatraEndTimeEn" to en.nakshatraEndTime,
+                "nakshatraPada" to hi.nakshatraPada,
+                "yoga" to hi.yoga,
+                "yogaHindi" to hi.yogaHindi,
+                "karan" to hi.karan,
+                "karanHindi" to hi.karanHindi,
+                "sunrise" to hi.sunrise,
+                "sunset" to hi.sunset,
+                "moonrise" to hi.moonrise,
+                "moonset" to hi.moonset,
+                "rahuKaal" to hi.rahuKaal,
+                "gulikaKaal" to hi.gulikaKaal,
+                "yamaganda" to hi.yamaganda,
+                "abhijitMuhurat" to hi.abhijitMuhurat,
+                "brahmaMuhurat" to hi.brahmaMuhurat,
+                "sunSignHi" to hi.sunSign,
+                "sunSignEn" to en.sunSign,
+                "moonSignHi" to hi.moonSign,
+                "moonSignEn" to en.moonSign,
+                "locationName" to hi.locationName,
+                "phaseEmoji" to phaseHi.emoji,
+                "phaseNameHi" to phaseHi.nameHindi,
+                "phaseNamePicked" to phaseEn.nameHindi,
+                "phaseNameEn" to phaseHi.nameEn,
+                "phaseIllumination" to phaseHi.illuminationPercent,
+                "phaseIsWaxing" to phaseHi.isWaxing,
+                "planets" to hi.planets.map {
+                    mapOf(
+                        "en" to it.planetNameEn, "hi" to it.planetNameHi,
+                        "rashiNumber" to it.rashiNumber,
+                        "rashiNameHi" to it.rashiNameHi, "rashiNameEn" to it.rashiNameEn,
+                        "degree" to it.degree, "house" to it.houseNumber,
+                        "retro" to it.isRetrograde,
+                        "nakshatraHi" to it.nakshatraHi, "nakshatraEn" to it.nakshatraEn,
+                    )
+                },
+            )
+        }
+
+        // One year, six cities, 12-hour clock.
+        var jd = AstroTime.julianDay(2026, 1, 1, 3.0)
+        val end = AstroTime.julianDay(2027, 1, 1, 3.0)
+        while (jd < end) {
+            val date = java.util.Date(AstroTime.millisFromJulianDay(jd))
+            for ((name, lat, lng) in cities) {
+                val city = com.example.data.model.CityLocation(name, name, "—", lat, lng)
+                rows.add(row(date, city, false))
+            }
+            jd += 1.0
+        }
+
+        // A second year in Jaipur on the 24-hour clock, so both formats and a
+        // leap year are covered.
+        val jaipur = com.example.data.model.CityLocation("Jaipur", "जयपुर", "Rajasthan", 26.9124, 75.7873)
+        var jd2 = AstroTime.julianDay(2024, 1, 1, 3.0)
+        val end2 = AstroTime.julianDay(2025, 1, 1, 3.0)
+        while (jd2 < end2) {
+            rows.add(row(java.util.Date(AstroTime.millisFromJulianDay(jd2)), jaipur, true))
+            jd2 += 1.0
+        }
+
+        write("panchang.json", rows)
+
+        write(
+            "panchang_cities.json",
+            PanchangCalculator.popularCities.map {
+                mapOf(
+                    "cityName" to it.cityName, "cityNameHindi" to it.cityNameHindi,
+                    "state" to it.state, "latitude" to it.latitude, "longitude" to it.longitude,
+                )
+            },
+        )
+
+        // The minute formatter on its own, including the wrap either side of
+        // midnight - Brahma Muhurta is computed as a negative minute count
+        // before sunrise, so the negative branch is load-bearing.
+        write(
+            "panchang_minutes.json",
+            (-200..1640 step 7).map {
+                mapOf(
+                    "minutes" to it,
+                    "h12" to PanchangCalculator.formatMinutesToTime(it, false),
+                    "h24" to PanchangCalculator.formatMinutesToTime(it, true),
+                )
+            },
+        )
+    }
+
+    @Test
+    fun exportMuhurats() {
+        // `getUpcomingMuhurats` scans the sixty days after today, and today
+        // comes from the clock. The export records the IST date it ran on and
+        // refuses to write a fixture that straddles midnight, so the port can
+        // be handed the same starting day and must find the same windows.
+        val zone = AstroTime.IST
+        val beforeMs = System.currentTimeMillis()
+        val results = PanchangCalculator.popularCities.take(6).flatMap { city ->
+            listOf(false, true).map { use24 ->
+                Triple(city, use24, MuhuratCalculator.getUpcomingMuhurats(city, use24))
+            }
+        }
+        val afterMs = System.currentTimeMillis()
+
+        fun istDay(ms: Long): Int {
+            val cal = java.util.GregorianCalendar(zone).apply { timeInMillis = ms }
+            return cal.get(java.util.Calendar.YEAR) * 10000 +
+                (cal.get(java.util.Calendar.MONTH) + 1) * 100 +
+                cal.get(java.util.Calendar.DAY_OF_MONTH)
+        }
+        check(istDay(beforeMs) == istDay(afterMs)) {
+            "the muhurat export crossed midnight; run it again"
+        }
+
+        write(
+            "muhurats.json",
+            results.map { (city, use24, items) ->
+                mapOf(
+                    "city" to city.cityName,
+                    "lat" to city.latitude, "lng" to city.longitude,
+                    "use24Hour" to use24,
+                    "istDay" to istDay(beforeMs),
+                    "items" to items.map {
+                        mapOf(
+                            "id" to it.id,
+                            "categoryHi" to it.categoryHi, "categoryEn" to it.categoryEn,
+                            "dateString" to it.dateString,
+                            "dayOfWeekHi" to it.dayOfWeekHi, "dayOfWeekEn" to it.dayOfWeekEn,
+                            "startTime" to it.startTime, "endTime" to it.endTime,
+                            "tithiHi" to it.tithiHi, "tithiEn" to it.tithiEn,
+                            "nakshatraHi" to it.nakshatraHi, "nakshatraEn" to it.nakshatraEn,
+                            "qualityHi" to it.qualityHi, "qualityEn" to it.qualityEn,
+                            "descriptionHi" to it.descriptionHi, "descriptionEn" to it.descriptionEn,
+                        )
+                    },
+                )
+            },
+        )
     }
 }
