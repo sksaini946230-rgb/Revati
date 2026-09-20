@@ -479,4 +479,108 @@ class GoldenFixtureExportTest {
         }
         write("panchang_samvat.json", samvat)
     }
+
+    @Test
+    fun exportTransits() {
+        // `midWeekDate` reads the JVM's default clock and the default locale's
+        // idea of where a week starts, so both are pinned here — otherwise the
+        // fixture would record this laptop rather than the engine. India, and
+        // a Sunday-start week, which is what every Indian locale gives.
+        val savedZone = java.util.TimeZone.getDefault()
+        val savedLocale = java.util.Locale.getDefault()
+        java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Asia/Kolkata"))
+        java.util.Locale.setDefault(java.util.Locale("hi", "IN"))
+        try {
+            val planets = listOf(
+                "Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu",
+            )
+
+            // Which house each planet transits, seen from Mesh. The house for
+            // every other rashi is a rotation of this, and the rotation itself
+            // is covered below — this grid is here for the part that can drift,
+            // which is the longitude and the sign it falls in.
+            val perDay = denseGrid().map { jd ->
+                val date = java.util.Date(AstroTime.millisFromJulianDay(jd))
+                val row = mutableMapOf<String, Any?>("jd" to jd)
+                for (p in planets) row[p] = TransitCalculator.getTransitHouse(0, p, date)
+                row
+            }
+            write("transit_house.json", perDay)
+
+            // All twelve rashis against all nine planets, so the rotation and
+            // its wrap are checked rather than assumed.
+            val allRashis = mutableListOf<Map<String, Any?>>()
+            var jd = AstroTime.julianDay(2026, 1, 1, 6.0)
+            while (jd < AstroTime.julianDay(2027, 1, 1, 6.0)) {
+                val date = java.util.Date(AstroTime.millisFromJulianDay(jd))
+                for (rashi in 0..11) {
+                    val row = mutableMapOf<String, Any?>("jd" to jd, "rashiIdx" to rashi)
+                    for (p in planets) row[p] = TransitCalculator.getTransitHouse(rashi, p, date)
+                    allRashis.add(row)
+                }
+                jd += 7.0
+            }
+            write("transit_all_rashis.json", allRashis)
+
+            // Mid-week, every day for four years. A whole run of consecutive
+            // days is the only way to see which side of the week a Sunday and
+            // a Saturday are thrown to, and the answers differ by six days.
+            val midWeek = mutableListOf<Map<String, Any?>>()
+            var ms = AstroTime.millisFromJulianDay(AstroTime.julianDay(2024, 1, 1, 3.5))
+            val endMs = AstroTime.millisFromJulianDay(AstroTime.julianDay(2028, 1, 1, 3.5))
+            while (ms < endMs) {
+                val date = java.util.Date(ms)
+                val cal = java.util.Calendar.getInstance()
+                cal.time = date
+                midWeek.add(
+                    mapOf(
+                        "ms" to ms,
+                        "dayOfWeek" to cal.get(java.util.Calendar.DAY_OF_WEEK),
+                        "midWeekMs" to TransitCalculator.midWeekDate(date).time,
+                    )
+                )
+                ms += 86_400_000L
+            }
+            write("transit_mid_week.json", midWeek)
+
+            // The driver planet and its house for each period, plus every
+            // string the readings are built from.
+            val drivers = mutableListOf<Map<String, Any?>>()
+            var dms = AstroTime.millisFromJulianDay(AstroTime.julianDay(2026, 1, 1, 3.5))
+            val dEnd = AstroTime.millisFromJulianDay(AstroTime.julianDay(2027, 1, 1, 3.5))
+            while (dms < dEnd) {
+                val date = java.util.Date(dms)
+                for (period in listOf("TODAY", "WEEK", "MONTH")) {
+                    for (rashi in 0..11) {
+                        drivers.add(
+                            mapOf(
+                                "ms" to dms,
+                                "period" to period,
+                                "rashiIdx" to rashi,
+                                "house" to TransitCalculator.getDriverHouse(rashi, period, date),
+                                "driverPlanet" to TransitCalculator.driverPlanetForPeriod(period),
+                                "periodWordHi" to TransitCalculator.periodWordHi(period),
+                                "periodWordEn" to TransitCalculator.periodWordEn(period),
+                                "periodWordEnCap" to TransitCalculator.periodWordEnCap(period),
+                            )
+                        )
+                    }
+                }
+                dms += 86_400_000L
+            }
+            write("transit_driver.json", drivers)
+
+            // The Hindi planet names, including the fallback for a name the
+            // table does not carry.
+            write(
+                "transit_planet_names.json",
+                (planets + listOf("Uranus", "")).map {
+                    mapOf("planet" to it, "hi" to TransitCalculator.planetNameHi(it))
+                },
+            )
+        } finally {
+            java.util.TimeZone.setDefault(savedZone)
+            java.util.Locale.setDefault(savedLocale)
+        }
+    }
 }
