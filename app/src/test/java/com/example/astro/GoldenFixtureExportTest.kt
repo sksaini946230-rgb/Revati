@@ -1,5 +1,6 @@
 package com.example.astro
 
+import com.example.data.model.GunaMatchingResult
 import java.io.File
 import org.junit.Test
 
@@ -582,5 +583,271 @@ class GoldenFixtureExportTest {
             java.util.TimeZone.setDefault(savedZone)
             java.util.Locale.setDefault(savedLocale)
         }
+    }
+
+    @Test
+    fun exportBirthData() {
+        // Every accepted birth moment, with the Julian day it resolves to.
+        // The 1940s rows matter most: India ran on UTC+6:30 through the war,
+        // so a fixed +5:30 in the port would land these on the wrong instant.
+        val valid = birthMoments().map { m ->
+            val year = m["year"] as Int
+            val month = m["month"] as Int
+            val day = m["day"] as Int
+            val hour = m["hour"] as Int
+            val minute = m["minute"] as Int
+            val dob = "%04d-%02d-%02d".format(year, month, day)
+            val tob = "%02d:%02d".format(hour, minute)
+            val b = BirthData.parse(
+                " Ravi  Kumar ", dob, tob, m["city"] as String,
+                m["lat"] as Double, m["lng"] as Double,
+            )
+            mapOf(
+                "dob" to dob, "tob" to tob,
+                "lat" to b.latitude, "lng" to b.longitude,
+                "name" to b.name, "placeName" to b.placeName,
+                "year" to b.year, "month" to b.month, "day" to b.day,
+                "hour" to b.hour, "minute" to b.minute,
+                "julianDay" to b.julianDay,
+                "dateString" to b.dateString, "timeString" to b.timeString,
+            )
+        }
+        write("birth_data_valid.json", valid)
+
+        // Every way the form can be wrong, and the exact sentence each one
+        // produces. These are read by a person who has just been refused, so
+        // the port may not paraphrase them.
+        val bad = listOf(
+            listOf("", "1994-08-25", "14:15", 26.9124, 75.7873),
+            listOf("   ", "1994-08-25", "14:15", 26.9124, 75.7873),
+            listOf("<script>alert(1)</script>", "1994-08-25", "14:15", 26.9124, 75.7873),
+            listOf("Ravi", "25-08-1994", "14:15", 26.9124, 75.7873),
+            listOf("Ravi", "1994/08/25", "14:15", 26.9124, 75.7873),
+            listOf("Ravi", "1994-08", "14:15", 26.9124, 75.7873),
+            listOf("Ravi", "abcd-ef-gh", "14:15", 26.9124, 75.7873),
+            listOf("Ravi", "1799-08-25", "14:15", 26.9124, 75.7873),
+            listOf("Ravi", "2201-08-25", "14:15", 26.9124, 75.7873),
+            listOf("Ravi", "1994-00-25", "14:15", 26.9124, 75.7873),
+            listOf("Ravi", "1994-13-25", "14:15", 26.9124, 75.7873),
+            listOf("Ravi", "1994-02-30", "14:15", 26.9124, 75.7873),
+            listOf("Ravi", "1900-02-29", "14:15", 26.9124, 75.7873),
+            listOf("Ravi", "2000-02-29", "14:15", 26.9124, 75.7873),
+            listOf("Ravi", "1994-04-31", "14:15", 26.9124, 75.7873),
+            listOf("Ravi", "1994-08-00", "14:15", 26.9124, 75.7873),
+            listOf("Ravi", "1994-08-25", "1415", 26.9124, 75.7873),
+            listOf("Ravi", "1994-08-25", "14:15:00", 26.9124, 75.7873),
+            listOf("Ravi", "1994-08-25", "ab:cd", 26.9124, 75.7873),
+            listOf("Ravi", "1994-08-25", "24:00", 26.9124, 75.7873),
+            listOf("Ravi", "1994-08-25", "-1:00", 26.9124, 75.7873),
+            listOf("Ravi", "1994-08-25", "14:60", 26.9124, 75.7873),
+            listOf("Ravi", "1994-08-25", "14:15", 90.1, 75.7873),
+            listOf("Ravi", "1994-08-25", "14:15", -90.1, 75.7873),
+            listOf("Ravi", "1994-08-25", "14:15", 26.9124, 180.1),
+            listOf("Ravi", "1994-08-25", "14:15", 26.9124, -180.1),
+        )
+        write(
+            "birth_data_errors.json",
+            bad.map { row ->
+                val name = row[0] as String
+                val dob = row[1] as String
+                val tob = row[2] as String
+                val lat = row[3] as Double
+                val lng = row[4] as Double
+                val e = runCatching {
+                    BirthData.parse(name, dob, tob, "Jaipur", lat, lng)
+                }.exceptionOrNull() as? BirthDataException
+                mapOf(
+                    "name" to name, "dob" to dob, "tob" to tob,
+                    "lat" to lat, "lng" to lng,
+                    "messageHi" to e?.messageHi, "messageEn" to e?.messageEn,
+                )
+            },
+        )
+
+        // Free text goes to the database, the PDF and the share sheet. What
+        // survives that cleaning, and what does not, is exported through the
+        // name field rather than by reaching into SecurityUtils.
+        val texts = listOf(
+            "Ravi",
+            "  Ravi  ",
+            "Ravi" + "\t" + "Kumar",
+            "<b>Ravi</b>",
+            "<script>x</script>Ravi",
+            "<SCRIPT>x</SCRIPT>Ravi",
+            "Ravi<",
+            "Ravi>",
+            "a<b>c</b>d",
+            "Ravi" + "\u0000" + "Kumar",
+            "Ravi" + "\u007f" + "Kumar",
+            "Ravi" + "\u001b" + "Kumar",
+            "Ravi" + "\n" + "Kumar",
+            "रवि कुमार",
+            "Ravi & Co.",
+            "O'Brien",
+            "x".repeat(300),
+            "<div>" + "y".repeat(300) + "</div>",
+        )
+        write(
+            "birth_data_sanitised.json",
+            texts.map { t ->
+                val parsed = runCatching {
+                    BirthData.parse(t, "1994-08-25", "14:15", t, 26.9124, 75.7873)
+                }.getOrNull()
+                mapOf(
+                    "input" to t,
+                    "name" to parsed?.name,
+                    "placeName" to parsed?.placeName,
+                    "refused" to (parsed == null),
+                )
+            },
+        )
+    }
+
+    @Test
+    fun exportGunaKoots() {
+        // Each koot exhaustively, over every index it can be handed. The
+        // tables are small enough that nothing needs sampling - 12x12 or
+        // 27x27 is the whole domain, so a single wrong cell cannot hide.
+        val rashiPairs = mutableListOf<Map<String, Any?>>()
+        for (b in 0..11) for (g in 0..11) {
+            rashiPairs.add(
+                mapOf(
+                    "b" to b, "g" to g,
+                    "varna" to KundaliMatchingCalculator.calculateVarna(b, g),
+                    "vashya" to KundaliMatchingCalculator.calculateVashya(b, g),
+                    "grahaMaitri" to KundaliMatchingCalculator.calculateGrahaMaitri(b, g),
+                    "bhakoot" to KundaliMatchingCalculator.calculateBhakoot(b, g),
+                )
+            )
+        }
+        write("guna_rashi_koots.json", rashiPairs)
+
+        val nakPairs = mutableListOf<Map<String, Any?>>()
+        for (b in 0..26) for (g in 0..26) {
+            nakPairs.add(
+                mapOf(
+                    "b" to b, "g" to g,
+                    "tara" to KundaliMatchingCalculator.calculateTara(b, g),
+                    "yoni" to KundaliMatchingCalculator.calculateYoni(b, g),
+                    "gana" to KundaliMatchingCalculator.calculateGana(b, g),
+                    "nadi" to KundaliMatchingCalculator.calculateNadi(b, g),
+                )
+            )
+        }
+        write("guna_nakshatra_koots.json", nakPairs)
+
+        write(
+            "guna_tables.json",
+            listOf(
+                mapOf(
+                    "varnaRanks" to KundaliMatchingCalculator.VARNA_RANKS,
+                    "vashyaGroup" to KundaliMatchingCalculator.VASHYA_GROUP,
+                    "nakshatraYoni" to KundaliMatchingCalculator.NAKSHATRA_YONI,
+                    "nakshatraGana" to KundaliMatchingCalculator.NAKSHATRA_GANA,
+                    "nakshatraNadi" to KundaliMatchingCalculator.NAKSHATRA_NADI,
+                    "bhakootDoshaDistances" to KundaliMatchingCalculator.BHAKOOT_DOSHA_DISTANCES,
+                )
+            ),
+        )
+    }
+
+    @Test
+    fun exportGunaMatching() {
+        // Whole matches, in both languages, with and without birth places.
+        // Without them the Manglik verdict cannot be reached at all, and the
+        // app says so rather than casting both charts for Jaipur - which is
+        // what it used to do, and stated as fact.
+        var seed = 314159265L
+        fun next(bound: Int): Int {
+            seed = (seed * 6364136223846793005L + 1442695040888963407L)
+            return (((seed ushr 33).toInt() % bound) + bound) % bound
+        }
+        fun person(): Map<String, Any?> {
+            val (city, lat, lng) = cities[next(cities.size)]
+            return mapOf(
+                "dob" to "%04d-%02d-%02d".format(1950 + next(60), 1 + next(12), 1 + next(28)),
+                "tob" to "%02d:%02d".format(next(24), next(60)),
+                "city" to city, "lat" to lat, "lng" to lng,
+            )
+        }
+
+        val rows = mutableListOf<Map<String, Any?>>()
+        for (i in 0 until 150) {
+            val boy = person()
+            val girl = person()
+            val withPlace = i % 2 == 0
+            val boyName = "Boy$i"
+            val girlName = "Girl$i"
+
+            fun runMatch(): GunaMatchingResult = KundaliMatchingCalculator.matchKundali(
+                boyName, boy["dob"] as String, boy["tob"] as String,
+                girlName, girl["dob"] as String, girl["tob"] as String,
+                if (withPlace) boy["lat"] as Double else null,
+                if (withPlace) boy["lng"] as Double else null,
+                if (withPlace) girl["lat"] as Double else null,
+                if (withPlace) girl["lng"] as Double else null,
+            )
+
+            com.example.util.LanguageManager.setLanguage(com.example.util.AppLanguage.HINDI)
+            val hi = runMatch()
+            com.example.util.LanguageManager.setLanguage(com.example.util.AppLanguage.ENGLISH)
+            val en = runMatch()
+            com.example.util.LanguageManager.setLanguage(com.example.util.AppLanguage.HINDI)
+
+            rows.add(
+                mapOf(
+                    "boyName" to boyName, "girlName" to girlName,
+                    "boyDob" to boy["dob"], "boyTob" to boy["tob"],
+                    "girlDob" to girl["dob"], "girlTob" to girl["tob"],
+                    "withPlace" to withPlace,
+                    "boyLat" to (if (withPlace) boy["lat"] else null),
+                    "boyLng" to (if (withPlace) boy["lng"] else null),
+                    "girlLat" to (if (withPlace) girl["lat"] else null),
+                    "girlLng" to (if (withPlace) girl["lng"] else null),
+                    "totalGuna" to hi.totalObtainedGuna,
+                    "maxGuna" to hi.maxGuna,
+                    "scoreCategory" to hi.scoreCategory,
+                    "isManglikBoy" to hi.isManglikBoy,
+                    "isManglikGirl" to hi.isManglikGirl,
+                    "mangalDoshaStatusHi" to hi.mangalDoshaStatusHi,
+                    "mangalDoshaStatusEn" to hi.mangalDoshaStatusEn,
+                    "hasNadiDosha" to hi.hasNadiDosha,
+                    "nadiDoshaStatusHi" to hi.nadiDoshaStatusHi,
+                    "nadiDoshaStatusEn" to hi.nadiDoshaStatusEn,
+                    "hasBhakootDosha" to hi.hasBhakootDosha,
+                    "bhakootDoshaStatusHi" to hi.bhakootDoshaStatusHi,
+                    "bhakootDoshaStatusEn" to hi.bhakootDoshaStatusEn,
+                    "verdictHi" to hi.compatibilityVerdictHi,
+                    "verdictEn" to hi.compatibilityVerdictEn,
+                    "summaryHi" to hi.summaryReadingHi,
+                    "summaryEn" to hi.summaryReadingEn,
+                    "boyMoonRashiHi" to hi.boyMoonRashi, "boyMoonRashiEn" to en.boyMoonRashi,
+                    "girlMoonRashiHi" to hi.girlMoonRashi, "girlMoonRashiEn" to en.girlMoonRashi,
+                    "boyNakshatraHi" to hi.boyNakshatra, "boyNakshatraEn" to en.boyNakshatra,
+                    "girlNakshatraHi" to hi.girlNakshatra, "girlNakshatraEn" to en.girlNakshatra,
+                    "boyNadiHi" to hi.boyNadi, "boyNadiEn" to en.boyNadi,
+                    "girlNadiHi" to hi.girlNadi, "girlNadiEn" to en.girlNadi,
+                    "boyGanaHi" to hi.boyGana, "boyGanaEn" to en.boyGana,
+                    "girlGanaHi" to hi.girlGana, "girlGanaEn" to en.girlGana,
+                    "boyYoniHi" to hi.boyYoni, "boyYoniEn" to en.boyYoni,
+                    "girlYoniHi" to hi.girlYoni, "girlYoniEn" to en.girlYoni,
+                    "boyVarnaHi" to hi.boyVarna, "boyVarnaEn" to en.boyVarna,
+                    "girlVarnaHi" to hi.girlVarna, "girlVarnaEn" to en.girlVarna,
+                    "boyVashyaHi" to hi.boyVashya, "boyVashyaEn" to en.boyVashya,
+                    "girlVashyaHi" to hi.girlVashya, "girlVashyaEn" to en.girlVashya,
+                    "koots" to hi.kootDetails.mapIndexed { idx, k ->
+                        mapOf(
+                            "index" to idx,
+                            "nameHi" to k.kootNameHi, "nameEn" to k.kootNameEn,
+                            "max" to k.maxPoints, "obtained" to k.obtainedPoints,
+                            "descriptionHi" to k.descriptionHi,
+                            "descriptionEn" to k.descriptionEn,
+                            "isFavorable" to k.isFavorable,
+                        )
+                    },
+                )
+            )
+        }
+        write("guna_matching.json", rows)
     }
 }
