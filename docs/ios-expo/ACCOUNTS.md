@@ -33,6 +33,9 @@ awkward to change once builds exist.
 | Team name | `Sunil Kumar Saini` (**Individual**) |
 | Team ID | `788G662STK` |
 | Role | Account Holder, Admin |
+| App Store Connect API key | name `Revati EAS Submit`, **Key ID `5M6CRWLM5B`**, role App Manager |
+| Issuer ID | `abf00db0-c3b8-4d4c-a10a-448af12971bd` (one per team) |
+| Key file | `~/secure-credentials/revati/AuthKey_5M6CRWLM5B.p8`, mode 600, never in git |
 | Membership | active, renews 15 Sep 2027 |
 | Preferred currency | USD — check this before the Paid Apps agreement; payouts for an Indian seller are normally INR |
 
@@ -52,20 +55,27 @@ needs an Organization account with a D-U-N-S number — a separate decision.
 | | Value |
 |---|---|
 | Phone | iPhone 16 |
-| iOS version | *to confirm — Liquid Glass needs iOS 26* |
+| iOS version | **26** (iPhone reports iOS 27 era build) — Liquid Glass available |
 | TestFlight | already installed |
 
-An iPhone 16 can run iOS 26, so the Liquid Glass tab bar is reachable. If the
-phone is on an older iOS, the app must still look right without it — the glass
-components fall back to solid surfaces, exactly as they do when a user turns on
-Reduce Transparency.
+The phone is current, so the Liquid Glass tab bar is reachable on the owner's
+own device. The app must still look right without it — on an older iPhone, and
+whenever a user turns on Reduce Transparency, every glass surface falls back to
+a solid one. That fallback is tested, not assumed.
 
 ## Still needed
 
 | | |
 |---|---|
 | Bundle ID | proposal `app.revati.jyotish` — **permanent once used**, owner's confirmation pending |
+| Expo slug | `astroveda01` — rename to `revati` while it is free? owner deciding |
 | App Store Connect app record | after the bundle ID |
-| App Store Connect API key (`.p8`) | for `eas submit` |
 | Firebase iOS apps | after the bundle ID |
 | AdMob iOS app + 4 units | after the bundle ID |
+
+## A second API key exists, and it is not ours
+
+App Store Connect lists two active team keys: `EAS` (`M45742P682`) belongs to
+the owner's other app, and `Revati EAS Submit` (`5M6CRWLM5B`) is this one. Keys
+are per team, not per app, so both are visible from either project. **Never
+use, edit or revoke the other one.**
