@@ -109,3 +109,40 @@ the `github-revati` SSH alias — the same account as the Kotlin repo.
 
 Created 20 Sep 2026 on Expo SDK 57.0.24. Expo Doctor 21/21; `npm run preflight`
 passes all eleven checks. No EAS build has been made.
+
+## Shared Apple team — what must never be revoked
+
+The Apple team `788G662STK` holds both Revati and the owner's other app, and
+Apple's per-team limits are small. Confirmed 20 Sep 2026 with the other
+project's session.
+
+| Slot | Revati | The other app |
+|---|---|---|
+| iOS Distribution certificate (**2 per team**) | `SQHMQC5HP4`, serial `5013C15392BCAE17CCD41D6F5510007E`, profile `7V9242AG7W` (`*[expo] app.revati.jyotish AppStore`), valid to 20 Sep 2027 | `674PM3MSVR`, serial `461B1D6426BD68D5289C28C1275649C4`, profile `QU4Q4PSJTM`, valid to 19 Sep 2027 |
+| APNs auth key (**2 per team**) | none — **both slots are the other app's** | two, one per Expo account |
+| App Store Connect app | `6814081148` | `6811940950` |
+| ASC API key | `5M6CRWLM5B` | `M45742P682` |
+
+**Both certificate slots are now full.** Revati's builds must **reuse**
+`SQHMQC5HP4` — in `eas credentials`, "Use an existing certificate", never
+"generate a new one". If any tool says *no free slot, revoke one to continue*:
+**stop and ask the owner.** Never pick `461B1D64…`; revoking it breaks the
+other app's next iOS build until the owner logs in to Apple and rebuilds its
+credentials by hand.
+
+**Revati cannot create an APNs key, and does not need one.** Both slots belong
+to the other app, and revoking one would silence its users' notifications
+entirely. Revati's notifications are **local** (`expo-notifications`,
+scheduled on the device) — no server push, so no APNs key. If remote push is
+ever wanted, one APNs key can serve a whole team, so the route is to reuse —
+but that is the owner's call, asked first.
+
+**Identify a certificate by serial, never by name.** Both are called
+"iOS Distribution: Sunil Kumar Saini". Read-only checks with the ASC API key:
+`/v1/certificates?fields[certificates]=name,serialNumber,expirationDate`,
+`/v1/profiles?fields[profiles]=name,profileState`, and
+`/v1/profiles/<id>/certificates`.
+
+Nothing of the other app is ever opened, edited, revoked or submitted from
+this project: not its app record, its builds, its credentials, its API key,
+its Google Cloud or Firebase projects, or any team-level agreement.
