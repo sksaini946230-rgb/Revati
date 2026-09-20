@@ -8,10 +8,10 @@ Confirmed by the owner on 20 Sep 2026 from the consoles themselves.
 
 | | Value |
 |---|---|
-| Account (username) | `astroveda1` |
+| Account (username) | `astroveda1` (email `sksaini012026@gmail.com`) |
 | Owner / team | `astroveda1s-team-01` |
-| Project name | `ASTROVEDA01` |
-| Slug | `revati` (renamed from `astroveda01` on 20 Sep 2026, before any build) |
+| Display name | `Revati` (renamed 20 Sep 2026) |
+| Slug | `astroveda01` — **deliberately left alone** |
 | Project ID | `1614c31b-65d5-447c-bacd-6788d4802842` |
 | Builds so far | none |
 
@@ -20,10 +20,14 @@ build quota is not shared with the owner's other app. Both `owner` and
 `projectId` go in `app.config.js`; the slug appears in EAS Update URLs and is
 awkward to change once builds exist.
 
-The project was first created as `ASTROVEDA01` / `astroveda01`. The owner
-renamed the slug to `revati` on 20 Sep 2026, while the project still had no
-builds — the slug appears in EAS Update URLs and is awkward to change once
-builds exist.
+The project was created as `ASTROVEDA01`. The display name is now `Revati`;
+**the slug stays `astroveda01`** and that is a decision, not an oversight.
+Expo offers no way to rename a slug — only deleting the project and making a
+new one — and the owner decided on 20 Sep 2026 that it is not worth it. The
+slug is never shown to a user: it appears in expo.dev URLs and as `slug` in
+`app.config.js`, and updates are addressed by project id, not by slug. So
+`app.config.js` must say `slug: 'astroveda01'` while `name` says Revati, and
+nobody should "fix" that later.
 
 ## Apple
 
