@@ -271,6 +271,49 @@ class GoldenFixtureExportTest {
     }
 
     @Test
+    fun exportChoghadiya() {
+        // Every day of one whole year in three cities, day and night. A year
+        // so that every weekday meets every season, because the sequence is
+        // chosen by weekday and the slot length comes from that day's length.
+        //
+        // The bug this guards against was exactly here: Sunday's row stepped
+        // through the Chaldean cycle three at a time instead of rotating it,
+        // so one day in seven called 07:34-09:09 Amrit when the cycle makes it
+        // Char. It survived because the only test counted the slots — eight
+        // came back, so it passed.
+        val rows = mutableListOf<Map<String, Any?>>()
+        val start = AstroTime.julianDay(2026, 1, 1, 0.0)
+        var jd = start
+        while (jd < AstroTime.julianDay(2027, 1, 1, 0.0)) {
+            val date = java.util.Date(AstroTime.millisFromJulianDay(jd))
+            for ((name, lat, lng) in cities.take(3)) {
+                for (isDay in listOf(true, false)) {
+                    val slots = ChoghadiyaCalculator.getChoghadiyaSlots(date, isDay, lat, lng)
+                    rows.add(
+                        mapOf(
+                            "jd" to jd,
+                            "city" to name,
+                            "lat" to lat,
+                            "lng" to lng,
+                            "isDay" to isDay,
+                            "slots" to slots.map {
+                                mapOf(
+                                    "start" to it.startTime,
+                                    "end" to it.endTime,
+                                    "type" to it.type.name,
+                                    "ruler" to it.rulerPlanetHi,
+                                )
+                            },
+                        )
+                    )
+                }
+            }
+            jd += 1.0
+        }
+        write("choghadiya.json", rows)
+    }
+
+    @Test
     fun exportPanchangElements() {
         val rows = denseGrid().map { jd ->
             mapOf(
