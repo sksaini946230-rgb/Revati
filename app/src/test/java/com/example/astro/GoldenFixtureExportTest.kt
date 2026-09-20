@@ -850,4 +850,145 @@ class GoldenFixtureExportTest {
         }
         write("guna_matching.json", rows)
     }
+
+    /**
+     * Names used for both the transliterator and the numerology reading.
+     *
+     * Devanagari is the point: the Chaldean table only covers A-Z, so a name
+     * typed in Hindi - which is what a Hindi-first app whose own placeholder
+     * reads "उदा. राहुल शर्मा" invites - summed to zero and came out as Name
+     * Number 1 for everybody. The pairs here also check the property the
+     * transliterator exists for, that "राहुल" and "Rahul" agree.
+     */
+    private fun numerologyNames(): List<String> = listOf(
+        "Rahul", "राहुल", "rahul", "RAHUL",
+        "कमल", "Kamal", "शर्मा", "Sharma",
+        "राहुल शर्मा", "Rahul Sharma",
+        "सूर्य", "अनिता", "ऋषभ", "श्री", "कृष्ण", "विद्या",
+        "प्रेम", "संजय", "गंगा", "सिंह", "चन्द्र", "मोहन",
+        "क़ासिम", "ख़ान", "ज़ाहिर", "फ़रीद", "ग़ालिब", "बड़ा", "पढ़ना",
+        "अंश", "अँगूठा", "दुःख", "स्वर्ग", "अक्षय", "विद्यालय",
+        "देवी", "गौरव", "ऐश्वर्या", "औरत", "इंदु", "ईशा", "उमा", "ऊषा",
+        "एकता", "ओम", "आरती", "अजय",
+        "Rahul123", "R", "Zoe", "O'Brien", "Anne-Marie", "  Ravi  ",
+        "राहुल Sharma", "12345", "!@#",
+    )
+
+    @Test
+    fun exportDevanagariTransliteration() {
+        write(
+            "devanagari.json",
+            numerologyNames().map { name ->
+                mapOf(
+                    "input" to name,
+                    "containsDevanagari" to DevanagariTransliterator.containsDevanagari(name),
+                    "latin" to DevanagariTransliterator.transliterate(name),
+                )
+            },
+        )
+    }
+
+    @Test
+    fun exportNumerology() {
+        val dobs = listOf(
+            "1994-08-25", "2000-01-01", "1999-12-31", "1980-10-09",
+            "1900-01-01", "2024-02-29", "1977-07-07", "1966-06-06",
+            "2011-11-11", "1988-08-08", "1955-05-05", "1943-03-03",
+            // Shapes the calculator tolerates rather than refuses. The day
+            // part is read by splitting on "-", so a malformed string falls
+            // back to 1 rather than throwing, and that fallback is a real
+            // answer the screen prints.
+            "1994-08", "19940825", "", "1994-08-0", "1994-08-99",
+        )
+        val rows = mutableListOf<Map<String, Any?>>()
+        for (name in numerologyNames()) {
+            for (dob in dobs) {
+                val d = NumerologyCalculator.calculateNumerology(name, dob)
+                rows.add(
+                    mapOf(
+                        "name" to name, "dob" to dob,
+                        "moolank" to d.moolank,
+                        "bhagyank" to d.bhagyank,
+                        "nameNumber" to d.nameNumber,
+                        "rulingPlanetHi" to d.rulingPlanetHi,
+                        "rulingPlanetEn" to d.rulingPlanetEn,
+                        "luckyDaysHi" to d.luckyDaysHi,
+                        "luckyDaysEn" to d.luckyDaysEn,
+                        "luckyColorsHi" to d.luckyColorsHi,
+                        "luckyColorsEn" to d.luckyColorsEn,
+                        "friendlyNumbers" to d.friendlyNumbers,
+                        "enemyNumbers" to d.enemyNumbers,
+                        "moolankReadingHi" to d.moolankReadingHi,
+                        "moolankReadingEn" to d.moolankReadingEn,
+                        "bhagyankReadingHi" to d.bhagyankReadingHi,
+                        "bhagyankReadingEn" to d.bhagyankReadingEn,
+                        "personName" to d.personName,
+                        "dateOfBirth" to d.dateOfBirth,
+                    )
+                )
+            }
+        }
+        write("numerology.json", rows)
+    }
+
+    @Test
+    fun exportNumerologyValidation() {
+        // "Today" is pinned, because the upper year bound and the future
+        // check both read it. It used to be the literal 2026, which would
+        // have refused a baby born on 1 January 2027 and told the parent the
+        // child's birth year was out of range.
+        fun todayAt(year: Int, month: Int, day: Int, hour: Int, minute: Int): java.util.Calendar =
+            java.util.GregorianCalendar(AstroTime.IST).apply {
+                clear()
+                set(year, month - 1, day, hour, minute, 0)
+            }
+
+        val todays = listOf(
+            todayAt(2026, 9, 20, 12, 0),
+            todayAt(2027, 1, 1, 0, 1),
+            todayAt(2027, 12, 31, 23, 59),
+        )
+
+        val names = listOf(
+            "", "  ", "R", "Ra", "राहुल", "र", "रा", "12", "1", "!!", "!!!",
+            "R2", "  Ravi  ", "O'B", "अ",
+        )
+        write(
+            "numerology_name_errors.json",
+            names.map { mapOf("name" to it, "error" to NumerologyValidator.validateName(it)) },
+        )
+
+        val dobs = listOf(
+            "", "   ", "1994-08-25", "1994-8-25", "94-08-25", "1994/08/25",
+            "1994-00-25", "1994-13-25", "1994-08-00", "1994-08-32",
+            "1994-02-29", "1996-02-29", "1900-02-29", "2000-02-29",
+            "1994-04-31", "1994-06-31", "1994-09-31", "1994-11-31",
+            "1899-08-25", "1900-01-01", "2026-09-20", "2026-09-21",
+            "2026-12-31", "2027-01-01", "2028-01-01", "abcd-ef-gh",
+            " 1994-08-25 ", "1994-08-25x",
+        )
+        val rows = mutableListOf<Map<String, Any?>>()
+        for ((index, today) in todays.withIndex()) {
+            for (dob in dobs) {
+                val result = NumerologyValidator.validateInput("Ravi", dob, today)
+                rows.add(
+                    mapOf(
+                        "todayIndex" to index,
+                        "todayYear" to today.get(java.util.Calendar.YEAR),
+                        "todayMonth" to today.get(java.util.Calendar.MONTH) + 1,
+                        "todayDay" to today.get(java.util.Calendar.DAY_OF_MONTH),
+                        "todayHour" to today.get(java.util.Calendar.HOUR_OF_DAY),
+                        "todayMinute" to today.get(java.util.Calendar.MINUTE),
+                        "dob" to dob,
+                        "dobError" to NumerologyValidator.validateDob(dob, today),
+                        "isValid" to result.isValid,
+                        "nameError" to result.nameError,
+                        "resultDobError" to result.dobError,
+                    )
+                )
+            }
+        }
+        write("numerology_dob_errors.json", rows)
+        write("numerology_min_year.json", listOf(mapOf("minYear" to NumerologyValidator.MIN_YEAR)))
+    }
 }
