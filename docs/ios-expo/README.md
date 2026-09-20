@@ -72,7 +72,12 @@ reproduce every one of them, and nothing moves on until it does.
     before a build, hack-proof by the table in §4, nothing that reads as
     vibe-coded, and the owner's colours. `npm run preflight` is all of them and
     the build script cannot be reached around it.
-11. **Colours come from `BRAND_COLORS.md` only** — green `#2E8B4E`, copper
+11. **Every build, on both platforms, is made on expo.dev with EAS.** Never a
+    local `expo run:android`, never a local archive. One build path means one
+    set of native settings, one signing story, one build log — and a record on
+    expo.dev of every artifact that ever existed. Saving quota is not a reason
+    to have two ways of building.
+12. **Colours come from `BRAND_COLORS.md` only** — green `#2E8B4E`, copper
     `#E8934A` (replacing gold), cream `#F0D09A`, background `#0B0E1A`. A
     literal hex in `src/` outside `theme/` fails lint.
 
@@ -123,7 +128,7 @@ whatever the console steps take on the owner's side.
 | In-app review | `expo-store-review` |
 | Legal pages | bundled HTML in `react-native-webview`, JavaScript off |
 | Tests | Jest (engine golden tests, logic), a render smoke test per screen |
-| Builds | EAS Build (iOS always; Android locally with `expo run:android` to save quota) |
+| Builds | **EAS Build, both platforms, always** — the owner's rule of 20 Sep 2026. No local `expo run:android`. |
 | Updates | EAS Update for JS-only fixes, used carefully |
 
 ---

@@ -16,7 +16,7 @@ Claude.**
 | Expo account | A **separate** Expo account for Revati, so its build quota is not shared with any other app. Owner creates it. |
 | Project | `~/Revati-Expo`, repo `sksaini946230-rgb/Revati-Expo` |
 | iOS builds | EAS Build (cloud Mac). No local Xcode. Each build is asked for first. |
-| Android builds | Locally with `npx expo run:android` onto the test phone during development — costs no EAS quota. |
+| Android builds | **EAS Build, same as iOS** (owner's rule, 20 Sep 2026). Building Android locally with `expo run:android` would save quota and is deliberately not done: one build path means one set of native settings, one signing story and one log to read when something breaks. Batch changes and build at gates instead. |
 | iOS credentials | EAS creates and stores the distribution certificate and provisioning profile after the owner logs in to the Apple account once in the terminal (`eas credentials`). |
 | Test installs on iPhone | TestFlight (internal testers: the owner). A development build for the owner's iPhone needs the device registered (`eas device:create`). |
 | Submitting | `eas submit -p ios` uploads to App Store Connect with an App Store Connect API key. |
