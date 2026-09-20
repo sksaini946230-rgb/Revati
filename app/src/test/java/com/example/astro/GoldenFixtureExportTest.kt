@@ -271,6 +271,134 @@ class GoldenFixtureExportTest {
     }
 
     @Test
+    fun exportNames() {
+        // Every displayed term, exported rather than retyped. The TypeScript
+        // table is generated from this file, so a Devanagari character cannot
+        // drift between the two engines through a transcription slip — which
+        // is the one kind of error a numeric fixture would never catch.
+        val rows = listOf(
+            mapOf("key" to "TITHI_HI", "values" to AstroNames.TITHI_HI),
+            mapOf("key" to "TITHI_EN", "values" to AstroNames.TITHI_EN),
+            mapOf("key" to "NAKSHATRA_HI", "values" to AstroNames.NAKSHATRA_HI),
+            mapOf("key" to "NAKSHATRA_EN", "values" to AstroNames.NAKSHATRA_EN),
+            mapOf("key" to "YOGA_HI", "values" to AstroNames.YOGA_HI),
+            mapOf("key" to "YOGA_EN", "values" to AstroNames.YOGA_EN),
+            mapOf("key" to "MASA_HI", "values" to AstroNames.MASA_HI),
+            mapOf("key" to "MASA_EN", "values" to AstroNames.MASA_EN),
+            mapOf("key" to "RASHI_HI", "values" to AstroNames.RASHI_HI),
+            mapOf("key" to "RASHI_EN", "values" to AstroNames.RASHI_EN),
+            mapOf("key" to "RASHI_SANSKRIT", "values" to AstroNames.RASHI_SANSKRIT),
+            mapOf("key" to "PLANET_ORDER", "values" to AstroNames.PLANET_HI.keys.toList()),
+            mapOf("key" to "PLANET_HI", "values" to AstroNames.PLANET_HI.values.toList()),
+            mapOf("key" to "PLANET_SHORT", "values" to AstroNames.PLANET_SHORT.values.toList()),
+            mapOf("key" to "DASHA_NAKSHATRA_HI", "values" to VimshottariDashaCalculator.NAKSHATRA_NAMES_HI),
+            mapOf("key" to "DASHA_PLANET_HI", "values" to VimshottariDashaCalculator.VIMSHOTTARI_PLANETS.map { it.nameHi }),
+            mapOf("key" to "DASHA_PLANET_EN", "values" to VimshottariDashaCalculator.VIMSHOTTARI_PLANETS.map { it.nameEn }),
+            mapOf("key" to "SINGLES", "values" to listOf(
+                AstroNames.AMAVASYA_HI, AstroNames.AMAVASYA_EN,
+                AstroNames.RETROGRADE_MARK, AstroNames.SHUKLA_HI, AstroNames.SHUKLA_EN,
+            )),
+        )
+        write("names.json", rows)
+    }
+
+    /**
+     * 400 birth moments: seeded, not random, so the same rows come back on any
+     * machine. They span 1940-2025 and the whole day, because the ascendant
+     * moves a full sign every two hours and is the most place- and
+     * time-sensitive quantity in a chart.
+     */
+    private fun birthMoments(): List<Map<String, Any?>> {
+        @Suppress("UNUSED_EXPRESSION")
+        var seed = 20260920L
+        fun next(bound: Int): Int {
+            seed = (seed * 6364136223846793005L + 1442695040888963407L)
+            return (((seed ushr 33).toInt() % bound) + bound) % bound
+        }
+        return (0 until 400).map {
+            val year = 1940 + next(86)
+            val month = 1 + next(12)
+            val day = 1 + next(28)
+            val hour = next(24)
+            val minute = next(60)
+            val (city, lat, lng) = cities[next(cities.size)]
+            val jd = AstroTime.julianDayFromLocal(year, month, day, hour, minute, AstroTime.IST)
+            mapOf(
+                "jd" to jd, "year" to year, "month" to month, "day" to day,
+                "hour" to hour, "minute" to minute,
+                "city" to city, "lat" to lat, "lng" to lng,
+            )
+        }
+    }
+
+    @Test
+    fun exportAscendantAndChart() {
+        val rows = birthMoments().map { m ->
+            val jd = m["jd"] as Double
+            val lat = m["lat"] as Double
+            val lng = m["lng"] as Double
+            val chart = KundaliCalculator.chartForInstant("Fixture", jd, m["city"] as String, lat, lng)
+            val extra: Map<String, Any?> = mapOf(
+                "ascendantDegrees" to KundaliCalculator.ascendantDegrees(jd, lat, lng),
+                "ascendantRashiNumber" to chart.ascendantRashiNumber,
+                "ascendantRashiEn" to chart.ascendantRashiEn,
+                "moonRashiEn" to chart.moonRashiEn,
+                "moonNakshatraEn" to chart.moonNakshatraEn,
+                "planets" to chart.planets.map {
+                    mapOf(
+                        "en" to it.planetNameEn, "hi" to it.planetNameHi,
+                        "rashiNumber" to it.rashiNumber, "rashiEn" to it.rashiNameEn,
+                        "degree" to it.degree, "house" to it.houseNumber,
+                        "retro" to it.isRetrograde, "nakshatraEn" to it.nakshatraEn,
+                    )
+                },
+                "housePlanets" to (1..12).associate { h ->
+                    h.toString() to (chart.housePlanetsMap[h] ?: emptyList())
+                },
+            )
+            m + extra
+        }
+        write("kundali.json", rows)
+    }
+
+    @Test
+    fun exportVimshottariDasha() {
+        // A fixed "now", or `isCurrent` would depend on the day the fixture was
+        // exported and the comparison could never be exact.
+        val nowMs = AstroTime.millisFromJulianDay(AstroTime.julianDay(2026, 9, 20, 12.0))
+        val rows = birthMoments().take(200).map { m ->
+            val jd = m["jd"] as Double
+            val moon = AstroMath.calculatePlanets(jd)["Moon"] ?: 0.0
+            val d = VimshottariDashaCalculator.calculateVimshottariDasha(moon, jd, nowMs)
+            mapOf(
+                "jd" to jd, "moonLongitude" to moon, "nowMs" to nowMs,
+                "nakshatraIndex" to d.nakshatraInfo.index,
+                "nakshatraNameHi" to d.nakshatraInfo.nameHi,
+                "lordEn" to d.nakshatraInfo.lordNameEn,
+                "degreeInNakshatra" to d.nakshatraInfo.degreeInNakshatra,
+                "fractionRemaining" to d.nakshatraInfo.fractionRemaining,
+                "balanceAtBirthYears" to d.balanceAtBirthYears,
+                "balanceAtBirthFormatted" to d.balanceAtBirthFormatted,
+                "currentMahadashaEn" to (d.currentMahadasha?.planetEn ?: "—"),
+                "currentAntardashaEn" to (d.currentAntardasha?.planetEn ?: "—"),
+                "mahadashas" to d.mahadashas.map {
+                    mapOf(
+                        "en" to it.planetEn, "start" to it.startDate, "end" to it.endDate,
+                        "years" to it.durationYears, "isCurrent" to it.isCurrent,
+                        "antardashas" to it.antardashas.map { a ->
+                            mapOf(
+                                "en" to a.planetEn, "start" to a.startDate, "end" to a.endDate,
+                                "months" to a.durationMonths, "isCurrent" to a.isCurrent,
+                            )
+                        },
+                    )
+                },
+            )
+        }
+        write("dasha.json", rows)
+    }
+
+    @Test
     fun exportChoghadiya() {
         // Every day of one whole year in three cities, day and night. A year
         // so that every weekday meets every season, because the sequence is
