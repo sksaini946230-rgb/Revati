@@ -63,6 +63,17 @@ own device. The app must still look right without it — on an older iPhone, and
 whenever a user turns on Reduce Transparency, every glass surface falls back to
 a solid one. That fallback is tested, not assumed.
 
+## Done on 20 Sep 2026
+
+| | |
+|---|---|
+| Apple identifier | `app.revati.jyotish`, name "Revati Kundli Panchang", Sign in with Apple enabled |
+| App Store Connect record | **Revati : Kundli & Panchang**, iOS 1.0, "Prepare for Submission" |
+| App Store Connect API key | `Revati EAS Submit` / `5M6CRWLM5B` |
+
+The Apple team now lists two identifiers and two apps — the other pair belongs
+to the owner's other product and is never touched from here.
+
 ## Bundle ID — decided
 
 **`app.revati.jyotish`**, chosen by the owner on 20 Sep 2026. Permanent.
@@ -76,8 +87,6 @@ separate identifiers and there is no requirement that they match.
 
 | | |
 |---|---|
-| Apple identifier registered | `app.revati.jyotish` in Certificates, Identifiers & Profiles, with Sign in with Apple |
-| App Store Connect app record | name, primary language English, SKU `revati-ios` |
 | Firebase iOS apps | production `app.revati.jyotish`, debug `app.revati.jyotish.debug` |
 | AdMob iOS app + 4 units | banner, interstitial, app open, rewarded; banner refresh 45 s |
 | App Group (widget) | `group.app.revati.jyotish` — only when widgets are built |
