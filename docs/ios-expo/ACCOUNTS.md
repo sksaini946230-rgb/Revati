@@ -101,3 +101,11 @@ App Store Connect lists two active team keys: `EAS` (`M45742P682`) belongs to
 the owner's other app, and `Revati EAS Submit` (`5M6CRWLM5B`) is this one. Keys
 are per team, not per app, so both are visible from either project. **Never
 use, edit or revoke the other one.**
+
+## The code
+
+`~/Revati-Expo`, GitHub `sksaini946230-rgb/Revati-Expo` (private), pushed over
+the `github-revati` SSH alias — the same account as the Kotlin repo.
+
+Created 20 Sep 2026 on Expo SDK 57.0.24. Expo Doctor 21/21; `npm run preflight`
+passes all eleven checks. No EAS build has been made.
