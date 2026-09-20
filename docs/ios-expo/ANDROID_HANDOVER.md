@@ -1,15 +1,32 @@
-# Android — whether the Play app ever moves to the Expo build
+# Android — moving the Play app to the Expo build
 
-**Not decided, and not part of the iOS launch.** Until the owner says so, the
-Kotlin app in `~/Revati` remains the Play app and keeps getting releases.
+**Decided on 20 Sep 2026: Android moves to Expo.** One codebase, every fix and
+feature once.
 
-## Why it might move later
+**It happens last, and that is part of the decision, not a delay.** The Play
+app has real users with saved kundalis, settings and PRO. Until the Expo build
+does everything the Kotlin one does, shipping it as an update would take a
+working app away from them and give back an unfinished one. So the Kotlin app
+in `~/Revati` stays the Play app and keeps getting releases until every
+precondition below is met.
 
-One codebase instead of two: every fix and feature once. The cost is a
-careful migration of existing users' data and the risk of a regression on a
-live app with real users.
+## Three things that are not reversible
 
-## Preconditions before even proposing it
+1. **The upload key.** Play accepts a differently signed upload never, not
+   once. The Play upload key must be imported into EAS before the first
+   production Android build; the keystore EAS generated on 20 Sep 2026 for
+   `app.revati.jyotish` is not it.
+2. **The package name.** The day `android.package` becomes
+   `com.aistudio.astroveda.kpvqzm`, this build is an *update* to the installed
+   app. A development build with that package installed on the test phone
+   **wipes the real app and its data.** `appConfig.test.ts` in the Expo repo
+   fails if the package changes without the migration module beside it.
+3. **The users' data.** It lives in a SQLCipher database whose key is wrapped
+   by an Android Keystore alias. Once the new app has written over it, there
+   is no undo. The migration copies and verifies before anything is renamed,
+   and never deletes on the same launch.
+
+## Preconditions before it ships
 
 - The Expo Android build passes every row of `FEATURE_PARITY.md` on the test
   phone, in both languages and both themes, at 320dp and at 1.6× text.

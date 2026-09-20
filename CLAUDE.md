@@ -89,6 +89,12 @@ answers for the TypeScript engine (`docs/ios-expo/ENGINE_PORT.md`). iOS and
 Android looks are kept apart on purpose (`PLATFORM_DESIGN.md`), and nothing is
 taken from the owner's other project except the Expo + EAS approach.
 
+**Android moves to Expo too** (owner, 20 Sep 2026) — but last, after the Expo
+build does everything this one does. Until then **this Kotlin app is the Play
+app and keeps shipping**. `docs/ios-expo/ANDROID_HANDOVER.md` has the three
+irreversible steps: the Play upload key into EAS, the package name, and the
+users' SQLCipher data.
+
 **The owner approved the plan on 20 Sep 2026 and set seven standards**
 (`docs/ios-expo/CODE_STANDARDS.md`): clean structure, no duplicate or dead
 code, every check green before a build, hack-proof, nothing that reads as
