@@ -1291,4 +1291,147 @@ class GoldenFixtureExportTest {
             },
         )
     }
+
+    @Test
+    fun exportRashifal() {
+        // The five template tables, read out by reflection rather than
+        // retyped. Each is 12 houses x 3 variations, in two languages - 360
+        // paragraphs of Devanagari and English that the screen shows word for
+        // word, and the only kind of content a numeric fixture would never
+        // catch drifting. Reflection rather than parsing the source, because
+        // it reads the same objects the app uses.
+        @Suppress("UNCHECKED_CAST")
+        fun table(name: String): List<List<String>> {
+            val field = RashifalProvider::class.java.getDeclaredField(name)
+            field.isAccessible = true
+            return field.get(RashifalProvider) as List<List<String>>
+        }
+
+        val names = listOf(
+            "GENERAL_HI", "GENERAL_EN", "CAREER_HI", "CAREER_EN",
+            "FINANCE_HI", "FINANCE_EN", "LOVE_HI", "LOVE_EN",
+            "HEALTH_HI", "HEALTH_EN",
+        )
+        write(
+            "rashifal_templates.json",
+            names.map { name -> mapOf("key" to name, "houses" to table(name)) },
+        )
+
+        // The gochar rating over its whole domain: both driver planets,
+        // every house. It used to be `3 + ((rashiIdx + house) % 3)`, which
+        // gave all twelve rashis the same score because rashiIdx cancels out
+        // of the house formula entirely.
+        write(
+            "rashifal_rating.json",
+            buildList {
+                for (planet in listOf("Sun", "Moon", "Mars", "Jupiter")) {
+                    for (house in 1..12) {
+                        add(
+                            mapOf(
+                                "planet" to planet, "house" to house,
+                                "rating" to RashifalProvider.gocharRating(planet, house),
+                            )
+                        )
+                    }
+                }
+            },
+        )
+
+        // The whole pipeline, for the instant this ran. `getHoroscope` reads
+        // the clock, so the export brackets it and refuses to write a fixture
+        // the port could not reproduce: the calendar fields must fall on one
+        // India day, and the transit house must be the same at both ends.
+        val beforeMs = System.currentTimeMillis()
+        val periods = listOf("TODAY", "WEEK", "MONTH")
+        val readings = periods.associateWith { RashifalProvider.getHoroscope(it) }
+        val afterMs = System.currentTimeMillis()
+
+        val zone = AstroTime.IST
+        fun dayFields(ms: Long): List<Int> {
+            val cal = java.util.GregorianCalendar(zone).apply { timeInMillis = ms }
+            return listOf(
+                cal.get(java.util.Calendar.YEAR),
+                cal.get(java.util.Calendar.MONTH),
+                cal.get(java.util.Calendar.DAY_OF_MONTH),
+                cal.get(java.util.Calendar.WEEK_OF_YEAR),
+            )
+        }
+        check(dayFields(beforeMs) == dayFields(afterMs)) {
+            "the rashifal export crossed a day boundary; run it again"
+        }
+        for (period in periods) {
+            for (rashi in 0..11) {
+                check(
+                    TransitCalculator.getDriverHouse(rashi, period, java.util.Date(beforeMs)) ==
+                        TransitCalculator.getDriverHouse(rashi, period, java.util.Date(afterMs))
+                ) { "a transit house changed while the export ran; run it again" }
+            }
+        }
+
+        // The calendar fields the rotation uses, recorded so the port can be
+        // held to the same week number - Java's WEEK_OF_YEAR depends on the
+        // locale's first day of the week and on how many days a first week
+        // needs, and both are easy to get wrong.
+        val fields = dayFields(beforeMs)
+        write(
+            "rashifal.json",
+            periods.flatMap { period ->
+                (readings[period] ?: emptyList()).map { r ->
+                    mapOf(
+                        "nowMs" to beforeMs,
+                        "year" to fields[0], "monthIndex" to fields[1],
+                        "dayOfMonth" to fields[2], "weekOfYear" to fields[3],
+                        "period" to period,
+                        "rashiId" to r.rashiId,
+                        "rashiNameEn" to r.rashiNameEn, "rashiNameHi" to r.rashiNameHi,
+                        "symbol" to r.symbol,
+                        "elementHi" to r.elementHi, "elementEn" to r.elementEn,
+                        "rulerHi" to r.rulerHi, "rulerEn" to r.rulerEn,
+                        "ratingStars" to r.ratingStars,
+                        "luckyNumber" to r.luckyNumber,
+                        "luckyColorHi" to r.luckyColorHi, "luckyColorEn" to r.luckyColorEn,
+                        "luckyStoneHi" to r.luckyStoneHi, "luckyStoneEn" to r.luckyStoneEn,
+                        "luckyTimeHi" to r.luckyTimeHi, "luckyTimeEn" to r.luckyTimeEn,
+                        "generalReadingHi" to r.generalReadingHi,
+                        "generalReadingEn" to r.generalReadingEn,
+                        "careerReadingHi" to r.careerReadingHi,
+                        "careerReadingEn" to r.careerReadingEn,
+                        "healthReadingHi" to r.healthReadingHi,
+                        "healthReadingEn" to r.healthReadingEn,
+                        "loveReadingHi" to r.loveReadingHi,
+                        "loveReadingEn" to r.loveReadingEn,
+                        "financeReadingHi" to r.financeReadingHi,
+                        "financeReadingEn" to r.financeReadingEn,
+                        "periodOut" to r.period,
+                    )
+                }
+            },
+        )
+
+        // Java's week number, over eight whole years. The rotation reads it,
+        // so the port has to agree on it everywhere - including the end of a
+        // year, where a week straddling 1 January belongs to the new year.
+        val weeks = mutableListOf<Map<String, Any?>>()
+        val cal = java.util.GregorianCalendar(zone).apply {
+            clear(); set(2024, java.util.Calendar.JANUARY, 1, 12, 0, 0)
+        }
+        val endCal = java.util.GregorianCalendar(zone).apply {
+            clear(); set(2032, java.util.Calendar.JANUARY, 1, 12, 0, 0)
+        }
+        while (cal.before(endCal)) {
+            weeks.add(
+                mapOf(
+                    "ms" to cal.timeInMillis,
+                    "year" to cal.get(java.util.Calendar.YEAR),
+                    "month" to cal.get(java.util.Calendar.MONTH) + 1,
+                    "day" to cal.get(java.util.Calendar.DAY_OF_MONTH),
+                    "weekOfYear" to cal.get(java.util.Calendar.WEEK_OF_YEAR),
+                    "firstDayOfWeek" to cal.firstDayOfWeek,
+                    "minimalDaysInFirstWeek" to cal.minimalDaysInFirstWeek,
+                )
+            )
+            cal.add(java.util.Calendar.DAY_OF_MONTH, 1)
+        }
+        write("week_of_year.json", weeks)
+    }
 }
