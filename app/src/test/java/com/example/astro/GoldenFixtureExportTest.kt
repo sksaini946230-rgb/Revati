@@ -295,6 +295,7 @@ class GoldenFixtureExportTest {
             mapOf("key" to "DASHA_NAKSHATRA_HI", "values" to VimshottariDashaCalculator.NAKSHATRA_NAMES_HI),
             mapOf("key" to "DASHA_PLANET_HI", "values" to VimshottariDashaCalculator.VIMSHOTTARI_PLANETS.map { it.nameHi }),
             mapOf("key" to "DASHA_PLANET_EN", "values" to VimshottariDashaCalculator.VIMSHOTTARI_PLANETS.map { it.nameEn }),
+            mapOf("key" to "GREGORIAN_MONTH_HI", "values" to AstroNames.GREGORIAN_MONTH_HI),
             mapOf("key" to "VARA_HI", "values" to AstroNames.VARA_HI),
             mapOf("key" to "VARA_EN", "values" to AstroNames.VARA_EN),
             // The karana tables are private and the two lookups fold a movable
@@ -1180,6 +1181,113 @@ class GoldenFixtureExportTest {
                         )
                     },
                 )
+            },
+        )
+    }
+
+    @Test
+    fun exportFestivals() {
+        // The whole pipeline: the rule table, the date each rule resolves to,
+        // and every string the screen shows. `getFestivals` covers this year
+        // and next, which is what keeps the upcoming list from emptying in
+        // December.
+        write(
+            "festivals.json",
+            FestivalProvider.getFestivals().map {
+                mapOf(
+                    "id" to it.id,
+                    "nameEn" to it.nameEn, "nameHi" to it.nameHi,
+                    "dateString" to it.dateString, "dateIso" to it.dateIso,
+                    "dayNameHi" to it.dayNameHi,
+                    "monthNameHi" to it.monthNameHi,
+                    "pakshaHi" to it.pakshaHi, "tithiHi" to it.tithiHi,
+                    "regionFilter" to it.regionFilter,
+                    "significanceEn" to it.significanceEn,
+                    "significanceHi" to it.significanceHi,
+                    "pujaVidhiHi" to it.pujaVidhiHi,
+                    "pujaVidhiEn" to it.pujaVidhiEn,
+                )
+            },
+        )
+
+        // `dateFor` on its own, over the seven years FestivalCalculatorTest
+        // checks against published panchang - chosen to include an Adhika
+        // month in 2029 and the Raksha Bandhan edge cases of 2026 and 2031.
+        // The month, paksha, tithi and observance of each rule are written
+        // out here rather than read from the provider, because the rule table
+        // is private; a mistake in one of them moves a date, and the dates
+        // are what the comparison checks.
+        val rules = listOf(
+            listOf("f1", "श्रावण", "शुक्ल पक्ष", "पूर्णिमा", "RAKSHA_BANDHAN"),
+            listOf("f2", "भाद्रपद", "कृष्ण पक्ष", "अष्टमी", "SUNRISE"),
+            listOf("f3", "भाद्रपद", "शुक्ल पक्ष", "चतुर्थी", "MADHYAHNA"),
+            listOf("f4", "आश्विन", "शुक्ल पक्ष", "प्रतिपदा", "SUNRISE"),
+            listOf("f5", "आश्विन", "शुक्ल पक्ष", "दशमी", "APARAHNA"),
+            listOf("f6", "कार्तिक", "कृष्ण पक्ष", "चतुर्थी", "CHANDRODAYA"),
+            listOf("f7", "कार्तिक", "कृष्ण पक्ष", "त्रयोदशी", "PRADOSH"),
+            listOf("f8", "कार्तिक", "अमावस्या", "अमावस्या", "PRADOSH"),
+            listOf("f9", "कार्तिक", "शुक्ल पक्ष", "प्रतिपदा", "SUNRISE"),
+            listOf("f10", "कार्तिक", "शुक्ल पक्ष", "षष्ठी", "SUNRISE"),
+            listOf("f11", "चैत्र", "शुक्ल पक्ष", "तृतीया", "SUNRISE"),
+            listOf("f12", "श्रावण", "शुक्ल पक्ष", "तृतीया", "SUNRISE"),
+        )
+
+        val rows = mutableListOf<Map<String, Any?>>()
+        for (year in 2025..2031) {
+            for (rule in rules) {
+                val masa = FestivalCalculator.masaIndexFor(rule[1])
+                val tithi = FestivalCalculator.tithiNumberFor(rule[2], rule[3])
+                val observance = FestivalCalculator.Observance.valueOf(rule[4])
+                val date = if (masa == null || tithi == null) null else {
+                    FestivalCalculator.dateFor(masa, tithi, year, observance)
+                }
+                rows.add(
+                    mapOf(
+                        "ruleId" to rule[0],
+                        "monthNameHi" to rule[1],
+                        "pakshaHi" to rule[2],
+                        "tithiHi" to rule[3],
+                        "observance" to rule[4],
+                        "year" to year,
+                        "masaIndex" to masa,
+                        "tithiNumber" to tithi,
+                        "dateIso" to date?.let {
+                            "%04d-%02d-%02d".format(
+                                it.get(java.util.Calendar.YEAR),
+                                it.get(java.util.Calendar.MONTH) + 1,
+                                it.get(java.util.Calendar.DAY_OF_MONTH),
+                            )
+                        },
+                    )
+                )
+            }
+        }
+        write("festival_dates.json", rows)
+
+        // The two lookups on their own, including the names they refuse.
+        val tithiNames = AstroNames.TITHI_HI + listOf("अमावस्या", "पूर्णिमा", "कुछ और", "")
+        val pakshas = listOf("शुक्ल पक्ष", "कृष्ण पक्ष", "अमावस्या", "")
+        write(
+            "festival_lookups.json",
+            buildList {
+                for (paksha in pakshas) for (tithi in tithiNames) {
+                    add(
+                        mapOf(
+                            "kind" to "tithi",
+                            "paksha" to paksha, "tithi" to tithi,
+                            "value" to FestivalCalculator.tithiNumberFor(paksha, tithi),
+                        )
+                    )
+                }
+                for (masa in AstroNames.MASA_HI + listOf("कुछ और", "")) {
+                    add(
+                        mapOf(
+                            "kind" to "masa",
+                            "paksha" to null, "tithi" to masa,
+                            "value" to FestivalCalculator.masaIndexFor(masa),
+                        )
+                    )
+                }
             },
         )
     }
