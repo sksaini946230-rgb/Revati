@@ -91,13 +91,24 @@ start without a yes.
 | # | Phase | Output | Gate (owner) | Rough time |
 |---|---|---|---|---|
 | 0 | Accounts and skeleton ✅ *20 Sep 2026* | Expo account, empty app with both platforms' tab bars, first TestFlight build on the owner's iPhone, Android dev build on the test phone | "Mere iPhone par khul gaya" | 3–5 days |
-| 1 | Design | Mockups of every screen, iOS and Android side by side, both languages, both themes, small and large phone | Design approved | ~1 week |
-| 2 | Engine | TypeScript engine + golden fixtures from Kotlin, 100% match | Report showing 0 differences | 1–2 weeks |
+| 1 | Design 🟡 *mockups v1, 25 Sep 2026, waiting on the owner* | Mockups of every screen, iOS and Android side by side, both languages, both themes, small and large phone | Design approved | ~1 week |
+| 2 | Engine ✅ *20 Sep 2026* | TypeScript engine + golden fixtures from Kotlin, 100% match | Report showing 0 differences | 1–2 weeks |
 | 3 | Screens | All screens from `FEATURE_PARITY.md`, offline features complete | TestFlight walk-through | 2–4 weeks |
 | 4 | Services | Sign-in, cloud backup, AI (PRO), ads, purchases, notifications, widgets | Each service checked on the iPhone | 1–2 weeks |
 | 5 | Hardening | Parity checklist 100%, accessibility, font scaling, SE-to-Pro-Max layouts, crash-free test round | Owner's full test pass | ~1 week |
 | 6 | App Store | Listing, screenshots, privacy labels, review | Approved and live | 1–2 weeks |
 | 7 | Android decision | Only after iOS is live: whether Play moves to the Expo build | Separate decision, see `ANDROID_HANDOVER.md` | later |
+
+**Phase 1 status (25 Sep 2026).** Mockups v1 of 16 screens are an artifact:
+https://claude.ai/artifact/G5dZchv9sAAKEFwwfHa9vs — iPhone and Android side by
+side, Hindi/English, dark/light, small/large, every number from the TypeScript
+engine (Jaipur, 25 Sep 2026, 7:00 AM). Phase 2 ran ahead of phase 1 because the
+engine does not depend on the design. **No screen is built until the owner
+approves these.** Open decisions the page lists: the fifth tab's name (More vs
+Settings), Apple + Google sign-in on iPhone, the Kundali sub-tab labels at
+375 pt in English, English inside Hindi engine strings, and a muhurat
+description that names Hasta/Pushya on an Ashwini day (the Kotlin text, ported
+as-is). The South Indian chart is not drawn in v1.
 
 **Total to App Store: about 6–10 weeks** of work, plus Apple's review time and
 whatever the console steps take on the owner's side.
