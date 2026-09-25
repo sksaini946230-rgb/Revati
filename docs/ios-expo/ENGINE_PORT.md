@@ -173,3 +173,33 @@ platform before reading it — the transit export fixes the JVM to
 Asia/Kolkata and a Sunday-start week, and the muhurat and rashifal exports
 refuse to write a fixture that straddles midnight, because both read the
 clock.
+
+## The profile file, 25 September 2026
+
+`ProfileTransfer.kt` is ported to `Revati-Expo/src/features/profiles/profileTransfer.ts`
+and held to Kotlin the same way: a second export class in the same test file,
+`ProfileTransferFixtureExportTest`, hands the Play app's reader 70 files —
+damaged, hand-edited and odd, one oddity each, plus a file each app wrote —
+and records what it kept, what it refused and the words it refused with.
+**0 differences.** It runs under Robolectric, because it is Android's
+org.json whose behaviour has to be matched, not json.org's. A deliberate
+mutation (reading JSON `null` as empty) fails three cases, so the check
+bites.
+
+`sanitizeTextInput` moved to `src/lib/textInput.ts` with Kotlin's own
+whitespace (U+001C–U+001F trimmed, U+FEFF kept), and the birth-data fixture
+still passes on it.
+
+What the Play app does with odd files — ported as-is, listed for the owner,
+not fixed on one side only:
+
+- `"name": null` imports a profile named **"null"**; a null `uuid` gives the
+  uuid "null", so a second such profile is skipped as a duplicate; null
+  `notes` become the text "null".
+- A date or time is validated after trimming but **stored untrimmed**
+  (`" 1994-08-25"`, `" 14:15 "`, `"+1994-08-25"`, `"9:5"`).
+- A date in Devanagari digits (`१९९४-०८-२५`) **passes the import and is then
+  refused** when a chart is made from it: the import accepts any-script
+  digits, the birth-data check only ASCII ones.
+- A uuid repeated inside one file is imported twice.
+

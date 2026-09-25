@@ -1,15 +1,74 @@
 package com.example.astro
 
+import com.example.data.local.KundaliEntity
+import com.example.data.local.ProfileTransfer
 import com.example.data.model.GunaMatchingResult
 import java.io.File
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+
+// ---------------------------------------------------------------- output
+//
+// File-level so both export classes below write the same format. The engine
+// exports run on the plain JVM; the profile-file export needs Robolectric,
+// because org.json is only a stub there.
+
+private val outputDir = File("build/golden").apply { mkdirs() }
+
+private fun write(name: String, rows: List<Map<String, Any?>>) {
+    val file = File(outputDir, name)
+    file.bufferedWriter().use { out ->
+        out.write("[\n")
+        rows.forEachIndexed { index, row ->
+            out.write("  ")
+            out.write(jsonObject(row))
+            if (index < rows.size - 1) out.write(",")
+            out.write("\n")
+        }
+        out.write("]\n")
+    }
+    println("golden: ${file.name}  ${rows.size} rows  ${file.length() / 1024} KB")
+}
+
+private fun jsonObject(row: Map<String, Any?>): String =
+    row.entries.joinToString(prefix = "{", postfix = "}") { (key, value) ->
+        "${jsonString(key)}:${jsonValue(value)}"
+    }
+
+private fun jsonValue(value: Any?): String = when (value) {
+    null -> "null"
+    is Double -> if (value.isFinite()) value.toString() else "null"
+    is Int, is Long, is Boolean -> value.toString()
+    is Map<*, *> ->
+        @Suppress("UNCHECKED_CAST")
+        jsonObject(value as Map<String, Any?>)
+    is List<*> -> value.joinToString(prefix = "[", postfix = "]") { jsonValue(it) }
+    else -> jsonString(value.toString())
+}
+
+private fun jsonString(text: String): String {
+    val sb = StringBuilder("\"")
+    for (ch in text) {
+        when (ch) {
+            '"' -> sb.append("\\\"")
+            '\\' -> sb.append("\\\\")
+            '\n' -> sb.append("\\n")
+            '\r' -> sb.append("\\r")
+            '\t' -> sb.append("\\t")
+            else -> if (ch < ' ') sb.append("\\u%04x".format(ch.code)) else sb.append(ch)
+        }
+    }
+    return sb.append("\"").toString()
+}
 
 /**
  * Exports the answers this engine gives, so the TypeScript port can be held to
  * them exactly.
  *
- * **This is the only change the iPhone project makes to this repo.** It is a
- * unit test, it ships in no APK, it asserts nothing about behaviour and it
+ * **This file is the only change the iPhone project makes to this repo.** It is
+ * a unit test, it ships in no APK, it asserts nothing about behaviour and it
  * cannot fail a release. Deleting it would not change the app; it would only
  * remove the one thing that proves the rewrite gives the same answers.
  *
@@ -34,56 +93,6 @@ import org.junit.Test
  * rules.
  */
 class GoldenFixtureExportTest {
-
-    private val outputDir = File("build/golden").apply { mkdirs() }
-
-    // ---------------------------------------------------------------- output
-
-    private fun write(name: String, rows: List<Map<String, Any?>>) {
-        val file = File(outputDir, name)
-        file.bufferedWriter().use { out ->
-            out.write("[\n")
-            rows.forEachIndexed { index, row ->
-                out.write("  ")
-                out.write(jsonObject(row))
-                if (index < rows.size - 1) out.write(",")
-                out.write("\n")
-            }
-            out.write("]\n")
-        }
-        println("golden: ${file.name}  ${rows.size} rows  ${file.length() / 1024} KB")
-    }
-
-    private fun jsonObject(row: Map<String, Any?>): String =
-        row.entries.joinToString(prefix = "{", postfix = "}") { (key, value) ->
-            "${jsonString(key)}:${jsonValue(value)}"
-        }
-
-    private fun jsonValue(value: Any?): String = when (value) {
-        null -> "null"
-        is Double -> if (value.isFinite()) value.toString() else "null"
-        is Int, is Long, is Boolean -> value.toString()
-        is Map<*, *> ->
-            @Suppress("UNCHECKED_CAST")
-            jsonObject(value as Map<String, Any?>)
-        is List<*> -> value.joinToString(prefix = "[", postfix = "]") { jsonValue(it) }
-        else -> jsonString(value.toString())
-    }
-
-    private fun jsonString(text: String): String {
-        val sb = StringBuilder("\"")
-        for (ch in text) {
-            when (ch) {
-                '"' -> sb.append("\\\"")
-                '\\' -> sb.append("\\\\")
-                '\n' -> sb.append("\\n")
-                '\r' -> sb.append("\\r")
-                '\t' -> sb.append("\\t")
-                else -> if (ch < ' ') sb.append("\\u%04x".format(ch.code)) else sb.append(ch)
-            }
-        }
-        return sb.append("\"").toString()
-    }
 
     // ------------------------------------------------------------- the dates
     //
@@ -1433,5 +1442,210 @@ class GoldenFixtureExportTest {
             cal.add(java.util.Calendar.DAY_OF_MONTH, 1)
         }
         write("week_of_year.json", weeks)
+    }
+}
+
+/**
+ * The profile file (`ProfileTransfer`), which the iPhone app must read and
+ * write exactly as this app does: a user moving from Android to iPhone carries
+ * their kundalis across in that file, and a file one app accepts and the other
+ * refuses — or reads differently — loses somebody's exact birth time.
+ *
+ * The inputs are mostly files this app did **not** write. Hand-edited and
+ * damaged files are where two readers disagree, so each case isolates one
+ * oddity in an otherwise valid file.
+ *
+ * Robolectric because `ProfileTransfer` uses Android's org.json, which is a
+ * stub on a plain JVM — and it is Android's parser whose behaviour the port
+ * has to match, not json.org's.
+ *
+ *     ./gradlew testDebugUnitTest --tests '*ProfileTransferFixtureExportTest*'
+ */
+@RunWith(RobolectricTestRunner::class)
+@Config(manifest = Config.NONE, sdk = [34])
+class ProfileTransferFixtureExportTest {
+
+    private val base = linkedMapOf(
+        "uuid" to "\"u-1\"", "name" to "\"राम\"", "gender" to "\"MALE\"",
+        "dateOfBirth" to "\"1994-08-25\"", "timeOfBirth" to "\"14:15\"",
+        "placeOfBirth" to "\"Jaipur\"", "latitude" to "26.9124", "longitude" to "75.7873",
+        "notes" to "\"note\"", "createdAt" to "1700000000000",
+    )
+
+    /** One profile, raw JSON values; a null replacement drops the key. */
+    private fun entry(vararg changes: Pair<String, String?>): String {
+        val m = LinkedHashMap(base)
+        changes.forEach { (k, v) -> if (v == null) m.remove(k) else m[k] = v }
+        return m.entries.joinToString(",", "{", "}") { "\"${it.key}\":${it.value}" }
+    }
+
+    private fun file(vararg entries: String, version: String = "1") =
+        """{"format":"revati-profiles","version":$version,"profiles":[${entries.joinToString(",")}]}"""
+
+    private fun profile(uuid: String, name: String = "राम") = KundaliEntity(
+        uuid = uuid, name = name, gender = "MALE", dateOfBirth = "1994-08-25",
+        timeOfBirth = "14:15", placeOfBirth = "Jaipur", latitude = 26.9124,
+        longitude = 75.7873, notes = "", createdAt = 1_700_000_000_000L,
+    )
+
+    /**
+     * What the TypeScript encoder writes for one profile, byte for byte. The
+     * port's own test checks that it still writes exactly this; this export
+     * records what *this* app reads out of it.
+     */
+    private val tsEncoded = """{
+  "format": "revati-profiles",
+  "version": 1,
+  "exportedAt": 1758800000000,
+  "profiles": [
+    {
+      "uuid": "t-1",
+      "name": "सीता",
+      "gender": "FEMALE",
+      "dateOfBirth": "1996-11-02",
+      "timeOfBirth": "18:20",
+      "placeOfBirth": "Delhi/NCR",
+      "latitude": 28.6139,
+      "longitude": 77.209,
+      "notes": "line one\nline \"two\"",
+      "createdAt": 1700000000000
+    }
+  ]
+}"""
+
+    @Test
+    fun exportProfileTransfer() {
+        val kotlinEncoded = ProfileTransfer.encode(
+            listOf(
+                profile("k-1", "राम कुमार"),
+                KundaliEntity(
+                    uuid = "k-2", name = "Sita \"Devi\"", gender = "FEMALE",
+                    dateOfBirth = "2000-02-29", timeOfBirth = "00:05",
+                    placeOfBirth = "Jaipur/Rajasthan", latitude = -33.8688, longitude = 151.2093,
+                    notes = "two\nlines", createdAt = 1_600_000_000_123L,
+                ),
+            )
+        )
+
+        val cases = linkedMapOf(
+            "not-json" to "not json at all",
+            "array-root" to "[]",
+            "empty-object" to "{}",
+            "wrong-format" to """{"format":"revati-profile","version":1,"profiles":[]}""",
+            "format-number" to """{"format":1,"version":1,"profiles":[]}""",
+            "newer-version" to file(entry(), version = "2"),
+            "version-string" to file(entry(), version = "\"1\""),
+            "version-string-newer" to file(entry(), version = "\"2\""),
+            "version-fraction" to file(entry(), version = "1.9"),
+            "version-text" to file(entry(), version = "\"abc\""),
+            "version-missing" to """{"format":"revati-profiles","profiles":[${entry()}]}""",
+            "no-profiles" to """{"format":"revati-profiles","version":1}""",
+            "profiles-object" to """{"format":"revati-profiles","version":1,"profiles":{}}""",
+            "profiles-null" to """{"format":"revati-profiles","version":1,"profiles":null}""",
+            "padded" to "  \n" + file(entry()) + "\n  ",
+            "non-objects" to file("5", "null", "\"x\"", "[]", entry()),
+            "ok-basic" to file(entry()),
+            "name-blank" to file(entry("name" to "\"   \"")),
+            "name-script" to file(entry("name" to "\"<script>alert(1)</script>Ram\"")),
+            "name-html" to file(entry("name" to "\"<b>Sita</b> Devi\"")),
+            "name-control" to file(entry("name" to "\"Ra\\u0007m\"")),
+            "name-null" to file(entry("name" to "null")),
+            "name-number" to file(entry("name" to "123")),
+            "name-long" to file(entry("name" to "\"" + "क".repeat(300) + "\"")),
+            "name-missing" to file(entry("name" to null)),
+            "dob-leap-bad" to file(entry("dateOfBirth" to "\"1994-02-29\"")),
+            "dob-leap-ok" to file(entry("dateOfBirth" to "\"2000-02-29\"")),
+            "dob-space" to file(entry("dateOfBirth" to "\" 1994-08-25\"")),
+            "dob-1899" to file(entry("dateOfBirth" to "\"1899-12-31\"")),
+            "dob-2101" to file(entry("dateOfBirth" to "\"2101-01-01\"")),
+            "dob-devanagari" to file(entry("dateOfBirth" to "\"१९९४-०८-२५\"")),
+            "dob-slash" to file(entry("dateOfBirth" to "\"25/08/1994\"")),
+            "dob-plus" to file(entry("dateOfBirth" to "\"+1994-08-25\"")),
+            "dob-number" to file(entry("dateOfBirth" to "19940825")),
+            "dob-missing" to file(entry("dateOfBirth" to null)),
+            "tob-2400" to file(entry("timeOfBirth" to "\"24:00\"")),
+            "tob-short" to file(entry("timeOfBirth" to "\"9:5\"")),
+            "tob-seconds" to file(entry("timeOfBirth" to "\"14:15:00\"")),
+            "tob-space" to file(entry("timeOfBirth" to "\" 14:15 \"")),
+            "lat-string" to file(entry("latitude" to "\"26.9\"")),
+            "lat-string-padded" to file(entry("latitude" to "\" 26.9 \"")),
+            "lat-string-suffix" to file(entry("latitude" to "\"26.9d\"")),
+            "lat-null" to file(entry("latitude" to "null")),
+            "lat-91" to file(entry("latitude" to "91")),
+            "lat-text" to file(entry("latitude" to "\"abc\"")),
+            "lat-bool" to file(entry("latitude" to "true")),
+            "lat-missing" to file(entry("latitude" to null)),
+            "lon-minus-180" to file(entry("longitude" to "-180")),
+            "lon-181" to file(entry("longitude" to "181")),
+            "gender-female" to file(entry("gender" to "\"FEMALE\"")),
+            "gender-lower" to file(entry("gender" to "\"female\"")),
+            "gender-other" to file(entry("gender" to "\"OTHER\"")),
+            "gender-missing" to file(entry("gender" to null)),
+            "uuid-empty" to file(entry("uuid" to "\"\"")),
+            "uuid-blank" to file(entry("uuid" to "\"   \"")),
+            "uuid-null" to file(entry("uuid" to "null")),
+            "uuid-number" to file(entry("uuid" to "42")),
+            "uuid-missing" to file(entry("uuid" to null)),
+            "created-zero" to file(entry("createdAt" to "0")),
+            "created-negative" to file(entry("createdAt" to "-5")),
+            "created-string" to file(entry("createdAt" to "\"1700000000000\"")),
+            "created-exponent" to file(entry("createdAt" to "1.7E12")),
+            "created-fraction" to file(entry("createdAt" to "1700000000000.9")),
+            "created-missing" to file(entry("createdAt" to null)),
+            "notes-null" to file(entry("notes" to "null")),
+            "notes-missing" to file(entry("notes" to null)),
+            "place-html" to file(entry("placeOfBirth" to "\"<i>Jaipur</i>\"")),
+            "duplicate-key" to file("""{"uuid":"d-1","name":"A","name":"B","gender":"MALE","dateOfBirth":"1994-08-25","timeOfBirth":"14:15","placeOfBirth":"Jaipur","latitude":26.9124,"longitude":75.7873}"""),
+            "kotlin-encoded" to kotlinEncoded,
+            "ts-encoded" to tsEncoded,
+        )
+
+        val rows = cases.map { (id, text) ->
+            val before = System.currentTimeMillis()
+            try {
+                val a = ProfileTransfer.decode(text)
+                val b = ProfileTransfer.decode(text)
+                mapOf(
+                    "id" to id, "input" to text, "error" to null,
+                    "profiles" to a.mapIndexed { i, p ->
+                        mapOf(
+                            // A minted uuid or timestamp is random; record that it was minted.
+                            "uuid" to if (p.uuid != b[i].uuid) "<minted>" else p.uuid,
+                            "name" to p.name, "gender" to p.gender,
+                            "dateOfBirth" to p.dateOfBirth, "timeOfBirth" to p.timeOfBirth,
+                            "placeOfBirth" to p.placeOfBirth,
+                            "latitude" to p.latitude, "longitude" to p.longitude,
+                            "notes" to p.notes,
+                            "createdAt" to if (p.createdAt >= before) "<now>" else p.createdAt,
+                        )
+                    },
+                )
+            } catch (e: ProfileTransfer.TransferException) {
+                mapOf(
+                    "id" to id, "input" to text,
+                    "error" to mapOf("hi" to e.messageHi, "en" to e.messageEn),
+                    "profiles" to null,
+                )
+            }
+        }
+        write("profile_transfer.json", rows)
+
+        // Which incoming profiles an import writes. Matching is on uuid only,
+        // and a uuid repeated inside one file is not collapsed — both copies
+        // are "fresh". Recorded, not endorsed.
+        val incoming = listOf("a", "b", "c", "a").map { profile(it) }
+        val existing = listOf(profile("b"), profile("z"))
+        val (fresh, skipped) = ProfileTransfer.plan(incoming, existing)
+        write(
+            "profile_transfer_plan.json",
+            listOf(
+                mapOf(
+                    "incoming" to incoming.map { it.uuid },
+                    "existing" to existing.map { it.uuid },
+                    "fresh" to fresh.map { it.uuid },
+                    "skipped" to skipped,
+                )
+            ),
+        )
     }
 }
