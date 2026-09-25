@@ -1,0 +1,10 @@
+# Findings reviewed by hand and accepted. Each is public by design, not a secret:
+# - gcp-api-key in google-services.json: Firebase's client key, shipped inside every APK
+#   and restricted by package name + signing SHA in Google Cloud.
+# - ascApiKeyIssuerId in eas.json: App Store Connect's issuer UUID. The .p8 key is the
+#   secret, and it never enters the repo.
+# Anything else gitleaks finds is NOT covered here and must stop the commit.
+5e010cfa291be6f1525bb86c0372498400847490:app/src/debug/google-services.json:gcp-api-key:31
+9bcb5737c0d7c96acde37090034a6de5bc8ec85a:app/google-services.json:gcp-api-key:39
+6a56946875399739b5ab4592cb91fb4582a21235:app/google-services.json:gcp-api-key:31
+9368290f85e2b5220c63d582788465828f539869:google-services.json:gcp-api-key:31
