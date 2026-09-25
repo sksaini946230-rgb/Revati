@@ -395,7 +395,7 @@ fun SettingsScreen(
                                     )
                                 )
                                 Text(
-                                    text = if (LanguageManager.currentLanguage == AppLanguage.HINDI) "वर्तमान: हिन्दी (Hindi)" else "Current: English",
+                                    text = if (LanguageManager.currentLanguage == AppLanguage.HINDI) "वर्तमान: हिन्दी" else "Current: English",
                                     style = MaterialTheme.typography.bodySmall.copy(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         fontSize = 11.sp

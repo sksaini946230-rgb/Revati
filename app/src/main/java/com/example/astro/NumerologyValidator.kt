@@ -3,24 +3,27 @@ package com.example.astro
 import java.util.Calendar
 import java.util.GregorianCalendar
 
+/** A refusal in both languages; the screen picks one. */
+data class ValidationMessage(val hi: String, val en: String)
+
 data class NumerologyValidationResult(
     val isValid: Boolean,
-    val nameError: String? = null,
-    val dobError: String? = null
+    val nameError: ValidationMessage? = null,
+    val dobError: ValidationMessage? = null
 )
 
 object NumerologyValidator {
 
-    fun validateName(name: String): String? {
+    fun validateName(name: String): ValidationMessage? {
         val trimmed = name.trim()
         if (trimmed.isEmpty()) {
-            return "नाम दर्ज करना अनिवार्य है (Name is required)"
+            return ValidationMessage("नाम दर्ज करना अनिवार्य है", "Name is required")
         }
         if (trimmed.length < 2) {
-            return "नाम में कम से कम 2 अक्षर होने चाहिए (Min 2 characters)"
+            return ValidationMessage("नाम में कम से कम 2 अक्षर होने चाहिए", "Enter at least 2 characters")
         }
         if (!trimmed.any { it.isLetter() }) {
-            return "नाम में वैध अक्षर होने चाहिए (Name must contain letters)"
+            return ValidationMessage("नाम में वैध अक्षर होने चाहिए", "Name must contain letters")
         }
         return null
     }
@@ -34,17 +37,17 @@ object NumerologyValidator {
      */
     const val MIN_YEAR = 1900
 
-    fun validateDob(dob: String, today: Calendar = Calendar.getInstance()): String? {
+    fun validateDob(dob: String, today: Calendar = Calendar.getInstance()): ValidationMessage? {
         val trimmed = dob.trim()
         if (trimmed.isEmpty()) {
-            return "जन्म तिथि अनिवार्य है (DOB is required)"
+            return ValidationMessage("जन्म तिथि अनिवार्य है", "Date of birth is required")
         }
         
         // Regex for YYYY-MM-DD
         val regex = Regex("""^(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$""")
         val match = regex.matchEntire(trimmed)
         if (match == null) {
-            return "प्रारूप YYYY-MM-DD होना चाहिए (Format: YYYY-MM-DD)"
+            return ValidationMessage("प्रारूप YYYY-MM-DD होना चाहिए", "Format: YYYY-MM-DD")
         }
 
         val (yearStr, monthStr, dayStr) = match.destructured
@@ -54,7 +57,7 @@ object NumerologyValidator {
 
         val maxYear = today.get(Calendar.YEAR)
         if (year < MIN_YEAR || year > maxYear) {
-            return "वर्ष $MIN_YEAR से $maxYear के बीच होना चाहिए (Year between $MIN_YEAR-$maxYear)"
+            return ValidationMessage("वर्ष $MIN_YEAR से $maxYear के बीच होना चाहिए", "Year must be between $MIN_YEAR and $maxYear")
         }
 
         // Days in month check
@@ -65,7 +68,7 @@ object NumerologyValidator {
         }
 
         if (day > maxDays) {
-            return "माह $month में अधिकतम $maxDays दिन होते हैं (Invalid day for month)"
+            return ValidationMessage("माह $month में अधिकतम $maxDays दिन होते हैं", "Month $month has at most $maxDays days")
         }
 
         val entered = GregorianCalendar(today.timeZone).apply {
@@ -77,7 +80,7 @@ object NumerologyValidator {
             add(Calendar.DAY_OF_MONTH, 1)
         }
         if (!entered.before(startOfTomorrow)) {
-            return "जन्म तिथि भविष्य की नहीं हो सकती (Date of birth cannot be in the future)"
+            return ValidationMessage("जन्म तिथि भविष्य की नहीं हो सकती", "Date of birth cannot be in the future")
         }
 
         return null

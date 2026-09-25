@@ -29,9 +29,9 @@ object KundaliMatchingCalculator {
         0, 1, 2, 3, 3, 4, 5, 2, 5, 6, 6, 7, 8, 9, 8, 9, 10, 10, 4, 11, 12, 11, 13, 0, 13, 7, 1
     )
     private val YONI_NAMES_HI = listOf(
-        "अश्व (Horse)", "गज (Elephant)", "मेष (Sheep)", "सर्प (Serpent)", "श्वान (Dog)",
-        "मार्जार (Cat)", "मूषक (Rat)", "गौ (Cow)", "महिष (Buffalo)", "व्याघ्र (Tiger)",
-        "मृग (Deer)", "वानर (Monkey)", "नकुल (Mongoose)", "सिंह (Lion)"
+        "अश्व", "गज", "मेष", "सर्प", "श्वान",
+        "मार्जार", "मूषक", "गौ", "महिष", "व्याघ्र",
+        "मृग", "वानर", "नकुल", "सिंह"
     )
     private val YONI_NAMES_EN = listOf(
         "Horse (Ashwa)", "Elephant (Gaja)", "Sheep (Mesha)", "Serpent (Sarpa)", "Dog (Shwan)",
@@ -43,14 +43,14 @@ object KundaliMatchingCalculator {
     internal val NAKSHATRA_GANA = listOf(
         0, 1, 2, 1, 0, 1, 0, 0, 2, 2, 1, 1, 0, 2, 0, 2, 0, 2, 2, 1, 1, 0, 2, 2, 1, 1, 0
     )
-    private val GANA_NAMES_HI = listOf("देव (Deva)", "मनुष्य (Manushya)", "राक्षस (Rakshasa)")
+    private val GANA_NAMES_HI = listOf("देव", "मनुष्य", "राक्षस")
     private val GANA_NAMES_EN = listOf("Deva (Divine)", "Manushya (Human)", "Rakshasa (Demonic)")
 
     // 27 Nakshatras Nadi (0:Adi, 1:Madhya, 2:Antya)
     internal val NAKSHATRA_NADI = listOf(
         0, 1, 2, 2, 1, 0, 0, 1, 2, 2, 1, 0, 0, 1, 2, 2, 1, 0, 0, 1, 2, 2, 1, 0, 0, 1, 2
     )
-    private val NADI_NAMES_HI = listOf("आद्य (Adi / Vata)", "मध्य (Madhya / Pitta)", "अन्त्य (Antya / Kapha)")
+    private val NADI_NAMES_HI = listOf("आद्य", "मध्य", "अन्त्य")
     private val NADI_NAMES_EN = listOf("Adi (Vata)", "Madhya (Pitta)", "Antya (Kapha)")
 
     /**
@@ -65,9 +65,9 @@ object KundaliMatchingCalculator {
     internal val BHAKOOT_DOSHA_DISTANCES = listOf(2, 12, 5, 9, 6, 8)
 
     private val RASHI_NAMES_HI = listOf(
-        "मेष (Aries)", "वृषभ (Taurus)", "मिथुन (Gemini)", "कर्क (Cancer)",
-        "सिंह (Leo)", "कन्या (Virgo)", "तुला (Libra)", "वृश्चिक (Scorpio)",
-        "धनु (Sagittarius)", "मकर (Capricorn)", "कुंभ (Aquarius)", "मीन (Pisces)"
+        "मेष", "वृषभ", "मिथुन", "कर्क",
+        "सिंह", "कन्या", "तुला", "वृश्चिक",
+        "धनु", "मकर", "कुंभ", "मीन"
     )
     private val RASHI_NAMES_EN = listOf(
         "Aries", "Taurus", "Gemini", "Cancer",
@@ -220,7 +220,7 @@ object KundaliMatchingCalculator {
 
         val kootDetails = listOf(
             GunaKootDetail(
-                kootNameHi = "वर्ण (Varna)",
+                kootNameHi = "वर्ण",
                 kootNameEn = "Varna",
                 maxPoints = 1.0,
                 obtainedPoints = varnaPoints,
@@ -229,7 +229,7 @@ object KundaliMatchingCalculator {
                 isFavorable = varnaPoints == 1.0
             ),
             GunaKootDetail(
-                kootNameHi = "वश्य (Vashya)",
+                kootNameHi = "वश्य",
                 kootNameEn = "Vashya",
                 maxPoints = 2.0,
                 obtainedPoints = vashyaPoints,
@@ -238,7 +238,7 @@ object KundaliMatchingCalculator {
                 isFavorable = vashyaPoints >= 1.0
             ),
             GunaKootDetail(
-                kootNameHi = "तारा (Tara)",
+                kootNameHi = "तारा",
                 kootNameEn = "Tara",
                 maxPoints = 3.0,
                 obtainedPoints = taraPoints,
@@ -247,7 +247,7 @@ object KundaliMatchingCalculator {
                 isFavorable = taraPoints >= 1.5
             ),
             GunaKootDetail(
-                kootNameHi = "योनि (Yoni)",
+                kootNameHi = "योनि",
                 kootNameEn = "Yoni",
                 maxPoints = 4.0,
                 obtainedPoints = yoniPoints,
@@ -256,7 +256,7 @@ object KundaliMatchingCalculator {
                 isFavorable = yoniPoints >= 2.0
             ),
             GunaKootDetail(
-                kootNameHi = "ग्रह मैत्री (Graha Maitri)",
+                kootNameHi = "ग्रह मैत्री",
                 kootNameEn = "Graha Maitri",
                 maxPoints = 5.0,
                 obtainedPoints = grahaMaitriPoints,
@@ -265,7 +265,7 @@ object KundaliMatchingCalculator {
                 isFavorable = grahaMaitriPoints >= 3.0
             ),
             GunaKootDetail(
-                kootNameHi = "गण (Gana)",
+                kootNameHi = "गण",
                 kootNameEn = "Gana",
                 maxPoints = 6.0,
                 obtainedPoints = ganaPoints,
@@ -274,7 +274,7 @@ object KundaliMatchingCalculator {
                 isFavorable = ganaPoints >= 5.0
             ),
             GunaKootDetail(
-                kootNameHi = "भकूट (Bhakoot)",
+                kootNameHi = "भकूट",
                 kootNameEn = "Bhakoot",
                 maxPoints = 7.0,
                 obtainedPoints = bhakootPoints,
@@ -283,7 +283,7 @@ object KundaliMatchingCalculator {
                 isFavorable = !hasBhakootDosha
             ),
             GunaKootDetail(
-                kootNameHi = "नाडी (Nadi)",
+                kootNameHi = "नाडी",
                 kootNameEn = "Nadi",
                 maxPoints = 8.0,
                 obtainedPoints = nadiPoints,
@@ -302,28 +302,28 @@ object KundaliMatchingCalculator {
         when {
             totalGuna >= 33.0 -> {
                 scoreCategory = "EXCELLENT"
-                verdictHi = "सर्वोत्कृष्ट मिलान (Excellent Match)"
+                verdictHi = "सर्वोत्कृष्ट मिलान"
                 verdictEn = "Excellent Match"
                 summaryHi = "$boyName एवं $girlName की कुण्डली में $totalGuna / 36 गुण प्राप्त हुए हैं। यह विवाह वैदिक दृष्टि से अत्यंत शुभ, समृद्ध एवं सुखद दाम्पत्य जीवन का परिचायक है।"
                 summaryEn = "An outstanding $totalGuna / 36 gunas match between $boyName and $girlName. Highly auspicious for lifelong marital harmony and prosperity."
             }
             totalGuna >= 25.0 -> {
                 scoreCategory = "GOOD"
-                verdictHi = "उत्तम एवं शुभ मिलान (Good Match)"
+                verdictHi = "उत्तम एवं शुभ मिलान"
                 verdictEn = "Good Match"
                 summaryHi = "$boyName एवं $girlName की कुण्डली में $totalGuna / 36 गुण प्राप्त हुए हैं। यह एक उत्तम मिलान है और विवाह के लिए पूर्णतः अनुशंसित है।"
                 summaryEn = "A solid $totalGuna / 36 gunas match between $boyName and $girlName. This is a very good match and is warmly recommended for marriage."
             }
             totalGuna >= 18.0 -> {
                 scoreCategory = "AVERAGE"
-                verdictHi = "मध्यम / सामान्य मिलान (Average Match)"
+                verdictHi = "मध्यम / सामान्य मिलान"
                 verdictEn = "Average Match"
                 summaryHi = "$boyName एवं $girlName की कुण्डली में $totalGuna / 36 गुण मिल रहे हैं। यह एक स्वीकार्य मिलान है। नाड़ी अथवा भकूट दोष होने पर शांति पूजा करवाना श्रेयस्कर रहेगा।"
                 summaryEn = "$totalGuna / 36 gunas match. This is an acceptable average match. If any Doshas exist, performing Vedic remedial prayers is recommended."
             }
             else -> {
                 scoreCategory = "POOR"
-                verdictHi = "अशुभ / असहमत मिलान (Poor Match - Caution)"
+                verdictHi = "अशुभ / असहमत मिलान"
                 verdictEn = "Poor Match (Not Recommended)"
                 summaryHi = "$boyName एवं $girlName की कुण्डली में मात्र $totalGuna / 36 गुण प्राप्त हुए हैं (18 से कम)। विवाह पूर्व वरिष्ठ ज्योतिषी से विस्तृत परामर्श एवं दोष निवारण आवश्यक है।"
                 summaryEn = "Only $totalGuna / 36 gunas match (below acceptable threshold of 18). Detailed astrological consultation and remedies are strongly advised."

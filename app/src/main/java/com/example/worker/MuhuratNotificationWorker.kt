@@ -150,7 +150,7 @@ class MuhuratNotificationWorker(
             val channelName = try {
                 context.getString(app.revati.jyotish.R.string.notif_channel_muhurat_name)
             } catch (e: Throwable) {
-                "शुभ मुहूर्त अलर्ट (Auspicious Muhurta Alerts)"
+                "शुभ मुहूर्त अलर्ट"
             }
             val channelDesc = try {
                 context.getString(app.revati.jyotish.R.string.notif_channel_muhurat_desc)

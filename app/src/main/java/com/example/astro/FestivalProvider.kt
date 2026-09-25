@@ -40,7 +40,7 @@ object FestivalProvider {
         Rule(
             id = "f1",
             nameEn = "Raksha Bandhan",
-            nameHi = "रक्षाबंधन (Raksha Bandhan)",
+            nameHi = "रक्षाबंधन",
             monthNameHi = "श्रावण",
             pakshaHi = "शुक्ल पक्ष",
             tithiHi = "पूर्णिमा",
@@ -72,7 +72,7 @@ object FestivalProvider {
         Rule(
             id = "f3",
             nameEn = "Ganesh Chaturthi",
-            nameHi = "गणेश चतुर्थी (Ganesh Utsav)",
+            nameHi = "गणेश चतुर्थी",
             monthNameHi = "भाद्रपद",
             pakshaHi = "शुक्ल पक्ष",
             tithiHi = "चतुर्थी",
@@ -114,7 +114,7 @@ object FestivalProvider {
         Rule(
             id = "f6",
             nameEn = "Karwa Chauth",
-            nameHi = "करवा चौथ (Karwa Chauth)",
+            nameHi = "करवा चौथ",
             monthNameHi = "कार्तिक",
             pakshaHi = "कृष्ण पक्ष",
             tithiHi = "चतुर्थी",
@@ -142,7 +142,7 @@ object FestivalProvider {
         Rule(
             id = "f8",
             nameEn = "Diwali / Deepawali",
-            nameHi = "दीपावली (Maha Lakshmi Puja)",
+            nameHi = "दीपावली",
             monthNameHi = "कार्तिक",
             pakshaHi = "अमावस्या",
             tithiHi = "अमावस्या",
@@ -170,7 +170,7 @@ object FestivalProvider {
         Rule(
             id = "f10",
             nameEn = "Chhath Puja",
-            nameHi = "छठ पूजा (Surya Sasthi)",
+            nameHi = "छठ पूजा",
             monthNameHi = "कार्तिक",
             pakshaHi = "शुक्ल पक्ष",
             tithiHi = "षष्ठी",
@@ -184,7 +184,7 @@ object FestivalProvider {
         Rule(
             id = "f11",
             nameEn = "Gangaur Teej",
-            nameHi = "गणगौर तीज (Rajasthan Special)",
+            nameHi = "गणगौर तीज (राजस्थान)",
             monthNameHi = "चैत्र",
             pakshaHi = "शुक्ल पक्ष",
             tithiHi = "तृतीया",
@@ -198,7 +198,7 @@ object FestivalProvider {
         Rule(
             id = "f12",
             nameEn = "Teej Utsav (Hariyali Teej)",
-            nameHi = "हरियाली तीज / कजरी तीज (Rajasthan)",
+            nameHi = "हरियाली तीज / कजरी तीज (राजस्थान)",
             monthNameHi = "श्रावण",
             pakshaHi = "शुक्ल पक्ष",
             tithiHi = "तृतीया",

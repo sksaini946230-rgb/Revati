@@ -30,8 +30,10 @@ class NumerologyValidatorDateTest {
     fun `the message names the real range`() {
         val error = NumerologyValidator.validateDob("2035-01-01", on(2030, 5, 1))
         assertNotNull(error)
-        assertEquals(true, error!!.contains("2030"))
-        assertEquals(true, error.contains("1900"))
+        for (text in listOf(error!!.hi, error.en)) {
+            assertEquals(true, text.contains("2030"))
+            assertEquals(true, text.contains("1900"))
+        }
     }
 
     @Test

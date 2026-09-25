@@ -87,8 +87,8 @@ fun NumerologyScreen(viewModel: MainViewModel) {
 
     var nameInput by remember { mutableStateOf(viewModel.numName.value) }
     var dobInput by remember { mutableStateOf(viewModel.numDob.value) }
-    var nameError by remember { mutableStateOf<String?>(null) }
-    var dobError by remember { mutableStateOf<String?>(null) }
+    var nameError by remember { mutableStateOf<com.example.astro.ValidationMessage?>(null) }
+    var dobError by remember { mutableStateOf<com.example.astro.ValidationMessage?>(null) }
 
     var userQuestion by remember { mutableStateOf("") }
     // The question box is PRO only. It stays visible for everyone — the chips
@@ -185,7 +185,7 @@ fun NumerologyScreen(viewModel: MainViewModel) {
                         )
                         if (nameError != null) {
                             Text(
-                                text = nameError!!,
+                                text = nameError!!.let { LanguageManager.getString(it.hi, it.en) },
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     color = MaterialTheme.colorScheme.error,
                                     fontSize = 11.sp
@@ -215,7 +215,7 @@ fun NumerologyScreen(viewModel: MainViewModel) {
                         )
                         if (dobError != null) {
                             Text(
-                                text = dobError!!,
+                                text = dobError!!.let { LanguageManager.getString(it.hi, it.en) },
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     color = MaterialTheme.colorScheme.error,
                                     fontSize = 11.sp

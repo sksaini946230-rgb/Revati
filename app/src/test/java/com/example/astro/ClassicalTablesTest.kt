@@ -286,12 +286,15 @@ class ClassicalTablesTest {
     /** Sixty half-tithis: Kimstughna, then seven movable eight times, then three fixed. */
     @Test
     fun `the karana cycle is one fixed, fifty-six movable and three fixed`() {
-        assertTrue(PanchangElements.karanaName(0).contains("Kimstughna"))
-        assertTrue(PanchangElements.karanaName(57).contains("Shakuni"))
-        assertTrue(PanchangElements.karanaName(58).contains("Chatushpada"))
-        assertTrue(PanchangElements.karanaName(59).contains("Naga"))
-        assertTrue(PanchangElements.karanaName(1).contains("Bava"))
-        assertTrue(PanchangElements.karanaName(56).contains("Vishti"))
+        assertEquals("Kimstughna", AstroNames.karanaEn(0))
+        assertEquals("Shakuni", AstroNames.karanaEn(57))
+        assertEquals("Chatushpada", AstroNames.karanaEn(58))
+        assertEquals("Naga", AstroNames.karanaEn(59))
+        assertEquals("Bava", AstroNames.karanaEn(1))
+        assertTrue(AstroNames.karanaEn(56).startsWith("Vishti"))
+        // Festival rules look for Bhadra in the Hindi name.
+        assertTrue(PanchangElements.karanaName(56).contains("भद्रा"))
+        (0..59).forEach { assertEquals(AstroNames.karanaHi(it), PanchangElements.karanaName(it)) }
         // The seven movable ones, and only those, fill 1..56 — eight times each.
         val movable = (1..56).map { PanchangElements.karanaName(it) }
         assertEquals(7, movable.distinct().size)

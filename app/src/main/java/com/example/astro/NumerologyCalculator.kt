@@ -5,9 +5,9 @@ import com.example.data.model.NumerologyData
 object NumerologyCalculator {
 
     private val PLANETS_MAP = mapOf(
-        1 to "सूर्य (Sun)", 2 to "चन्द्र (Moon)", 3 to "गुरु (Jupiter)",
-        4 to "राहु (Rahu)", 5 to "बुध (Mercury)", 6 to "शुक्र (Venus)",
-        7 to "केतु (Ketu)", 8 to "शनि (Saturn)", 9 to "मंगल (Mars)"
+        1 to "सूर्य", 2 to "चन्द्र", 3 to "गुरु",
+        4 to "राहु", 5 to "बुध", 6 to "शुक्र",
+        7 to "केतु", 8 to "शनि", 9 to "मंगल"
     )
 
     private val READINGS = mapOf(

@@ -17,6 +17,9 @@ import org.robolectric.annotation.Config
 
 private val outputDir = File("build/golden").apply { mkdirs() }
 
+/** A validator's refusal as the fixture holds it: both languages, or null. */
+private fun message(m: ValidationMessage?): Map<String, String>? = m?.let { mapOf("hi" to it.hi, "en" to it.en) }
+
 private fun write(name: String, rows: List<Map<String, Any?>>) {
     val file = File(outputDir, name)
     file.bufferedWriter().use { out ->
@@ -973,7 +976,7 @@ class GoldenFixtureExportTest {
         )
         write(
             "numerology_name_errors.json",
-            names.map { mapOf("name" to it, "error" to NumerologyValidator.validateName(it)) },
+            names.map { mapOf("name" to it, "error" to message(NumerologyValidator.validateName(it))) },
         )
 
         val dobs = listOf(
@@ -998,10 +1001,10 @@ class GoldenFixtureExportTest {
                         "todayHour" to today.get(java.util.Calendar.HOUR_OF_DAY),
                         "todayMinute" to today.get(java.util.Calendar.MINUTE),
                         "dob" to dob,
-                        "dobError" to NumerologyValidator.validateDob(dob, today),
+                        "dobError" to message(NumerologyValidator.validateDob(dob, today)),
                         "isValid" to result.isValid,
-                        "nameError" to result.nameError,
-                        "resultDobError" to result.dobError,
+                        "nameError" to message(result.nameError),
+                        "resultDobError" to message(result.dobError),
                     )
                 )
             }

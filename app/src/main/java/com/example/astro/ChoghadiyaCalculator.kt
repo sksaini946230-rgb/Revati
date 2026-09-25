@@ -48,13 +48,13 @@ object ChoghadiyaCalculator {
     )
 
     private val RULERS = mapOf(
-        ChoghadiyaType.AMRIT to "चन्द्र (Moon)",
-        ChoghadiyaType.SHUBH to "गुरु (Jupiter)",
-        ChoghadiyaType.LABH to "बुध (Mercury)",
-        ChoghadiyaType.CHAR to "शुक्र (Venus)",
-        ChoghadiyaType.ROG to "मंगल (Mars)",
-        ChoghadiyaType.KAAL to "शनि (Saturn)",
-        ChoghadiyaType.UDVEG to "सूर्य (Sun)"
+        ChoghadiyaType.AMRIT to "चन्द्र",
+        ChoghadiyaType.SHUBH to "गुरु",
+        ChoghadiyaType.LABH to "बुध",
+        ChoghadiyaType.CHAR to "शुक्र",
+        ChoghadiyaType.ROG to "मंगल",
+        ChoghadiyaType.KAAL to "शनि",
+        ChoghadiyaType.UDVEG to "सूर्य"
     )
 
     fun getChoghadiyaSlots(

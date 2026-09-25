@@ -23,25 +23,6 @@ object PanchangElements {
     const val YOGA_SPAN = 360.0 / 27.0
     const val KARANA_SPAN = 6.0
 
-    /** Movable Karanas, repeating eight times through the month. */
-    private val MOVABLE_KARANAS = listOf(
-        "बव (Bava)", "बालव (Balava)", "कौलव (Kaulava)", "तैतिल (Taitila)",
-        "गर (Gara)", "वणिज (Vanija)", "विष्टि/भद्रा (Vishti/Bhadra)"
-    )
-    private const val KIMSTUGHNA = "किंस्तुघ्न (Kimstughna)"
-    private const val SHAKUNI = "शकुनि (Shakuni)"
-    private const val CHATUSHPADA = "चतुष्पाद (Chatushpada)"
-    private const val NAGA = "नाग (Naga)"
-
-    val MASA_NAMES_HI = listOf(
-        "चैत्र (Chaitra)", "वैशाख (Vaisakha)", "ज्येष्ठ (Jyeshtha)", "आषाढ़ (Ashadha)",
-        "श्रावण (Shravana)", "भाद्रपद (Bhadrapada)", "आश्विन (Ashvin)", "कार्तिक (Kartika)",
-        "मार्गशीर्ष (Margashirsha)", "पौष (Pausha)", "माघ (Magha)", "फाल्गुन (Phalguna)"
-    )
-    val MASA_NAMES_EN = listOf(
-        "Chaitra", "Vaisakha", "Jyeshtha", "Ashadha", "Shravana", "Bhadrapada",
-        "Ashvin", "Kartika", "Margashirsha", "Pausha", "Magha", "Phalguna"
-    )
 
     // ------------------------------------------------------------------
     // Instantaneous values
@@ -72,13 +53,12 @@ object PanchangElements {
         (AstroMath.elongation(jd) / KARANA_SPAN).toInt().coerceIn(0, 59)
 
     /** Karana name for a 0..59 index, honouring the four fixed Karanas. */
-    fun karanaName(index: Int): String = when (index) {
-        0 -> KIMSTUGHNA
-        57 -> SHAKUNI
-        58 -> CHATUSHPADA
-        59 -> NAGA
-        else -> MOVABLE_KARANAS[(index - 1) % 7]
-    }
+    /**
+     * The Hindi karana name for a 0..59 half-tithi index. It had its own copy of
+     * the eleven names, with the English in brackets; AstroNames is the one
+     * list now, and festival rules find Bhadra in it the same way.
+     */
+    fun karanaName(index: Int): String = AstroNames.karanaHi(index)
 
     // ------------------------------------------------------------------
     // End times — when the current value gives way to the next

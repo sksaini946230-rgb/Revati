@@ -38,8 +38,10 @@ val FestivalData.pakshaLocal: String
     get() = LanguageManager.getString(pakshaHi, AstroNames.pakshaEnFromHi(pakshaHi))
 
 /**
- * The Hindi names carry a romanised echo — "करवा चौथ (Karwa Chauth)" — which is
- * pure noise to a Hindi reader and wraps a compact tile onto a third line.
+ * The Hindi names used to carry a romanised echo — "करवा चौथ (Karwa Chauth)" —
+ * cut off here for the tiles only, while the calendar and the reminder showed it
+ * whole. The names are plain Hindi at the source now (25 Sep 2026), so every
+ * screen reads them the same way.
  */
 val FestivalData.nameLocal: String
-    get() = LanguageManager.getString(nameHi.substringBefore(" (").trim(), nameEn)
+    get() = LanguageManager.getString(nameHi, nameEn)
