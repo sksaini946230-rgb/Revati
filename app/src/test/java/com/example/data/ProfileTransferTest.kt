@@ -158,4 +158,32 @@ class ProfileTransferTest {
         val decoded = ProfileTransfer.decode(ProfileTransfer.encode(listOf(profile())))
         assertEquals(0L, decoded.single().id)
     }
+
+    private fun one(fields: String) = ProfileTransfer.decode(
+        """{"format":"revati-profiles","version":1,"profiles":[{$fields}]}"""
+    )
+
+    private val base = """"latitude":26.9,"longitude":75.8"""
+
+    @Test
+    fun `a null name is no name, so the profile is skipped rather than called null`() {
+        assertEquals(0, one(""""name":null,"dateOfBirth":"1994-08-25","timeOfBirth":"14:15",$base""").size)
+    }
+
+    @Test
+    fun `a null uuid, notes or place is absent, not the text null`() {
+        val p = one(""""name":"Ram","uuid":null,"notes":null,"placeOfBirth":null,"dateOfBirth":"1994-08-25","timeOfBirth":"14:15",$base""").single()
+        assertNotEquals("null", p.uuid)
+        assertTrue(p.uuid.isNotBlank())
+        assertEquals("", p.notes)
+        assertEquals("", p.placeOfBirth)
+    }
+
+    @Test
+    fun `dates and times are stored the way the chart screen reads them`() {
+        val p = one(""""name":"Ram","dateOfBirth":" \u0967\u096f\u096f\u096a-\u0966\u096e-\u0968\u096b","timeOfBirth":"9:5 ",$base""").single()
+        assertEquals("1994-08-25", p.dateOfBirth)
+        assertEquals("09:05", p.timeOfBirth)
+        assertEquals("1994-08-05", one(""""name":"Ram","dateOfBirth":"+1994-8-5","timeOfBirth":"14:15",$base""").single().dateOfBirth)
+    }
 }

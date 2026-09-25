@@ -1,6 +1,7 @@
 package com.example.data.local
 
 import com.example.util.SecurityUtils
+import java.util.Locale
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -105,26 +106,50 @@ object ProfileTransfer {
         return out
     }
 
+    /**
+     * A field as text, with JSON `null` read as absent. `optString` returns the
+     * four letters "null" for it, which imported a profile named "null", with
+     * notes "null" and a uuid "null" that every such profile then shared.
+     */
+    private fun text(o: JSONObject, key: String): String = if (o.isNull(key)) "" else o.optString(key)
+
+    /**
+     * The date as the rest of the app reads it: ASCII digits, zero-padded.
+     * The validity check accepts Devanagari digits ("१९९४-०८-२५"), a stray
+     * space or a "+", and they used to be stored as written — so the import
+     * succeeded and the chart screen then refused the profile.
+     */
+    private fun canonicalDate(raw: String): String? {
+        if (!SecurityUtils.isValidDate(raw)) return null
+        val (y, m, d) = raw.trim().split("-").map { it.toInt() }
+        return String.format(Locale.US, "%04d-%02d-%02d", y, m, d)
+    }
+
+    /** The time the same way: "९:५" and " 9:05 " both become "09:05". */
+    private fun canonicalTime(raw: String): String? {
+        if (!SecurityUtils.isValidTime(raw)) return null
+        val (h, m) = raw.trim().split(":").map { it.toInt() }
+        return String.format(Locale.US, "%02d:%02d", h, m)
+    }
+
     /** Returns null for anything that does not survive validation. */
     private fun readEntity(o: JSONObject): KundaliEntity? {
-        val name = SecurityUtils.sanitizeTextInput(o.optString("name"))
+        val name = SecurityUtils.sanitizeTextInput(text(o, "name"))
         if (name.isBlank()) return null
 
-        val dob = o.optString("dateOfBirth")
-        val tob = o.optString("timeOfBirth")
-        if (!SecurityUtils.isValidDate(dob)) return null
-        if (!SecurityUtils.isValidTime(tob)) return null
+        val dob = canonicalDate(text(o, "dateOfBirth")) ?: return null
+        val tob = canonicalTime(text(o, "timeOfBirth")) ?: return null
 
         val lat = o.optDouble("latitude", Double.NaN)
         val lon = o.optDouble("longitude", Double.NaN)
         if (lat.isNaN() || lon.isNaN()) return null
         if (lat < -90.0 || lat > 90.0 || lon < -180.0 || lon > 180.0) return null
 
-        val gender = o.optString("gender").takeIf { it == "MALE" || it == "FEMALE" } ?: "MALE"
+        val gender = text(o, "gender").takeIf { it == "MALE" || it == "FEMALE" } ?: "MALE"
 
         // A file written by an older build, or edited by hand, may have no uuid.
         // Minting one here is correct: it is a profile this device has not seen.
-        val uuid = o.optString("uuid").takeIf { it.isNotBlank() }
+        val uuid = text(o, "uuid").takeIf { it.isNotBlank() }
             ?: java.util.UUID.randomUUID().toString()
 
         val createdAt = o.optLong("createdAt", 0L).takeIf { it > 0L }
@@ -137,10 +162,10 @@ object ProfileTransfer {
             gender = gender,
             dateOfBirth = dob,
             timeOfBirth = tob,
-            placeOfBirth = SecurityUtils.sanitizeTextInput(o.optString("placeOfBirth")),
+            placeOfBirth = SecurityUtils.sanitizeTextInput(text(o, "placeOfBirth")),
             latitude = lat,
             longitude = lon,
-            notes = SecurityUtils.sanitizeTextInput(o.optString("notes")),
+            notes = SecurityUtils.sanitizeTextInput(text(o, "notes")),
             createdAt = createdAt
         )
     }
