@@ -27,6 +27,21 @@ bataunga. Phone par check bhi **aap** karoge.
 | A10 | GitHub par naya **private** repo `Revati-Expo` main bana doon? | Haan bolo, main bana dunga |
 | A11 | Naye app me **gold ki jagah copper-orange `#E8934A`** aayega (aapke diye colours). Android ka Play app abhi bhi gold hai — use bhi copper karna hai ya waisa hi rehne dena hai? | Abhi Android waisa hi; iPhone naye colours par |
 
+## A2. Design ke faisle — ✅ tay ho gaye 25 Sep 2026 (owner)
+
+| # | Faisla | Owner ka jawab |
+|---|---|---|
+| D1 | Neeche ke 5th tab ka naam | **सेटिंग्स / Settings** (More nahi) |
+| D2 | iPhone par login | **Google + Apple dono** |
+| D3 | Hindi screen par bracket me English ("(Good Match)") | **Hatao** — dono app me |
+| D4 | Muhurat ka samay sunrise→sunset | **Theek karo** — asli nakshatra/tithi samay aur sahi naam, Play aur iPhone dono |
+| D5 | Naye Android build ka rang | **Copper**; abhi ka Play app gold rahega |
+| D6 | Profile file me naam khali/null | **Chhod do**, import mat karo |
+| D7 | Janm tithi Hindi ank me (१५-०८-१९९०) | **Apne aap 15-08-1990 me badlo** |
+| D8 | Main rashi save nahi hoti (Play bug) | **Play me bhi theek karo**, agli Play release |
+| D9 | GitHub ki 54 warnings (sab Gradle build tools ki, APK me nahi) | **Agli Play release ke saath** tools naye karo |
+| D10 | Mockups v2 | **Manzoor** — screens banana shuru |
+
 ## B. Charan 0 se pehle — accounts (1–2 din)
 
 | # | Kaam | Kaise |

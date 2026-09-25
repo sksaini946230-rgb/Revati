@@ -91,7 +91,7 @@ start without a yes.
 | # | Phase | Output | Gate (owner) | Rough time |
 |---|---|---|---|---|
 | 0 | Accounts and skeleton ✅ *20 Sep 2026* | Expo account, empty app with both platforms' tab bars, first TestFlight build on the owner's iPhone, Android dev build on the test phone | "Mere iPhone par khul gaya" | 3–5 days |
-| 1 | Design 🟡 *mockups v2, 25 Sep 2026, waiting on the owner* | Mockups of every screen, iOS and Android side by side, both languages, both themes, small and large phone | Design approved | ~1 week |
+| 1 | Design ✅ *mockups v2 approved 25 Sep 2026; fifth tab named Settings/सेटिंग्स* | Mockups of every screen, iOS and Android side by side, both languages, both themes, small and large phone | Design approved | ~1 week |
 | 2 | Engine ✅ *20 Sep 2026* | TypeScript engine + golden fixtures from Kotlin, 100% match | Report showing 0 differences | 1–2 weeks |
 | 3 | Screens | All screens from `FEATURE_PARITY.md`, offline features complete | TestFlight walk-through | 2–4 weeks |
 | 4 | Services | Sign-in, cloud backup, AI (PRO), ads, purchases, notifications, widgets | Each service checked on the iPhone | 1–2 weeks |
