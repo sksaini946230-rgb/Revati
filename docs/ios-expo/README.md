@@ -107,11 +107,11 @@ Chrome and looked at before v2 went out; that pass caught selected pills with
 invisible labels, chart lines too pale on the light theme, and an overflowing
 South Indian house. Phase 2 ran ahead of phase 1 because the engine does not
 depend on the design. **No screen is built until the owner approves these.**
-Open decisions the page lists: the fifth tab's name (More vs Settings), Apple
-+ Google sign-in on iPhone, English in brackets inside Hindi engine strings,
-muhurat windows that run sunrise to sunset whatever the nakshatra does (and a
-description naming two of the four nakshatras a category accepts — the Kotlin
-behaviour, ported as-is), and copper for the new Android build.
+The open decisions it listed were settled by the owner on 25 Sep 2026 (see
+`OWNER_CHECKLIST.md` §A2): Settings as the fifth tab, Apple + Google sign-in,
+no English in brackets in Hindi, muhurat windows cut to their tithi and
+nakshatra, copper on the new Android build. The engine changes among them were
+made in the Kotlin app first and ported, so both apps give the same answers.
 
 **Design-independent work done meanwhile (25 Sep 2026).** The profile file
 (export/import) at 0 differences against the Play app; the stored settings

@@ -35,147 +35,145 @@ object MuhuratCalculator {
         "अमावस्या"
     )
 
+    private class Category(
+        val id: String,
+        val categoryHi: String,
+        val categoryEn: String,
+        val nakshatras: List<String>,
+        val qualityHi: String,
+        val qualityEn: String,
+        /** The day's own nakshatra is put in front: "रोहिणी" + " नक्षत्र में …". */
+        val descriptionHi: (String) -> String,
+        val descriptionEn: (String) -> String
+    )
+
+    /**
+     * The descriptions used to name two fixed nakshatras whatever the day's was —
+     * a Business window on an Ashvini day read "under Hasta or Pushya". Each now
+     * names the nakshatra that made the day qualify.
+     */
+    private val CATEGORIES = listOf(
+        Category(
+            "m1", "विवाह मुहूर्त", "Wedding Muhurat",
+            listOf("रोहिणी", "उत्तराफाल्गुनी", "स्वाती", "अनुराधा", "पुष्य"),
+            "अति शुभ", "Highly auspicious",
+            { "$it नक्षत्र में उत्तम विवाह लगन।" },
+            { "A strong wedding window under $it Nakshatra." }
+        ),
+        Category(
+            "m2", "गृह प्रवेश", "Housewarming",
+            listOf("रोहिणी", "पुष्य", "चित्रा", "स्वाती"),
+            "शुभ", "Auspicious",
+            { "$it नक्षत्र में नया गृह प्रवेश फलदायी।" },
+            { "Entering a new home under $it Nakshatra is considered fruitful." }
+        ),
+        Category(
+            "m3", "व्यापार शुभारम्भ", "Business Launch",
+            listOf("अश्विनी", "हस्त", "पुष्य", "श्रवण"),
+            "अति शुभ", "Highly auspicious",
+            { "$it नक्षत्र में व्यापार की शुरुआत।" },
+            { "Beginning a venture under $it Nakshatra." }
+        ),
+        Category(
+            "m4", "वाहन खरीद", "Vehicle Purchase",
+            listOf("श्रवण", "धनिष्ठा", "शतभिषा", "चित्रा", "अश्विनी"),
+            "शुभ", "Auspicious",
+            { "$it नक्षत्र में नया वाहन क्रय मुहूर्त।" },
+            { "A favourable window to buy a vehicle, under $it Nakshatra." }
+        ),
+        Category(
+            "m5", "शुभ यात्रा", "Travel Muhurat",
+            listOf("अश्विनी", "पुष्य", "स्वाती", "अनुराधा", "रोहिणी"),
+            "शुभ", "Auspicious",
+            { "$it नक्षत्र में यात्रा हेतु उत्तम समय।" },
+            { "A good time to set out, under $it Nakshatra." }
+        )
+    )
+
     /**
      * The next auspicious window in each category, from where the user is.
      *
      * The place used to be a Jaipur literal declared inside this function, which
      * is the same mistake Guna Milan's Manglik reading made with the string
-     * "Default". Every window is a sunrise-to-sunset span, and sunrise in
-     * Guwahati is the better part of an hour before Jaipur's — so a reader in
-     * Assam was told to begin at a time that had already passed, and one in
-     * Kerala at a time that had not arrived. The tithi and nakshatra are read at
-     * sunrise too, so near a boundary the day itself could be the wrong one.
+     * "Default". Sunrise in Guwahati is the better part of an hour before
+     * Jaipur's, so a reader in Assam was told to begin at a time that had
+     * already passed.
+     *
+     * **The window is the part of the day the reason for it lasts** (owner's
+     * decision, 25 Sep 2026). A day qualifies on its sunrise tithi and
+     * nakshatra, and every window used to run on to sunset regardless — so a
+     * Rohini wedding window could carry on for hours after Rohini had ended.
+     * It now ends at sunset, the tithi's end or the nakshatra's end, whichever
+     * comes first, and a day whose window is shorter than one muhurta (a
+     * fifteenth of that day) is not offered at all.
      *
      * It is sixty full Panchang computations, so call it off the main thread.
      */
     fun getUpcomingMuhurats(city: CityLocation, use24Hour: Boolean = false): List<MuhuratItem> {
         val muhurats = mutableListOf<MuhuratItem>()
+        val found = HashSet<String>()
         val cal = Calendar.getInstance()
         val sdf = SimpleDateFormat("dd MMMM yyyy", Locale.ENGLISH)
 
-        // Find upcoming good days by scanning next 60 days
-        var foundWedding = false
-        var foundGriha = false
-        var foundBusiness = false
-        var foundVehicle = false
-        var foundTravel = false
-
         for (i in 1..60) {
             cal.add(Calendar.DAY_OF_YEAR, 1)
-            val dateStr = sdf.format(cal.time)
             val panchang = PanchangCalculator.calculatePanchang(cal.time, city, use24Hour)
 
-            val isAuspiciousTithi = AUSPICIOUS_TITHI_EXCLUSIONS.none { panchang.tithiHindi.contains(it) }
-            
-            if (!foundWedding && isAuspiciousTithi && (panchang.nakshatraHindi == "रोहिणी" || panchang.nakshatraHindi == "उत्तराफाल्गुनी" || panchang.nakshatraHindi == "स्वाती" || panchang.nakshatraHindi == "अनुराधा" || panchang.nakshatraHindi == "पुष्य")) {
-                muhurats.add(
-                    MuhuratItem(
-                        id = "m1",
-                        categoryHi = "विवाह मुहूर्त", categoryEn = "Wedding Muhurat",
-                        dateString = dateStr,
-                        dayOfWeekHi = panchang.dayOfWeekHindi, dayOfWeekEn = panchang.dayOfWeek,
-                        startTime = panchang.sunrise, endTime = panchang.sunset,
-                        tithiHi = panchang.tithiHindi, tithiEn = panchang.tithi,
-                        nakshatraHi = panchang.nakshatraHindi, nakshatraEn = panchang.nakshatra,
-                        qualityHi = "अति शुभ", qualityEn = "Highly auspicious",
-                        descriptionHi = "रोहिणी/उत्तराफाल्गुनी नक्षत्र में उत्तम विवाह लगन।",
-                        descriptionEn = "A strong wedding window under Rohini or Uttara Phalguni Nakshatra."
-                    )
-                )
-                foundWedding = true
-            }
+            // All five categories are gated on this. Vehicle and Travel were not.
+            if (AUSPICIOUS_TITHI_EXCLUSIONS.any { panchang.tithiHindi.contains(it) }) continue
 
-            if (!foundGriha && isAuspiciousTithi && (panchang.nakshatraHindi == "रोहिणी" || panchang.nakshatraHindi == "पुष्य" || panchang.nakshatraHindi == "चित्रा" || panchang.nakshatraHindi == "स्वाती")) {
-                muhurats.add(
-                    MuhuratItem(
-                        id = "m2",
-                        categoryHi = "गृह प्रवेश", categoryEn = "Housewarming",
-                        dateString = dateStr,
-                        dayOfWeekHi = panchang.dayOfWeekHindi, dayOfWeekEn = panchang.dayOfWeek,
-                        startTime = panchang.sunrise, endTime = panchang.sunset,
-                        tithiHi = panchang.tithiHindi, tithiEn = panchang.tithi,
-                        nakshatraHi = panchang.nakshatraHindi, nakshatraEn = panchang.nakshatra,
-                        qualityHi = "शुभ", qualityEn = "Auspicious",
-                        descriptionHi = "पुष्य/रोहिणी नक्षत्र में नया गृह प्रवेश फलदायी।",
-                        descriptionEn = "Entering a new home under Pushya or Rohini Nakshatra is considered fruitful."
-                    )
-                )
-                foundGriha = true
-            }
+            val sun = PanchangCalculator.sunWindow(cal.time, city)
+            val endJd = listOfNotNull(
+                sun.sunsetJd,
+                PanchangElements.tithiEndJd(sun.sunriseJd),
+                PanchangElements.nakshatraEndJd(sun.sunriseJd)
+            ).min()
+            val muhurta = (sun.sunsetJd - sun.sunriseJd) / 15.0
+            if (endJd - sun.sunriseJd < muhurta) continue
+            val endTime = PanchangCalculator.formatJdTime(endJd, AstroTime.IST, use24Hour)
 
-            if (!foundBusiness && isAuspiciousTithi && (panchang.nakshatraHindi == "अश्विनी" || panchang.nakshatraHindi == "हस्त" || panchang.nakshatraHindi == "पुष्य" || panchang.nakshatraHindi == "श्रवण")) {
+            for (c in CATEGORIES) {
+                if (c.id in found || panchang.nakshatraHindi !in c.nakshatras) continue
                 muhurats.add(
                     MuhuratItem(
-                        id = "m3",
-                        categoryHi = "व्यापार शुभारम्भ", categoryEn = "Business Launch",
-                        dateString = dateStr,
+                        id = c.id,
+                        categoryHi = c.categoryHi, categoryEn = c.categoryEn,
+                        dateString = sdf.format(cal.time),
                         dayOfWeekHi = panchang.dayOfWeekHindi, dayOfWeekEn = panchang.dayOfWeek,
-                        startTime = panchang.sunrise, endTime = panchang.sunset,
+                        startTime = panchang.sunrise, endTime = endTime,
                         tithiHi = panchang.tithiHindi, tithiEn = panchang.tithi,
                         nakshatraHi = panchang.nakshatraHindi, nakshatraEn = panchang.nakshatra,
-                        qualityHi = "अति शुभ", qualityEn = "Highly auspicious",
-                        descriptionHi = "हस्त/पुष्य नक्षत्र में व्यापार की शुरुआत।",
-                        descriptionEn = "Beginning a venture under Hasta or Pushya Nakshatra."
+                        qualityHi = c.qualityHi, qualityEn = c.qualityEn,
+                        descriptionHi = c.descriptionHi(panchang.nakshatraHindi),
+                        descriptionEn = c.descriptionEn(panchang.nakshatra)
                     )
                 )
-                foundBusiness = true
-            }
-
-            if (!foundVehicle && isAuspiciousTithi && (panchang.nakshatraHindi == "श्रवण" || panchang.nakshatraHindi == "धनिष्ठा" || panchang.nakshatraHindi == "शतभिषा" || panchang.nakshatraHindi == "चित्रा" || panchang.nakshatraHindi == "अश्विनी")) {
-                muhurats.add(
-                    MuhuratItem(
-                        id = "m4",
-                        categoryHi = "वाहन खरीद", categoryEn = "Vehicle Purchase",
-                        dateString = dateStr,
-                        dayOfWeekHi = panchang.dayOfWeekHindi, dayOfWeekEn = panchang.dayOfWeek,
-                        startTime = panchang.sunrise, endTime = panchang.sunset,
-                        tithiHi = panchang.tithiHindi, tithiEn = panchang.tithi,
-                        nakshatraHi = panchang.nakshatraHindi, nakshatraEn = panchang.nakshatra,
-                        qualityHi = "शुभ", qualityEn = "Auspicious",
-                        descriptionHi = "श्रवण/चित्रा नक्षत्र में नया वाहन क्रय मुहूर्त।",
-                        descriptionEn = "A favourable window to buy a vehicle, under Shravana or Chitra Nakshatra."
-                    )
-                )
-                foundVehicle = true
-            }
-
-            if (!foundTravel && isAuspiciousTithi && (panchang.nakshatraHindi == "अश्विनी" || panchang.nakshatraHindi == "पुष्य" || panchang.nakshatraHindi == "स्वाती" || panchang.nakshatraHindi == "अनुराधा" || panchang.nakshatraHindi == "रोहिणी")) {
-                muhurats.add(
-                    MuhuratItem(
-                        id = "m5",
-                        categoryHi = "शुभ यात्रा", categoryEn = "Travel Muhurat",
-                        dateString = dateStr,
-                        dayOfWeekHi = panchang.dayOfWeekHindi, dayOfWeekEn = panchang.dayOfWeek,
-                        startTime = panchang.sunrise, endTime = panchang.sunset,
-                        tithiHi = panchang.tithiHindi, tithiEn = panchang.tithi,
-                        nakshatraHi = panchang.nakshatraHindi, nakshatraEn = panchang.nakshatra,
-                        qualityHi = "शुभ", qualityEn = "Auspicious",
-                        descriptionHi = "शुभ नक्षत्र में यात्रा हेतु उत्तम समय।",
-                        descriptionEn = "A good time to set out, under a favourable Nakshatra."
-                    )
-                )
-                foundTravel = true
+                found.add(c.id)
             }
         }
 
-        // Fallback: If no strict match found, provide general auspicious dates
+        // Sixty days with nothing at all is possible, and an empty screen says
+        // nothing useful — so that day's Abhijit Muhurta, two days out, stands
+        // in. It used to be sunrise to sunset under a "Sarvartha Siddhi" label
+        // that nothing had checked.
         if (muhurats.isEmpty()) {
             val fallbackCal = Calendar.getInstance()
             fallbackCal.add(Calendar.DAY_OF_YEAR, 2)
-            val dateStr = sdf.format(fallbackCal.time)
             val panchang = PanchangCalculator.calculatePanchang(fallbackCal.time, city, use24Hour)
             muhurats.add(
                 MuhuratItem(
                     id = "m1",
                     categoryHi = "शुभ कार्य मुहूर्त", categoryEn = "General Muhurat",
-                    dateString = dateStr,
+                    dateString = sdf.format(fallbackCal.time),
                     dayOfWeekHi = panchang.dayOfWeekHindi, dayOfWeekEn = panchang.dayOfWeek,
-                    startTime = panchang.sunrise, endTime = panchang.sunset,
+                    // abhijitMuhurat is "start - end", as PanchangCalculator writes it.
+                    startTime = panchang.abhijitMuhurat.substringBefore(" - "),
+                    endTime = panchang.abhijitMuhurat.substringAfter(" - "),
                     tithiHi = panchang.tithiHindi, tithiEn = panchang.tithi,
                     nakshatraHi = panchang.nakshatraHindi, nakshatraEn = panchang.nakshatra,
                     qualityHi = "शुभ", qualityEn = "Auspicious",
-                    descriptionHi = "सर्वार्थ सिद्धि व अभिजित मुहूर्त योग।",
-                    descriptionEn = "Sarvartha Siddhi and the Abhijit Muhurta window."
+                    descriptionHi = "अभिजित मुहूर्त।",
+                    descriptionEn = "The Abhijit Muhurta, the day's midday window."
                 )
             )
         }

@@ -59,6 +59,23 @@ object PanchangCalculator {
      * Tithi changed as the day went on, so the same day could read "Purnima,
      * Shukla" in the morning and "Pratipada, Krishna" in the evening.
      */
+    /** Local midnight, sunrise and sunset of [date]'s Indian calendar day, as Julian Days. */
+    internal data class SunWindow(val midnightJd: Double, val sunriseJd: Double, val sunsetJd: Double)
+
+    internal fun sunWindow(date: Date, city: CityLocation): SunWindow {
+        val cal = GregorianCalendar(AstroTime.IST).apply { time = date }
+        val midnightJd = AstroTime.julianDayFromLocal(
+            cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH), 0, 0, AstroTime.IST
+        )
+        val sunTimes = RiseSetCalculator.sunRiseSet(midnightJd, city.latitude, city.longitude)
+        // Fall back to 6am local only when the Sun genuinely does not rise (polar).
+        return SunWindow(
+            midnightJd,
+            sunTimes.riseJd ?: (midnightJd + 0.25),
+            sunTimes.setJd ?: (midnightJd + 0.75)
+        )
+    }
+
     fun calculatePanchang(date: Date, city: CityLocation, use24Hour: Boolean = false): PanchangData {
         val zone = AstroTime.IST
         val cal = GregorianCalendar(zone).apply { time = date }
@@ -68,14 +85,8 @@ object PanchangCalculator {
         val dayOfWeek = cal.get(Calendar.DAY_OF_WEEK)
         val varIdx = (dayOfWeek - Calendar.SUNDAY).coerceIn(0, 6)
 
-        val midnightJd = AstroTime.julianDayFromLocal(year, month, day, 0, 0, zone)
-
-        val sunTimes = RiseSetCalculator.sunRiseSet(midnightJd, city.latitude, city.longitude)
+        val (midnightJd, sunriseJd, sunsetJd) = sunWindow(date, city)
         val moonTimes = RiseSetCalculator.moonRiseSet(midnightJd, city.latitude, city.longitude)
-
-        // Fall back to 6am local only when the Sun genuinely does not rise (polar).
-        val sunriseJd = sunTimes.riseJd ?: (midnightJd + 0.25)
-        val sunsetJd = sunTimes.setJd ?: (midnightJd + 0.75)
 
         // ---- the five limbs, at sunrise ----
         val tithiNum = PanchangElements.tithiNumber(sunriseJd)
@@ -248,7 +259,7 @@ object PanchangCalculator {
         return cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE)
     }
 
-    private fun formatJdTime(jd: Double, zone: TimeZone, use24Hour: Boolean): String =
+    internal fun formatJdTime(jd: Double, zone: TimeZone, use24Hour: Boolean): String =
         formatMinutesToTime(jdToLocalMinutes(jd, zone), use24Hour)
 
     /**

@@ -190,16 +190,25 @@ bites.
 whitespace (U+001C–U+001F trimmed, U+FEFF kept), and the birth-data fixture
 still passes on it.
 
-What the Play app does with odd files — ported as-is, listed for the owner,
-not fixed on one side only:
+What the Play app did with odd files was ported as-is and listed for the
+owner, who decided on 25 Sep 2026 (D6, D7) to fix it — in both apps at once,
+so the fixture stays the one truth:
 
-- `"name": null` imports a profile named **"null"**; a null `uuid` gives the
-  uuid "null", so a second such profile is skipped as a duplicate; null
-  `notes` become the text "null".
-- A date or time is validated after trimming but **stored untrimmed**
-  (`" 1994-08-25"`, `" 14:15 "`, `"+1994-08-25"`, `"9:5"`).
-- A date in Devanagari digits (`१९९४-०८-२५`) **passes the import and is then
-  refused** when a chart is made from it: the import accepts any-script
-  digits, the birth-data check only ASCII ones.
-- A uuid repeated inside one file is imported twice.
+- A JSON `null` field is now absent: a null `name` skips the profile, a null
+  `uuid` mints a fresh one, null `notes` or place are empty. (It used to import
+  a profile named "null", and every null-uuid profile shared the uuid "null".)
+- Dates and times are stored as `YYYY-MM-DD` / `HH:MM` in ASCII digits,
+  zero-padded, so `" 1994-08-25"`, `"+1994-8-5"` and `१९९४-०८-२५` all become a
+  date the chart screen accepts. (Devanagari digits used to pass the import and
+  then be refused at the chart.)
+- Still as before: a uuid repeated inside one file is counted twice, and
+  Room's REPLACE keeps the last copy.
+
+**Later owner decisions, both apps (25 Sep 2026).** D3: Hindi strings carry
+no English in brackets — choghadiya rulers, numerology planets, karanas, every
+Guna Milan name, koot and verdict, festival names; the numerology form's
+refusals are a Hindi/English pair. D4: a muhurat window ends at sunset, the
+tithi's end or the nakshatra's end, whichever is first; a day with less than
+one muhurta (a fifteenth of the day) left is not offered; the description names
+the day's own nakshatra. Both regenerated every fixture, at 0 differences.
 
