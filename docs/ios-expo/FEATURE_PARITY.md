@@ -120,8 +120,8 @@ Legend: `[ ]` not started · `[~]` built, not device-checked · `[x]` checked on
 | 7.2 | Language (हिंदी / English), generated text re-made on switch, AI answers cleared | `util/LanguageManager.kt`, `MainViewModel.onLanguageChanged` | [ ] | [ ] |
 | 7.3 | Time format 12/24 | `SettingsScreen.kt` | [ ] | [ ] |
 | 7.4 | City: search and choose, or current location; "location updated" feedback; permission-denied message | `SettingsScreen.kt` | [ ] | [ ] |
-| 7.5 | Main rashi | pref `user_rashi_id` | [ ] | [ ] |
-| 7.6 | Notifications: daily Panchang & Rahu Kaal alert (on/off + time, default 6:30 AM everywhere), Muhurat & Choghadiya alert (on/off + time), festival & vrat reminder (on/off, 10:00) | `SettingsScreen.kt`, `util/NotificationDefaults.kt`, `worker/*` | [ ] | [ ] |
+| 7.5 | Main rashi — **Play app bug:** the choice is held in memory only (`MainViewModel._selectedRashiId`), never written to `user_rashi_id`, so it resets to Mesh on every launch and the daily notification always shows Mesh. The Expo app saves it. | pref `user_rashi_id` | [ ] | [ ] |
+| 7.6 | Notifications: daily Panchang & Rahu Kaal alert (on/off + time, default **7:00 AM** — `NotificationDefaults.DAILY_HOUR`), Muhurat & Choghadiya alert (on/off only; its hour/minute keys exist but no screen sets them, so it is always 7:00), festival & vrat reminder (on/off, fixed 10:00) | `SettingsScreen.kt`, `util/NotificationDefaults.kt`, `worker/*` | [ ] | [ ] |
 | 7.7 | Latest astro & astrology news (AI with search grounding, offline bilingual fallback, refresh) | `GeminiAstroService.fetchAstroNewsWithSearchGrounding`, `getOfflineAstroNews` | [ ] | [ ] |
 | 7.8 | About Revati | `SettingsScreen.kt` | [ ] | [ ] |
 | 7.9 | Rate on Play Store (App Store on iOS) | `SettingsScreen.kt` | [ ] | [ ] |
@@ -137,7 +137,7 @@ Legend: `[ ]` not started · `[~]` built, not device-checked · `[x]` checked on
 | 8.3 | Firestore `users/{uid}/kundali_profiles/{uuid}`, batched (450), rules `request.auth.uid == userId` | `FirebaseAuthService.kt`, `firebase/firestore.rules` | [ ] | [ ] |
 | 8.4 | App Check on every AI call (Play Integrity → App Attest on iOS) | `RevatiApp.kt` | [ ] | [ ] |
 | 8.5 | AI rate limit: 3 s gap, 20/hour, 50/day persisted | `util/AiRateLimiter.kt`, `AiRateLimiterTest` | [ ] | [ ] |
-| 8.6 | AI prompt rules: app language, round brackets, crisis-response rule, max 2,000 question chars / 1,000 detail chars, model `gemini-3.6-flash` (re-check at build time) | `data/ai/GeminiAstroService.kt` | [ ] | [ ] |
+| 8.6 | AI prompt rules: app language, round brackets, crisis-response rule; the question box and ViewModel cut a question at **500** chars (`AiRateLimiter.MAX_QUESTION_CHARS`), the service's own backstop is 2,000 question / 1,000 detail chars; model `gemini-3.6-flash` (re-check at build time) | `data/ai/GeminiAstroService.kt` | [ ] | [ ] |
 | 8.7 | Encrypted local database (SQLCipher), key in secure hardware storage, never backed up | `data/local/DatabaseEncryption.kt` | [ ] | [ ] |
 | 8.8 | Panchang cache keyed with language + clock format; expired rows pruned daily | `data/local/PanchangCacheDao.kt` | [ ] | [ ] |
 | 8.9 | Input sanitising at every free-text entry (profile save ×2, birth data parse, import) | `util/SecurityUtils.kt` | [ ] | [ ] |
@@ -159,16 +159,32 @@ Legend: `[ ]` not started · `[~]` built, not device-checked · `[x]` checked on
 
 ## 9. Stored settings to carry (names from the Kotlin app)
 
-`app_language`, `chart_style`, `city_name`, `city_name_hi`, `city_state`,
-latitude/longitude of the city, `user_rashi_id`, `is_onboarding_completed`,
-`is_first_run`, `is_discovery_completed`, `is_pro`,
-`daily_notification_enabled`, `notification_hour`, `notification_minute`,
-`muhurat_notification_enabled`, `muhurat_notification_hour`,
-`muhurat_notification_minute`, `festival_notification_enabled`, `has_rated`,
+Checked against the code on 25 Sep 2026; the Expo side is `src/lib/settings.ts`,
+same key names, same fallbacks.
+
+Prefs file `astroveda_prefs`: `city_name` (Jaipur), `city_name_hi`, `city_state`
+(Rajasthan), `city_lat` / `city_lon` (**stored as Java floats**, 26.9124 /
+75.7873 — the engine sees float-rounded coordinates, and the Expo app does the
+same so the answers match), `use_24_hour_format` (false), `user_rashi_id` (1,
+read by the daily worker but never written — see 7.5),
+`is_onboarding_completed`, `is_first_run`, `is_discovery_completed`, `is_pro`,
+`daily_notification_enabled` / `notification_hour` (7) / `notification_minute`
+(0), `muhurat_notification_enabled` / `muhurat_notification_hour` (7) /
+`muhurat_notification_minute` (0), `festival_notification_enabled`, `has_rated`,
 `rate_dialog_dismissed_at`, `successful_lookup_count`, `session_action_count`,
-`ai_calls_day`, `ai_calls_count`, 12/24-hour flag. Prefs file:
-`astroveda_prefs`. Needed again only if Android ever moves over
-(`ANDROID_HANDOVER.md`).
+`ai_calls_day`, `ai_calls_count`, and `user_rating_value` /
+`user_feedback_text` (written by the in-app feedback form and never read or sent
+anywhere).
+
+**`app_language` is in a different file, `astro_prefs`** (`LanguageManager`),
+not `astroveda_prefs`. A handover that copies one file loses the language.
+
+Not stored at all: the chart style (North/South is chosen per view;
+`chart_style` is only an analytics parameter).
+
+Deliberately not carried as a setting in Expo: `is_pro` — PRO comes from the
+store receipt every time, never from a value the user can edit. Needed again
+only if Android ever moves over (`ANDROID_HANDOVER.md`).
 
 ## 10. Local database (Room schema v7) to mirror
 
@@ -182,4 +198,7 @@ latitude/longitude of the city, `user_rashi_id`, `is_onboarding_completed`,
 
 Caches need not be carried over; profiles, reports and recent searches must be
 (if Android moves). The Expo schema starts at its own version 1 with real
-migrations from day one — never a destructive fallback.
+migrations from day one — never a destructive fallback. Version 1
+(`src/services/storage/schema.ts`, 25 Sep 2026) is the three user-data tables,
+checked column for column and index for index against Room's exported v7
+schema; the caches join when a screen needs them.

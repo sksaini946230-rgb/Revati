@@ -113,6 +113,16 @@ muhurat windows that run sunrise to sunset whatever the nakshatra does (and a
 description naming two of the four nakshatras a category accepts — the Kotlin
 behaviour, ported as-is), and copper for the new Android build.
 
+**Design-independent work done meanwhile (25 Sep 2026).** The profile file
+(export/import) at 0 differences against the Play app; the stored settings
+under the Play app's key names and fallbacks; the alert hours; the AI rate
+limits; the rating prompt; and version 1 of the local database, checked against
+Room's own v7 schema. Reading the Kotlin code for these found the parity list
+wrong in four places (fixed in `FEATURE_PARITY.md`) and one Play bug for the
+owner: **the main rashi chosen in Settings is never saved**, so it is Mesh again
+after every launch and the morning notification always carries Mesh's
+horoscope.
+
 **Total to App Store: about 6–10 weeks** of work, plus Apple's review time and
 whatever the console steps take on the owner's side.
 
