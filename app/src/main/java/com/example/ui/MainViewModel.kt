@@ -701,7 +701,29 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         loadHoroscopesWithCache(period = period, forceRefresh = true)
     }
 
-    private val _selectedRashiId = MutableStateFlow(1) // Mesh
+    /**
+     * The main rashi chosen in onboarding or Settings, kept across launches.
+     *
+     * It used to live only in [_selectedRashiId], in memory: Settings showed the
+     * choice until the app was closed, then it was Mesh again, and the morning
+     * notification (which reads `user_rashi_id`) always carried Mesh because
+     * nothing ever wrote that key. It is kept apart from [selectedRashiId] on
+     * purpose — looking at another sign on the Rashifal tab must not change it.
+     */
+    private val _defaultRashiId = MutableStateFlow(
+        sharedPrefs.getInt("user_rashi_id", 1).takeIf { it in 1..12 } ?: 1
+    )
+    val defaultRashiId: StateFlow<Int> = _defaultRashiId.asStateFlow()
+
+    fun setDefaultRashi(id: Int) {
+        if (id !in 1..12) return
+        _defaultRashiId.value = id
+        sharedPrefs.edit().putInt("user_rashi_id", id).apply()
+        selectRashi(id)
+    }
+
+    /** The sign on screen. Starts at the main rashi; the Rashifal tab moves it. */
+    private val _selectedRashiId = MutableStateFlow(_defaultRashiId.value)
     val selectedRashiId: StateFlow<Int> = _selectedRashiId.asStateFlow()
 
     fun selectRashi(id: Int) {

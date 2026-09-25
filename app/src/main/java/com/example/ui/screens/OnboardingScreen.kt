@@ -419,7 +419,7 @@ fun RashiSelectOnboardingPage(viewModel: MainViewModel) {
                             if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
                             RoundedCornerShape(14.dp)
                         )
-                        .clickable { viewModel.selectRashi(item.rashiId) }
+                        .clickable { viewModel.setDefaultRashi(item.rashiId) }
                         .padding(10.dp)
                         .testTag("onboarding_rashi_${item.rashiId}"),
                     contentAlignment = Alignment.Center

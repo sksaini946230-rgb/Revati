@@ -120,7 +120,7 @@ fun SettingsScreen(
     val haptic = LocalHapticFeedback.current
 
     val selectedCity by viewModel.selectedCity.collectAsState()
-    val selectedRashiId by viewModel.selectedRashiId.collectAsState()
+    val defaultRashiId by viewModel.defaultRashiId.collectAsState()
     val dailyRahuKaalAlert by viewModel.dailyRahuKaalAlert.collectAsState()
     val festivalRemindersAlert by viewModel.festivalRemindersAlert.collectAsState()
     val muhuratAlertsEnabled by viewModel.muhuratAlertsEnabled.collectAsState()
@@ -213,7 +213,7 @@ fun SettingsScreen(
     }
 
     val horoscopes = remember { RashifalProvider.getDailyHoroscope() }
-    val currentRashi = horoscopes.find { it.rashiId == selectedRashiId } ?: horoscopes.first()
+    val currentRashi = horoscopes.find { it.rashiId == defaultRashiId } ?: horoscopes.first()
 
     LazyColumn(
         modifier = Modifier
@@ -1518,7 +1518,7 @@ fun SettingsScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(horoscopes, key = { it.rashiId }) { rashi ->
-                            val isSelected = (rashi.rashiId == selectedRashiId)
+                            val isSelected = (rashi.rashiId == defaultRashiId)
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(12.dp))
@@ -1526,7 +1526,7 @@ fun SettingsScreen(
                                     .border(1.dp, if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
                                     .clickable {
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        viewModel.selectRashi(rashi.rashiId)
+                                        viewModel.setDefaultRashi(rashi.rashiId)
                                         showRashiDialog = false
                                     }
                                     .padding(vertical = 10.dp, horizontal = 4.dp),
