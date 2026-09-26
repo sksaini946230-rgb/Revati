@@ -15,7 +15,7 @@ mix.** This document is how that is enforced rather than hoped for.
 
 | Element | iOS | Android |
 |---|---|---|
-| Tab bar | System tab bar via expo-router native tabs — Liquid Glass on iOS 26, shrinks on scroll, SF Symbols icons | Today's floating capsule bar, labels under every icon, selected tab in a tinted pill (see the nav-bar notes in `CLAUDE.md`) |
+| Tab bar | Our own floating bar (`IosTabBar`, 26 Sep 2026) — all five tabs with labels on Liquid Glass (solid under Reduce Transparency or before iOS 26), SF Symbols, shrinks to 0.86 on the way down and back on the way up, still under Reduce Motion. Not `NativeTabs`: UIKit collapses that to one button on scroll | Floating capsule bar at 110% (`AndroidTabBar`), labels under every icon, one gold capsule on the selected tab; labels stay at 12 for Devanagari |
 | Cards and grouped sections | Glass surfaces (`expo-glass-effect`) on iOS 26; solid fallback when Reduce Transparency is on or on iOS < 26 | Today's glassmorphic cards, unchanged |
 | Navigation headers | Large titles that collapse, native back swipe | Today's top header bar |
 | Sub-tabs | Native segmented control look | Today's pill row |
