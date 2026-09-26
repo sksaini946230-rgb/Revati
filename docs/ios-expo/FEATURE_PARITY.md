@@ -38,7 +38,7 @@ Legend: `[ ]` not started · `[~]` built, not device-checked · `[x]` checked on
 | # | Feature | Kotlin source | iOS | And |
 |---|---|---|---|---|
 | 2.1 | Greeting ("Good evening", "Namaste, name 🙏"), city and guest/user line | `ui/screens/PanchangScreen.kt`, `DailyPanchangCard.kt` | [ ] | [ ] |
-| 2.2 | Date + location card; previous/next day; date picker; city picker; "use my location" | `PanchangScreen.kt` (`PanchangDateLocationCard`), `ui/components/DateTimePicker.kt` | [ ] | [ ] |
+| 2.2 | Date + location card; previous/next day and Today; city picker; "use my location". *(No date picker: the Play app has none on this screen; another day is reached through the calendar. Checked 26 Sep 2026.)* | `PanchangScreen.kt` (`PanchangDateLocationCard`), `ui/components/DateTimePicker.kt` | [ ] | [ ] |
 | 2.3 | Four shortcut tiles: Horoscope, Birth Chart, Kundli Milan, Muhurat (one column below 300dp content width) | `PanchangScreen.kt` | [ ] | [ ] |
 | 2.4 | Today's horoscope card for the user's rashi, with lucky number and colour, "Full →" | `PanchangScreen.kt` | [ ] | [ ] |
 | 2.5 | Daily insights pager (Panchang insight, Choghadiya & auspicious timings, Nakshatra energy & transit, Moon phase & Rahu Kaal warning) | `DailyInsightsPager` | [ ] | [ ] |
@@ -52,7 +52,7 @@ Legend: `[ ]` not started · `[~]` built, not device-checked · `[x]` checked on
 | 2.13 | 12/24-hour clock everywhere times appear | pref, `MainViewModel` | [ ] | [ ] |
 | 2.14 | Monthly calendar: month grid Mon–Sun, tithi per day, festivals marked, month navigation, current year shown (never a hardcoded year) | `ui/screens/CalendarScreen.kt` | [ ] | [ ] |
 | 2.15 | Calendar region filter: All / North India / Rajasthan | `CalendarScreen.kt` | [ ] | [ ] |
-| 2.16 | Festival detail sheet: date and tithi, religious significance, puja vidhi & rules, regional history & folk traditions | `CalendarScreen.kt`, `astro/FestivalProvider.kt`, `data/model/FestivalLocalized.kt` | [ ] | [ ] |
+| 2.16 | Festival detail sheet: date and tithi, religious significance, puja vidhi & rules. *(The Play app's "regional history" section is left out: every festival shows the same default sentence from `FestivalData`, so it says nothing about the festival. Found 26 Sep 2026.)* | `CalendarScreen.kt`, `astro/FestivalProvider.kt`, `data/model/FestivalLocalized.kt` | [ ] | [ ] |
 | 2.17 | Festival dates computed from tithi rules (2025–2031 verified, Adhika months skipped) | `astro/FestivalCalculator.kt`, `FestivalCalculatorTest` | [ ] | [ ] |
 | 2.18 | 30 built-in cities + free-text city search (geocoder) + GPS city | `astro/PanchangCalculator.kt`, `data/local/CityPreferences.kt`, `SettingsScreen.kt` | [ ] | [ ] |
 
