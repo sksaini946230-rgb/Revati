@@ -808,6 +808,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _generatedKundali = MutableStateFlow<KundaliChartData?>(null)
     val generatedKundali: StateFlow<KundaliChartData?> = _generatedKundali.asStateFlow()
+    // The birth place's coordinates for the chart above, so saving it keeps them.
+    private var generatedChartCoords: Pair<Double, Double>? = null
 
     fun resetKundaliForm() {
         kundaliName.value = ""
@@ -866,6 +868,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     longitude = lng
                 )
                 val result = KundaliCalculator.generateKundali(birth)
+                generatedChartCoords = lat to lng
                 _generatedKundali.value = result
                 com.example.util.AstroAnalytics.logKundaliGenerated(isNorthIndian = true, source = "form")
                 addRecentSearch("KUNDALI", trimmedName, trimmedDob, trimmedTob, trimmedPlace, lat, lng)
@@ -1364,26 +1367,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun saveCurrentKundaliProfile() {
-        viewModelScope.launch {
-            val entity = KundaliEntity(
-                // These two save paths do not go through BirthData.parse, so they
-                // sanitise here — otherwise unbounded free text reaches Room,
-                // Firestore, the PDF and the share sheet.
-                name = SecurityUtils.sanitizeTextInput(kundaliName.value),
-                gender = "MALE",
-                dateOfBirth = kundaliDob.value,
-                timeOfBirth = kundaliTob.value,
-                placeOfBirth = SecurityUtils.sanitizeTextInput(kundaliPlace.value),
-                latitude = _selectedCity.value.latitude,
-                longitude = _selectedCity.value.longitude,
-                notes = "Saved from Revati Kundali Generator"
-            )
-            repository.saveProfile(entity)
-        }
+    /** Saves the chart on screen as a profile, at the place it was cast for. */
+    fun saveGeneratedChart() {
+        val chart = _generatedKundali.value ?: return
+        val (lat, lng) = generatedChartCoords ?: return
+        saveNewProfile(chart.personName, chart.dateOfBirth, chart.timeOfBirth, chart.placeOfBirth, lat, lng)
     }
 
-    fun saveNewProfile(name: String, dob: String, tob: String, place: String) {
+    /**
+     * [latitude] and [longitude] are the BIRTH place's, picked from the geocoder.
+     * This used to store the Settings city's instead, so every added or saved
+     * profile was cast for wherever the phone's Panchang was set.
+     */
+    fun saveNewProfile(name: String, dob: String, tob: String, place: String, latitude: Double, longitude: Double) {
         viewModelScope.launch {
             val entity = KundaliEntity(
                 name = SecurityUtils.sanitizeTextInput(name),
@@ -1391,8 +1387,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 dateOfBirth = dob,
                 timeOfBirth = tob,
                 placeOfBirth = SecurityUtils.sanitizeTextInput(place),
-                latitude = _selectedCity.value.latitude,
-                longitude = _selectedCity.value.longitude,
+                latitude = latitude,
+                longitude = longitude,
                 notes = "Saved Profile"
             )
             repository.saveProfile(entity)

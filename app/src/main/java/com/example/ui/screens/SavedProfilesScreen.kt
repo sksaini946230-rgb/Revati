@@ -82,6 +82,7 @@ import com.example.ui.components.GlassCard
 import com.example.ui.components.GoldGlowButton
 import com.example.ui.components.EmptyStateComponent
 import com.example.ui.components.M3DatePickerDialog
+import com.example.ui.components.BirthPlaceField
 import com.example.ui.components.M3TimePickerDialog
 import com.example.ui.components.SectionHeader
 import com.example.util.LanguageManager
@@ -101,8 +102,8 @@ fun SavedProfilesScreen(viewModel: MainViewModel) {
 
     if (showAddDialog) {
         AddProfileDialog(
-            onSave = { name, dob, tob, place ->
-                viewModel.saveNewProfile(name, dob, tob, place)
+            onSave = { name, dob, tob, place, lat, lng ->
+                viewModel.saveNewProfile(name, dob, tob, place, lat, lng)
                 showAddDialog = false
             },
             onDismiss = { showAddDialog = false }
@@ -264,13 +265,14 @@ fun SavedProfilesScreen(viewModel: MainViewModel) {
 
 @Composable
 fun AddProfileDialog(
-    onSave: (String, String, String, String) -> Unit,
+    onSave: (String, String, String, String, Double, Double) -> Unit,
     onDismiss: () -> Unit
 ) {
     var name by remember { mutableStateOf("") }
     var dob by remember { mutableStateOf("") }
     var tob by remember { mutableStateOf("") }
     var place by remember { mutableStateOf("") }
+    var coords by remember { mutableStateOf<Pair<Double, Double>?>(null) }
 
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
@@ -371,26 +373,35 @@ fun AddProfileDialog(
                     }
                 }
 
-                OutlinedTextField(
+                BirthPlaceField(
                     value = place,
-                    onValueChange = { place = it },
-                    label = { Text(LanguageManager.getString("जन्म स्थान", "Place of Birth")) },
-                    placeholder = { Text(LanguageManager.getString("उदा. जयपुर, राजस्थान", "e.g. Jaipur, Rajasthan"), fontSize = 13.sp) },
+                    onValueChange = {
+                        place = it
+                        coords = null
+                    },
+                    onPicked = { suggestion ->
+                        place = suggestion.label
+                        coords = suggestion.latitude to suggestion.longitude
+                    },
+                    label = LanguageManager.getString("जन्म स्थान", "Place of Birth"),
+                    placeholder = LanguageManager.getString("उदा. जयपुर, राजस्थान", "e.g. Jaipur, Rajasthan"),
                     colors = tfColors,
-                    modifier = Modifier.fillMaxWidth().testTag("add_profile_place")
+                    testTag = "add_profile_place"
                 )
+                PickPlaceHint(visible = place.isNotBlank() && coords == null)
             }
         },
         confirmButton = {
             TextButton(
                 onClick = {
-                    if (name.isNotBlank() && dob.isNotBlank() && tob.isNotBlank() && place.isNotBlank()) {
-                        onSave(name, dob, tob, place)
+                    val picked = coords
+                    if (name.isNotBlank() && dob.isNotBlank() && tob.isNotBlank() && place.isNotBlank() && picked != null) {
+                        onSave(name, dob, tob, place, picked.first, picked.second)
                     }
                 },
-                enabled = name.isNotBlank() && dob.isNotBlank() && tob.isNotBlank() && place.isNotBlank()
+                enabled = name.isNotBlank() && dob.isNotBlank() && tob.isNotBlank() && place.isNotBlank() && coords != null
             ) {
-                Text(LanguageManager.getString("सहेजें", "Save"), color = if (name.isNotBlank() && dob.isNotBlank() && tob.isNotBlank() && place.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f), fontWeight = FontWeight.Bold)
+                Text(LanguageManager.getString("सहेजें", "Save"), color = if (name.isNotBlank() && dob.isNotBlank() && tob.isNotBlank() && place.isNotBlank() && coords != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f), fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
@@ -411,6 +422,7 @@ fun EditProfileDialog(
     var dob by remember { mutableStateOf(profile.dateOfBirth) }
     var tob by remember { mutableStateOf(profile.timeOfBirth) }
     var place by remember { mutableStateOf(profile.placeOfBirth) }
+    var coords by remember { mutableStateOf<Pair<Double, Double>?>(profile.latitude to profile.longitude) }
 
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
@@ -508,30 +520,42 @@ fun EditProfileDialog(
                     }
                 }
 
-                OutlinedTextField(
+                BirthPlaceField(
                     value = place,
-                    onValueChange = { place = it },
-                    label = { Text(LanguageManager.getString("जन्म स्थान", "Place of Birth")) },
+                    onValueChange = {
+                        place = it
+                        coords = null
+                    },
+                    onPicked = { suggestion ->
+                        place = suggestion.label
+                        coords = suggestion.latitude to suggestion.longitude
+                    },
+                    label = LanguageManager.getString("जन्म स्थान", "Place of Birth"),
+                    placeholder = "",
                     colors = tfColors,
-                    modifier = Modifier.fillMaxWidth().testTag("edit_profile_place")
+                    testTag = "edit_profile_place"
                 )
+                PickPlaceHint(visible = place.isNotBlank() && coords == null)
             }
         },
         confirmButton = {
             TextButton(
                 onClick = {
-                    if (name.isNotBlank()) {
+                    val picked = coords
+                    if (name.isNotBlank() && picked != null) {
                         onSave(
                             profile.copy(
                                 name = name,
                                 dateOfBirth = dob,
                                 timeOfBirth = tob,
-                                placeOfBirth = place
+                                placeOfBirth = place,
+                                latitude = picked.first,
+                                longitude = picked.second
                             )
                         )
                     }
                 },
-                enabled = name.isNotBlank()
+                enabled = name.isNotBlank() && coords != null
             ) {
                 Text(LanguageManager.getString("अपडेट करें", "Update"), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
             }
@@ -1102,3 +1126,18 @@ fun CloudBackupCard(
     }
 }
 
+/**
+ * Save stays off until the place is picked from the list; this says why, in the
+ * words the Kundali form already uses for the same refusal.
+ */
+@Composable
+private fun PickPlaceHint(visible: Boolean) {
+    if (!visible) return
+    Text(
+        text = LanguageManager.getString(
+            "⚠️ सूची में से जन्म स्थान चुनें — सही लग्न के लिए स्थान के निर्देशांक आवश्यक हैं",
+            "⚠️ Pick the birth place from the list — the Ascendant needs the place's coordinates"
+        ),
+        style = MaterialTheme.typography.bodySmall.copy(color = RahuKaalDangerColor)
+    )
+}

@@ -26,7 +26,7 @@ Legend: `[ ]` not started · `[~]` built, not device-checked · `[x]` checked on
 | 1.7 | Celestial background image and glass cards | `ui/components/CelestialBackground.kt`, `Glassmorphic.kt`, `drawable-nodpi/divine_cosmic_background_*.webp` | [ ] | [ ] |
 | 1.8 | Loading skeletons (gold shimmer), astro loading indicator, empty states | `GoldShimmerSkeleton.kt`, `AstroLoadingIndicator.kt`, `EmptyStateComponent.kt` | [ ] | [ ] |
 | 1.9 | Error boundary: a crashing section shows a bilingual fallback, not a dead app | `ui/components/ErrorBoundary.kt` | [ ] | [ ] |
-| 1.10 | Feature discovery overlay (first-run hints), remembered as done | `ui/components/FeatureDiscoveryOverlay.kt`, pref `is_discovery_completed` | [ ] | [ ] |
+| 1.10 | Feature discovery overlay (first-run hints), remembered as done. *(Owner, 26 Sep 2026: build it. The Muhurat card's "and ensure success" promise was removed in both apps.)* | `ui/components/FeatureDiscoveryOverlay.kt`, pref `is_discovery_completed` | [ ] | [ ] |
 | 1.11 | Rate-us dialog after successful use, with feedback text, dismiss memory, opens store review | `ui/components/RateUsDialog.kt`, prefs `has_rated`, `rate_dialog_dismissed_at`, `successful_lookup_count`, `session_action_count` | [ ] | [ ] |
 | 1.12 | PRO dialog listing only real PRO benefits (ad-free; AI horoscope day/week/month; guidance up to 50 questions/day; PDF without the ad) | `ui/components/PremiumDialog.kt` | [ ] | [ ] |
 | 1.13 | Theme follows the system, light and dark both real | `ui/theme/*` | [ ] | [ ] |
@@ -105,7 +105,7 @@ Legend: `[ ]` not started · `[~]` built, not device-checked · `[x]` checked on
 
 | # | Feature | Kotlin source | iOS | And |
 |---|---|---|---|---|
-| 6.1 | Saved profiles list; add, edit, delete (confirm); "Generate chart" from a profile; Use Boy / Use Girl for Guna Milan. **Play app bug:** Add and Edit store the Settings city's coordinates whatever birth place is typed (`MainViewModel.saveNewProfile`), so the lagna of an added profile is wrong. The Expo app picks the place from the list and keeps its coordinates. | `ui/screens/SavedProfilesScreen.kt`, `data/local/Kundali*` | [ ] | [ ] |
+| 6.1 | Saved profiles list; add, edit, delete (confirm); "Generate chart" from a profile; Use Boy / Use Girl for Guna Milan. **Fixed in the Play app 26 Sep 2026:** Add, Edit and "Save" on a chart used to store the Settings city's coordinates whatever the birth place (`MainViewModel.saveNewProfile`), so the lagna of every such profile was wrong. All three now take the place from the geocoder list (`ui/components/BirthPlaceField.kt`) and keep its coordinates, as the Expo app does. Profiles saved before the fix keep their old coordinates until re-picked in Edit. | `ui/screens/SavedProfilesScreen.kt`, `data/local/Kundali*` | [ ] | [ ] |
 | 6.2 | Profile identity is `uuid`, never a row id | `data/local/ProfileMerge.kt`, `ProfileMergeTest` | [ ] | [ ] |
 | 6.3 | Saved reports list and delete | `SavedProfilesScreen.kt` | [ ] | [ ] |
 | 6.4 | Cloud backup card: sign in, back up, restore, online/offline state, sign out (confirm) | `SavedProfilesScreen.kt`, `service/FirebaseAuthService.kt` | [ ] | [ ] |

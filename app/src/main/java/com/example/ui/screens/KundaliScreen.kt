@@ -96,6 +96,7 @@ import androidx.compose.material3.TextFieldColors
 import com.example.data.model.PlanetPosition
 import com.example.data.model.KundaliChartData
 import com.example.ui.components.AstroLoadingIndicator
+import com.example.ui.components.BirthPlaceField
 import com.example.ui.components.CelestialBackground
 import com.example.ui.components.DashaHorizontalTimeline
 import com.example.ui.components.GlassBadge
@@ -276,8 +277,6 @@ fun KundaliScreen(
     var dobInput by remember { mutableStateOf("") }
     var tobInput by remember { mutableStateOf("") }
     var placeInput by remember { mutableStateOf("") }
-    var placeSuggestions by remember { mutableStateOf<List<PlaceSuggestion>>(emptyList()) }
-    var placeDropdownExpanded by remember { mutableStateOf(false) }
     // The coordinates of the chosen birth place. Null until the user picks a
     // suggestion — the chart cannot be cast without them, and silently falling
     // back to Jaipur is what made every Lagna in the app wrong.
@@ -580,86 +579,25 @@ fun KundaliScreen(
                                             )
 
                                             // 3. Place of Birth Field
-                                            LaunchedEffect(placeInput) {
-                                                if (placeInput.length < 3) {
-                                                    placeSuggestions = emptyList()
-                                                    placeDropdownExpanded = false
-                                                } else {
-                                                    delay(400)
-                                                    val results = withContext(Dispatchers.IO) {
-                                                        try {
-                                                            val geocoder = android.location.Geocoder(context, java.util.Locale.getDefault())
-                                                            @Suppress("DEPRECATION")
-                                                            val addresses = geocoder.getFromLocationName(placeInput, 5)
-                                                            addresses?.mapNotNull { addr ->
-                                                                // Keep the coordinates. The geocoder hands them over with
-                                                                // every result and this code used to throw them away, then
-                                                                // fall back to Jaipur for the actual calculation.
-                                                                if (!addr.hasLatitude() || !addr.hasLongitude()) return@mapNotNull null
-                                                                val city = addr.locality ?: addr.subAdminArea ?: addr.featureName
-                                                                val state = addr.adminArea
-                                                                val country = addr.countryName
-                                                                val label = listOfNotNull(city, state, country)
-                                                                    .joinToString(", ")
-                                                                    .takeIf { it.isNotBlank() } ?: return@mapNotNull null
-                                                                PlaceSuggestion(label, addr.latitude, addr.longitude)
-                                                            }?.distinctBy { it.label } ?: emptyList()
-                                                        } catch (e: Exception) {
-                                                            emptyList()
-                                                        }
-                                                    }
-                                                    placeSuggestions = results
-                                                    placeDropdownExpanded = results.isNotEmpty()
-                                                }
-                                            }
-
-                                            Column(modifier = Modifier.fillMaxWidth()) {
-                                                OutlinedTextField(
-                                                    value = placeInput,
-                                                    onValueChange = {
-                                                        placeInput = it
-                                                        // Typing after a pick invalidates the coordinates that
-                                                        // came with it — force a fresh selection.
-                                                        placeCoords = null
-                                                        formValidationError = null
-                                                    },
-                                                    label = { Text(LanguageManager.getString("जन्म स्थान *", "Place of Birth *")) },
-                                                    placeholder = { Text(LanguageManager.getString("शहर, राज्य (उदा. जयपुर, राजस्थान)", "City, State (e.g. Jaipur, Rajasthan)")) },
-                                                    shape = RoundedCornerShape(14.dp),
-                                                    colors = tfColors,
-                                                    singleLine = true,
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .testTag("input_kundali_place")
-                                                )
-                                                if (placeSuggestions.isNotEmpty()) {
-                                                    Column(
-                                                        modifier = Modifier
-                                                            .fillMaxWidth()
-                                                            .padding(top = 4.dp)
-                                                            .clip(RoundedCornerShape(12.dp))
-                                                            .background(ElevatedSurface)
-                                                            .border(1.dp, GlassCardBorder, RoundedCornerShape(12.dp))
-                                                    ) {
-                                                        placeSuggestions.forEach { suggestion ->
-                                                            Text(
-                                                                text = suggestion.label,
-                                                                style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface),
-                                                                modifier = Modifier
-                                                                    .fillMaxWidth()
-                                                                    .clickable {
-                                                                        placeInput = suggestion.label
-                                                                        placeCoords = suggestion.latitude to suggestion.longitude
-                                                                        placeSuggestions = emptyList()
-                                                                        placeDropdownExpanded = false
-                                                                        formValidationError = null
-                                                                    }
-                                                                    .padding(horizontal = 14.dp, vertical = 12.dp)
-                                                            )
-                                                        }
-                                                    }
-                                                }
-                                            }
+                                            BirthPlaceField(
+                                                value = placeInput,
+                                                onValueChange = {
+                                                    placeInput = it
+                                                    // Typing after a pick invalidates the coordinates that
+                                                    // came with it — force a fresh selection.
+                                                    placeCoords = null
+                                                    formValidationError = null
+                                                },
+                                                onPicked = { suggestion ->
+                                                    placeInput = suggestion.label
+                                                    placeCoords = suggestion.latitude to suggestion.longitude
+                                                    formValidationError = null
+                                                },
+                                                label = LanguageManager.getString("जन्म स्थान *", "Place of Birth *"),
+                                                placeholder = LanguageManager.getString("शहर, राज्य (उदा. जयपुर, राजस्थान)", "City, State (e.g. Jaipur, Rajasthan)"),
+                                                colors = tfColors,
+                                                testTag = "input_kundali_place"
+                                            )
 
                                             // Validation Error Alert
                                             if (formValidationError != null) {
@@ -734,12 +672,7 @@ fun KundaliScreen(
                                         viewModel.resetKundaliForm()
                                     },
                                     onSave = {
-                                        viewModel.saveNewProfile(
-                                            name = currentChart.personName,
-                                            dob = currentChart.dateOfBirth,
-                                            tob = currentChart.timeOfBirth,
-                                            place = currentChart.placeOfBirth
-                                        )
+                                        viewModel.saveGeneratedChart()
                                         isSaved = true
                                     }
                                 )
@@ -1254,16 +1187,3 @@ private fun KundaliPlanetTable(planets: List<PlanetPosition>) {
         }
     }
 }
-
-/**
- * A birth-place option from the geocoder, carrying the coordinates the chart needs.
- *
- * The autocomplete used to be a plain List<String>: the geocoder returned latitude
- * and longitude with every result and the code kept only the display label, after
- * which the calculator fell back to Jaipur for everyone.
- */
-data class PlaceSuggestion(
-    val label: String,
-    val latitude: Double,
-    val longitude: Double
-)

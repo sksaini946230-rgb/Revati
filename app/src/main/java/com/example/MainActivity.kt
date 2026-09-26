@@ -408,8 +408,8 @@ class MainActivity : ComponentActivity() {
                                             DiscoveryStep(
                                                 titleHi = "शुभ मुहूर्त",
                                                 titleEn = "Auspicious Muhurat",
-                                                descriptionHi = "अपनी महत्वपूर्ण गतिविधियों के लिए सबसे शुभ समय खोजें और सफलता सुनिश्चित करें।",
-                                                descriptionEn = "Find the most auspicious timings for your important activities and ensure success.",
+                                                descriptionHi = "अपनी महत्वपूर्ण गतिविधियों के लिए सबसे शुभ समय खोजें।",
+                                                descriptionEn = "Find the most auspicious timings for your important activities.",
                                                 icon = Icons.Default.Schedule
                                             )
                                         ),
