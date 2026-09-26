@@ -212,3 +212,26 @@ tithi's end or the nakshatra's end, whichever is first; a day with less than
 one muhurta (a fifteenth of the day) left is not offered; the description names
 the day's own nakshatra. Both regenerated every fixture, at 0 differences.
 
+## Speed, 26 September 2026
+
+Building the calendar found the festival list taking **52 seconds** in Node for
+two years (it would be longer on a phone). Four changes, none of which moves an
+answer — every golden suite still passes at 0 differences:
+
+- **Moonrise only where it is read.** It was worked out for every day of the
+  year (35 s of the 52) and only Karwa Chauth's rule reads it.
+- **New moons found once per lunation.** `lastNewMoonJd` walked back and
+  bisected on every call; masa and adhika checks asked about the same dozen new
+  moons thousands of times. Lunation *n* is now searched once from three days
+  past its mean date; the result differs from the old walk by about 10⁻¹⁴ day.
+- **Days that cannot match are skipped early.** Sunrise at Ujjain is always
+  between 05:38 and 07:10 IST and the tithi only moves forward, so the tithi at
+  04:30 and 08:00 (cached per day) settles most days without a sunrise; a day in
+  the wrong masa at both ends of its 24 hours is skipped before any sampling.
+- **Pervasion counted by bisection.** The tithi (and its karanas) form unbroken
+  runs through a window, so the minute count is found in a few dozen readings
+  instead of two thousand.
+
+Result: 52 s → 1.3 s. Muhurat's sixty-day scan likewise reads only the sunrise
+limbs (125 s → 12 s for its golden suite). The Kotlin app is unchanged; these are
+the same answers, reached faster.

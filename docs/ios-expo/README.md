@@ -93,7 +93,7 @@ start without a yes.
 | 0 | Accounts and skeleton ✅ *20 Sep 2026* | Expo account, empty app with both platforms' tab bars, first TestFlight build on the owner's iPhone, Android dev build on the test phone | "Mere iPhone par khul gaya" | 3–5 days |
 | 1 | Design ✅ *mockups v2 approved 25 Sep 2026; fifth tab named Settings/सेटिंग्स* | Mockups of every screen, iOS and Android side by side, both languages, both themes, small and large phone | Design approved | ~1 week |
 | 2 | Engine ✅ *20 Sep 2026* | TypeScript engine + golden fixtures from Kotlin, 100% match | Report showing 0 differences | 1–2 weeks |
-| 3 | Screens 🟡 *started 25 Sep 2026: Panchang (daily), Muhurat, Settings (language, clock, rashi, city, profiles) built and tested* | All screens from `FEATURE_PARITY.md`, offline features complete | TestFlight walk-through | 2–4 weeks |
+| 3 | Screens 🟡 *26 Sep 2026: all five tabs real — Panchang (daily + calendar & festivals), Rashifal, Kundali (birth chart, Guna Milan, numerology, transits), Muhurat, Settings (language, clock, rashi, city, profiles). Still to come: onboarding, profile file export/import, South Indian chart, Panchang lagna chart and insight* | All screens from `FEATURE_PARITY.md`, offline features complete | TestFlight walk-through | 2–4 weeks |
 | 4 | Services | Sign-in, cloud backup, AI (PRO), ads, purchases, notifications, widgets | Each service checked on the iPhone | 1–2 weeks |
 | 5 | Hardening | Parity checklist 100%, accessibility, font scaling, SE-to-Pro-Max layouts, crash-free test round | Owner's full test pass | ~1 week |
 | 6 | App Store | Listing, screenshots, privacy labels, review | Approved and live | 1–2 weeks |
