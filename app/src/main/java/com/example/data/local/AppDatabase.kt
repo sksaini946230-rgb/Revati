@@ -20,7 +20,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun kundaliDao(): KundaliDao
     abstract fun panchangCacheDao(): PanchangCacheDao
     abstract fun horoscopeCacheDao(): HoroscopeCacheDao
-    abstract fun savedReportDao(): SavedReportDao
     abstract fun recentSearchDao(): RecentSearchDao
 
     companion object {

@@ -30,7 +30,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteForever
@@ -74,7 +73,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.local.KundaliEntity
-import com.example.data.local.SavedReportEntity
 import com.example.ui.AppTab
 import com.example.ui.MainViewModel
 import com.example.ui.components.GlassBadge
@@ -86,16 +84,12 @@ import com.example.ui.components.BirthPlaceField
 import com.example.ui.components.M3TimePickerDialog
 import com.example.ui.components.SectionHeader
 import com.example.util.LanguageManager
-import java.text.SimpleDateFormat
-import java.util.Date
 import androidx.compose.material.icons.filled.Edit
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SavedProfilesScreen(viewModel: MainViewModel) {
     val profiles by viewModel.savedProfiles.collectAsState()
-    val savedReports by viewModel.savedReports.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
     var editingProfile by remember { mutableStateOf<KundaliEntity?>(null) }
     var deletingProfile by remember { mutableStateOf<KundaliEntity?>(null) }
@@ -227,33 +221,6 @@ fun SavedProfilesScreen(viewModel: MainViewModel) {
                         onDelete = { deletingProfile = profile }
                     )
                 }
-            }
-        }
-
-        // Saved Astrology Reports Section
-        item {
-            Spacer(modifier = Modifier.height(16.dp))
-            SectionHeader(
-                titleHi = "सहेजी गई रिपोर्ट",
-                titleEn = "Saved Astrology Reports",
-                subtitleHi = "ऑफ़लाइन रिपोर्ट संग्रहण",
-                subtitleEn = "Offline Stored Astrology Reports"
-            )
-        }
-
-        if (savedReports.isEmpty()) {
-            item {
-                EmptyStateComponent(
-                    icon = Icons.Default.CloudDownload,
-                    title = LanguageManager.getString("कोई रिपोर्ट सहेजी नहीं गई है।", "No saved reports available.")
-                )
-            }
-        } else {
-            items(savedReports, key = { it.id }) { report ->
-                SavedReportCard(
-                    report = report,
-                    onDelete = { viewModel.deleteReport(report) }
-                )
             }
         }
 
@@ -731,93 +698,6 @@ fun SavedProfileCard(
                         textColor = MaterialTheme.colorScheme.secondary,
                         borderColor = MaterialTheme.colorScheme.secondary,
                         modifier = Modifier.clickable { onUseForMatchingGirl() }
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun SavedReportCard(
-    report: SavedReportEntity,
-    onDelete: () -> Unit
-) {
-    val dateFormat = remember { SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault()) }
-    val formattedDate = remember(report.createdAt) { dateFormat.format(Date(report.createdAt)) }
-
-    val animatedAlpha = remember { Animatable(0f) }
-    val animatedTranslationY = remember { Animatable(30f) }
-
-    LaunchedEffect(report.id) {
-        animatedAlpha.animateTo(
-            targetValue = 1f,
-            animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing)
-        )
-    }
-    LaunchedEffect(report.id) {
-        animatedTranslationY.animateTo(
-            targetValue = 0f,
-            animationSpec = spring(stiffness = Spring.StiffnessLow, dampingRatio = Spring.DampingRatioMediumBouncy)
-        )
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .graphicsLayer {
-                alpha = animatedAlpha.value
-                translationY = animatedTranslationY.value
-            }
-    ) {
-        GlassCard(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = report.title,
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontSize = 15.sp
-                            )
-                        )
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = report.profileName,
-                                style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.secondary, fontSize = 12.sp)
-                            )
-                            Text(
-                                text = "• $formattedDate",
-                                style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp)
-                            )
-                        }
-                    }
-
-                    IconButton(
-                        onClick = onDelete,
-                        modifier = Modifier.testTag("delete_report_${report.id}")
-                    ) {
-                        Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete Report", tint = RahuKaalDangerColor)
-                    }
-                }
-
-                if (report.summaryText.isNotBlank()) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = report.summaryText,
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 13.sp,
-                            lineHeight = 18.sp
-                        )
                     )
                 }
             }

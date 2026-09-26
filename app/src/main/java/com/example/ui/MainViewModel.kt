@@ -21,8 +21,6 @@ import com.example.data.local.KundaliRepository
 import com.example.data.local.ProfileMerge
 import com.example.data.local.RecentSearchEntity
 import com.example.data.local.RecentSearchRepository
-import com.example.data.local.SavedReportEntity
-import com.example.data.local.SavedReportRepository
 import com.example.data.model.ChoghadiyaSlot
 import com.example.data.model.CityLocation
 import com.example.data.model.FestivalData
@@ -68,7 +66,6 @@ enum class AppTab {
 class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: KundaliRepository
-    private val reportRepository: SavedReportRepository
     private val recentSearchRepository: RecentSearchRepository
     private val cacheRepository: AstroCacheRepository
     private val connectivityManager = application.getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
@@ -1407,43 +1404,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // Room DB Saved Reports
-    private val _savedReports = MutableStateFlow<List<SavedReportEntity>>(emptyList())
-    val savedReports: StateFlow<List<SavedReportEntity>> = _savedReports.asStateFlow()
-
-    private fun loadSavedReports() {
-        viewModelScope.launch {
-            reportRepository.allReports.collect { list ->
-                _savedReports.value = list
-            }
-        }
-    }
-
-    fun saveReport(
-        title: String,
-        reportType: String,
-        profileName: String,
-        summaryText: String,
-        detailedJsonData: String = ""
-    ) {
-        viewModelScope.launch {
-            val entity = SavedReportEntity(
-                title = title,
-                reportType = reportType,
-                profileName = profileName,
-                summaryText = summaryText,
-                detailedJsonData = detailedJsonData
-            )
-            reportRepository.saveReport(entity)
-        }
-    }
-
-    fun deleteReport(entity: SavedReportEntity) {
-        viewModelScope.launch {
-            reportRepository.deleteReport(entity)
-        }
-    }
-
     // Firebase Auth & Cloud Backup
     private val authService = com.example.service.FirebaseAuthService()
     private val _currentUser = MutableStateFlow<com.google.firebase.auth.FirebaseUser?>(authService.currentUser)
@@ -1697,7 +1657,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             result.onSuccess {
                 try {
                     repository.deleteAllProfiles()
-                    reportRepository.deleteAllReports()
                     recentSearchRepository.clearAllSearches()
                 } catch (e: kotlinx.coroutines.CancellationException) {
                     throw e
@@ -1840,7 +1799,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 repository.deleteAllProfiles()
-                reportRepository.deleteAllReports()
                 recentSearchRepository.clearAllSearches()
                 _backupStatusMessage.value = LanguageManager.getString("सभी स्थानीय डेटा और सहेजे गए प्रोफाइल हटा दिए गए हैं।", "All local data and saved profiles have been deleted.")
             } catch (e: kotlinx.coroutines.CancellationException) {
@@ -1869,7 +1827,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         repository = DatabaseProvider.getKundaliRepository(application)
-        reportRepository = DatabaseProvider.getSavedReportRepository(application)
         recentSearchRepository = DatabaseProvider.getRecentSearchRepository(application)
         cacheRepository = DatabaseProvider.getAstroCacheRepository(application)
         
@@ -1900,7 +1857,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             // 2. Deferred Background Tasks (Non-critical)
             launch {
                 loadRecentSearches()
-                loadSavedReports()
                 loadHoroscopesWithCache()
                 fetchAstroNews()
                 

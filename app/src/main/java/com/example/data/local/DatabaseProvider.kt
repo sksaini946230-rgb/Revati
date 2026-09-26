@@ -19,8 +19,6 @@ object DatabaseProvider {
 
     fun getKundaliDao(context: Context): KundaliDao = getDatabase(context).kundaliDao()
 
-    fun getSavedReportDao(context: Context): SavedReportDao = getDatabase(context).savedReportDao()
-
     fun getRecentSearchDao(context: Context): RecentSearchDao = getDatabase(context).recentSearchDao()
 
     fun getPanchangCacheDao(context: Context): PanchangCacheDao = getDatabase(context).panchangCacheDao()
@@ -35,10 +33,6 @@ object DatabaseProvider {
 
     fun getKundaliRepository(context: Context): KundaliRepository {
         return KundaliRepository(getKundaliDao(context))
-    }
-
-    fun getSavedReportRepository(context: Context): SavedReportRepository {
-        return SavedReportRepository(getSavedReportDao(context))
     }
 
     fun getAstroCacheRepository(context: Context): AstroCacheRepository {
