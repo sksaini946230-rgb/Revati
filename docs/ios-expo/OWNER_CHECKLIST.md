@@ -39,7 +39,7 @@ bataunga. Phone par check bhi **aap** karoge.
 | D6 | Profile file me naam khali/null | **Chhod do**, import mat karo |
 | D7 | Janm tithi Hindi ank me (१५-०८-१९९०) | **Apne aap 15-08-1990 me badlo** |
 | D8 | Main rashi save nahi hoti (Play bug) | **Play me bhi theek karo**, agli Play release |
-| D9 | GitHub ki 54 warnings (sab Gradle build tools ki, APK me nahi) | **Agli Play release ke saath** tools naye karo |
+| D9 | GitHub ki 54 warnings (sab Gradle build tools ki, APK me nahi) | **Agli Play release ke saath** tools naye karo — ✅ 26 Sep 2026: Gradle 9.6.0, AGP 9.4.1, Kotlin 2.4.20 + patched floors; **0 alerts khule**, 262 tests, lint, CI hare |
 | D10 | Mockups v2 | **Manzoor** — screens banana shuru |
 
 ## B. Charan 0 se pehle — accounts (1–2 din)
