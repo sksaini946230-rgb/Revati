@@ -72,7 +72,7 @@ Legend: `[ ]` not started · `[~]` built, not device-checked · `[x]` checked on
 
 | # | Feature | Kotlin source | iOS | And |
 |---|---|---|---|---|
-| 4.1 | Birth details form: full name*, gender, date*, time*, place* (geocoded), validation messages in both languages | `ui/screens/KundaliScreen.kt` (`KundaliDateTimeFields`, `BirthPickerField`) | [ ] | [ ] |
+| 4.1 | Birth details form: full name*, date*, time*, place* (geocoded), validation messages in both languages. *(No gender field: the Play app has none and stores every profile as `MALE`; checked 26 Sep 2026.)* | `ui/screens/KundaliScreen.kt` (`KundaliDateTimeFields`, `BirthPickerField`) | [ ] | [ ] |
 | 4.2 | Pick from saved profiles with search | `KundaliScreen.kt` | [ ] | [ ] |
 | 4.3 | Recent searches chips (never show real data in screenshots) | `ui/components/RecentSearchesComponent.kt`, `data/local/RecentSearch*` | [ ] | [ ] |
 | 4.4 | Chart header: name, "Edit details", "New chart", Save to profiles, saved state | `KundaliChartHeaderCard` | [ ] | [ ] |
@@ -105,7 +105,7 @@ Legend: `[ ]` not started · `[~]` built, not device-checked · `[x]` checked on
 
 | # | Feature | Kotlin source | iOS | And |
 |---|---|---|---|---|
-| 6.1 | Saved profiles list; add, edit, delete (confirm); "Generate chart" from a profile | `ui/screens/SavedProfilesScreen.kt`, `data/local/Kundali*` | [ ] | [ ] |
+| 6.1 | Saved profiles list; add, edit, delete (confirm); "Generate chart" from a profile; Use Boy / Use Girl for Guna Milan. **Play app bug:** Add and Edit store the Settings city's coordinates whatever birth place is typed (`MainViewModel.saveNewProfile`), so the lagna of an added profile is wrong. The Expo app picks the place from the list and keeps its coordinates. | `ui/screens/SavedProfilesScreen.kt`, `data/local/Kundali*` | [ ] | [ ] |
 | 6.2 | Profile identity is `uuid`, never a row id | `data/local/ProfileMerge.kt`, `ProfileMergeTest` | [ ] | [ ] |
 | 6.3 | Saved reports list and delete | `SavedProfilesScreen.kt` | [ ] | [ ] |
 | 6.4 | Cloud backup card: sign in, back up, restore, online/offline state, sign out (confirm) | `SavedProfilesScreen.kt`, `service/FirebaseAuthService.kt` | [ ] | [ ] |
