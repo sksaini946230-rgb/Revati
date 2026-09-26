@@ -28,11 +28,16 @@ subprojects {
     }
     return false
   }
+  // Guava ships as "-android" and "-jre"; a floor only lifts a request of its
+  // own flavour, or a build tool asking for -jre would be handed -android.
+  fun flavour(v: String) = v.substringAfterLast('-', "").takeIf { s -> s.any { it.isLetter() } } ?: ""
   configurations.configureEach {
     resolutionStrategy.eachDependency {
-      val floor = floors.firstOrNull { it.startsWith("${requested.group}:${requested.name}:") } ?: return@eachDependency
-      val wanted = floor.substringAfterLast(':')
       val current = requested.version ?: return@eachDependency
+      val floor = floors.firstOrNull {
+        it.startsWith("${requested.group}:${requested.name}:") && flavour(it.substringAfterLast(':')) == flavour(current)
+      } ?: return@eachDependency
+      val wanted = floor.substringAfterLast(':')
       if (below(current, wanted)) {
         useVersion(wanted)
         because("patched release; see buildToolFloors in gradle.properties")
