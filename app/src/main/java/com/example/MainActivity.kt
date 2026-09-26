@@ -388,6 +388,21 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
 
+                                val showAdmin by mainViewModel.showAdmin.collectAsState()
+                                if (showAdmin) {
+                                    androidx.compose.ui.window.Dialog(
+                                        onDismissRequest = { mainViewModel.closeAdmin() },
+                                        properties = androidx.compose.ui.window.DialogProperties(
+                                            usePlatformDefaultWidth = false
+                                        )
+                                    ) {
+                                        com.example.ui.screens.AdminScreen(
+                                            mainViewModel = mainViewModel,
+                                            onClose = { mainViewModel.closeAdmin() }
+                                        )
+                                    }
+                                }
+
                                 if (!isDiscoveryCompleted && isOnboardingCompleted && !isFirstRunSyncing) {
                                     FeatureDiscoveryOverlay(
                                         steps = listOf(

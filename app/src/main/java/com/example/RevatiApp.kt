@@ -31,5 +31,6 @@ class RevatiApp : Application() {
         // be registered from here rather than from an Activity — an Activity
         // cannot see the app being backgrounded and brought back.
         com.example.service.AppOpenAdManager.register(this)
+        com.example.service.AnnouncementService.createChannel(this)
     }
 }

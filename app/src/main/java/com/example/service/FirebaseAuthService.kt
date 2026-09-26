@@ -11,10 +11,20 @@ import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.FirebaseAuthMultiFactorException
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.MultiFactorResolver
+import com.google.firebase.auth.TotpMultiFactorGenerator
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.tasks.await
+
+/**
+ * The account has an authenticator (only admins enrol one), so the sign-in is
+ * half done: [FirebaseAuthService.finishSignInWithCode] completes it.
+ */
+class CodeRequired(val resolver: MultiFactorResolver) : Exception("Authenticator code required")
 
 class FirebaseAuthService {
 
@@ -106,6 +116,8 @@ class FirebaseAuthService {
         } catch (e: androidx.credentials.exceptions.GetCredentialCancellationException) {
             Log.i("FirebaseAuthService", "Sign-in cancelled by user")
             Result.failure(Exception(LanguageManager.getString("साइन-इन रद्द किया गया।", "Sign-in cancelled.")))
+        } catch (e: FirebaseAuthMultiFactorException) {
+            Result.failure(CodeRequired(e.resolver))
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -166,11 +178,52 @@ class FirebaseAuthService {
         } else {
             Result.success(user)
         }
+    } catch (e: FirebaseAuthMultiFactorException) {
+        Result.failure(CodeRequired(e.resolver))
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
         Log.e("FirebaseAuthService", "Email sign-in failed", e)
         Result.failure(Exception(readableAuthError(e)))
+    }
+
+    /** The second half of a sign-in that answered [CodeRequired]. Admin-only, so English only. */
+    suspend fun finishSignInWithCode(resolver: MultiFactorResolver, code: String): Result<FirebaseUser> = try {
+        val hint = resolver.hints.first { it.factorId == TotpMultiFactorGenerator.FACTOR_ID }
+        val result = resolver.resolveSignIn(
+            TotpMultiFactorGenerator.getAssertionForSignIn(hint.uid, code.trim())
+        ).await()
+        Result.success(requireNotNull(result.user))
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: com.google.firebase.auth.FirebaseAuthInvalidCredentialsException) {
+        Result.failure(Exception("That code is not right. Use the one your authenticator app shows now."))
+    } catch (e: Exception) {
+        Log.e("FirebaseAuthService", "Authenticator sign-in failed", e)
+        Result.failure(Exception(readableAuthError(e)))
+    }
+
+    /**
+     * The account's row in `directory/`, which is how the admin panel lists
+     * users — Firebase gives a phone no way to list accounts. The rules pin the
+     * email to the sign-in's own and the time to the server's.
+     */
+    suspend fun touchDirectory() {
+        val user = currentUser ?: return
+        firestore.collection("directory").document(user.uid).set(
+            mapOf(
+                "email" to user.email,
+                "name" to user.displayName.orEmpty().take(100),
+                "createdAt" to (user.metadata?.creationTimestamp ?: 0L),
+                "lastSeenAt" to FieldValue.serverTimestamp()
+            )
+        ).await()
+    }
+
+    /** Whether an admin has banned this account. The rules already refuse its backups; this is so the app can say so. */
+    suspend fun isBanned(): Boolean {
+        val user = currentUser ?: return false
+        return firestore.collection("bans").document(user.uid).get().await().getBoolean("banned") == true
     }
 
     /** Sends a password-reset mail; the address may or may not have an account. */
@@ -346,6 +399,7 @@ class FirebaseAuthService {
                 batch.commit().await()
             }
             firestore.collection("users").document(user.uid).delete().await()
+            firestore.collection("directory").document(user.uid).delete().await()
 
             // 3. Delete the Firebase Auth user account
             user.delete().await()

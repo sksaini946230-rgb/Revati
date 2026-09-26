@@ -82,6 +82,7 @@ fun AuthScreen(viewModel: MainViewModel, onDismiss: (() -> Unit)? = null) {
     val isBusy by viewModel.isAuthInProgress.collectAsState()
     val error by viewModel.authError.collectAsState()
     val notice by viewModel.authNotice.collectAsState()
+    val needsCode by viewModel.needsSignInCode.collectAsState()
 
     var isSignUp by remember { mutableStateOf(false) }
     var name by remember { mutableStateOf("") }
@@ -102,6 +103,7 @@ fun AuthScreen(viewModel: MainViewModel, onDismiss: (() -> Unit)? = null) {
     val activity = context as? android.app.Activity
     androidx.activity.compose.BackHandler(enabled = true) {
         when {
+            needsCode -> viewModel.clearAuthMessages()
             isSignUp -> isSignUp = false
             onDismiss != null -> onDismiss()
             else -> activity?.finish()
@@ -159,7 +161,7 @@ fun AuthScreen(viewModel: MainViewModel, onDismiss: (() -> Unit)? = null) {
 
             Spacer(modifier = Modifier.height(22.dp))
 
-            GlassCard(modifier = Modifier.fillMaxWidth()) {
+            if (needsCode) SignInCodeCard(viewModel, isBusy, error) else GlassCard(modifier = Modifier.fillMaxWidth()) {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
 
                     // Sign in / Sign up switch
@@ -410,4 +412,44 @@ private fun AuthModeTab(
             .clickable { onClick() }
             .padding(vertical = 9.dp)
     )
+}
+
+/**
+ * The second step for an account with an authenticator. Only admins enrol one,
+ * so this is English only and nobody else ever sees it.
+ */
+@Composable
+private fun SignInCodeCard(viewModel: MainViewModel, isBusy: Boolean, error: String?) {
+    var code by remember { mutableStateOf("") }
+    GlassCard(modifier = Modifier.fillMaxWidth()) {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(
+                text = "Enter the 6-digit code from your authenticator app.",
+                style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface)
+            )
+            OutlinedTextField(
+                value = code,
+                onValueChange = { typed -> code = typed.filter(Char::isDigit).take(6) },
+                label = { Text("Code") },
+                singleLine = true,
+                enabled = !isBusy,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth().testTag("auth_code_field")
+            )
+            error?.let {
+                Text(text = it, style = MaterialTheme.typography.bodySmall.copy(color = RahuKaalDangerColor))
+            }
+            if (isBusy) {
+                CircularProgressIndicator(modifier = Modifier.size(24.dp).align(Alignment.CenterHorizontally))
+            } else {
+                GoldGlowButton(
+                    text = "Verify",
+                    onClick = { viewModel.submitSignInCode(code) },
+                    modifier = Modifier.fillMaxWidth(),
+                    testTag = "auth_code_verify"
+                )
+            }
+        }
+    }
 }

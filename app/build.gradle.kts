@@ -297,6 +297,9 @@ dependencies {
   implementation(libs.firebase.firestore)
 
   implementation(libs.firebase.auth)
+  // Messages to everyone, sent from Firebase Console → Messaging (Spark plan:
+  // there is no server to send them from). See service/AnnouncementService.kt.
+  implementation(libs.firebase.messaging)
   implementation(libs.androidx.credentials)
   implementation(libs.androidx.credentials.play.services)
   implementation(libs.googleid)

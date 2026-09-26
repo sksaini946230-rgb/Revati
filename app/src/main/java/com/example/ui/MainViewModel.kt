@@ -49,6 +49,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Date
@@ -1322,7 +1323,33 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      */
     private var lastBackedUpSnapshot: List<KundaliEntity> = emptyList()
 
+    // ---- Account standing and the admin panel ------------------------------
+    // Every sync starts here: the directory row (how the admin panel lists
+    // users), the ban, and whether this sign-in may see the Admin row. None of
+    // them is a gate — firebase/firestore.rules is — so a failed read hides
+    // the row and leaves backup alone rather than guessing.
+
+    private val _isRestricted = MutableStateFlow(false)
+    val isRestricted: StateFlow<Boolean> = _isRestricted.asStateFlow()
+
+    private val _isAllowlisted = MutableStateFlow(false)
+    val isAllowlisted: StateFlow<Boolean> = _isAllowlisted.asStateFlow()
+
+    private val _showAdmin = MutableStateFlow(false)
+    val showAdmin: StateFlow<Boolean> = _showAdmin.asStateFlow()
+
+    fun openAdmin() { _showAdmin.value = true }
+    fun closeAdmin() { _showAdmin.value = false }
+
+    private suspend fun refreshAccountStanding() {
+        runCatching { authService.touchDirectory() }
+            .onFailure { com.example.util.AstroAnalytics.recordNonFatal(it, "touchDirectory") }
+        runCatching { authService.isBanned() }.onSuccess { _isRestricted.value = it }
+        _isAllowlisted.value = com.example.service.AdminService().isAllowlisted()
+    }
+
     private fun triggerBackgroundBackup(profiles: List<KundaliEntity>) {
+        if (_isRestricted.value) return
         // This is driven by a Room Flow, which emits on every write — so editing
         // one note re-uploaded every profile the user has. Skip an emission that
         // is identical to what the cloud already holds, and let the debounce
@@ -1424,24 +1451,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun closeAuthScreen() { _showAuthScreen.value = false }
 
-    fun signInWithGoogle(context: android.content.Context, webClientId: String = "") {
-        viewModelScope.launch {
-            _backupStatusMessage.value = LanguageManager.getString("Google से साइन-इन हो रहा है...", "Signing in with Google...")
-            val result = authService.signInWithGoogle(context, webClientId)
-            result.onSuccess { user ->
-                _currentUser.value = user
-                _backupStatusMessage.value = LanguageManager.getString("साइन इन सफल: ${user.displayName ?: user.email}", "Signed in: ${user.displayName ?: user.email}")
-                Firebase.crashlytics.setUserId(user.uid)
-                com.example.util.AstroAnalytics.logLogin(method = "google", isSuccess = true)
-                syncCloudAndLocalProfiles()
-            }.onFailure { err ->
-                _backupStatusMessage.value = LanguageManager.getString("साइन-इन विफल: ${err.message}", "Sign-in failed: ${err.message}")
-                com.example.util.AstroAnalytics.logLogin(method = "google", isSuccess = false)
-                com.example.util.AstroAnalytics.recordNonFatal(err, "signInWithGoogle")
-            }
-        }
-    }
-
     // ---- Sign-in ------------------------------------------------------
     // Sign-in is no longer a gate in front of the app — an account buys cloud
     // backup and nothing else, and AuthScreen opens as a dialog from Saved
@@ -1460,6 +1469,44 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun clearAuthMessages() {
         _authError.value = null
         _authNotice.value = null
+        _codeResolver.value = null
+    }
+
+    // An account with an authenticator — only admins enrol one — stops half way
+    // through sign-in and asks for the code. AuthScreen shows the code field
+    // while this is set.
+    private val _codeResolver = MutableStateFlow<com.google.firebase.auth.MultiFactorResolver?>(null)
+    val needsSignInCode: StateFlow<Boolean> = _codeResolver
+        .map { it != null }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    private fun onSignInFailed(err: Throwable, method: String): Boolean {
+        if (err is com.example.service.CodeRequired) {
+            _codeResolver.value = err.resolver
+            return true
+        }
+        _authError.value = err.message
+        com.example.util.AstroAnalytics.logLogin(method = method, isSuccess = false)
+        return false
+    }
+
+    fun submitSignInCode(code: String) {
+        val resolver = _codeResolver.value ?: return
+        if (code.trim().length != 6) {
+            _authError.value = "Enter the 6-digit code from your authenticator app."
+            return
+        }
+        viewModelScope.launch {
+            _isAuthInProgress.value = true
+            _authError.value = null
+            authService.finishSignInWithCode(resolver, code)
+                .onSuccess {
+                    _codeResolver.value = null
+                    onSignedIn(it, method = "authenticator")
+                }
+                .onFailure { _authError.value = it.message }
+            _isAuthInProgress.value = false
+        }
     }
 
     fun signInWithGoogleGate(context: android.content.Context, webClientId: String = "") {
@@ -1469,9 +1516,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             authService.signInWithGoogle(context, webClientId)
                 .onSuccess { onSignedIn(it, method = "google") }
                 .onFailure { err ->
-                    _authError.value = err.message
-                    com.example.util.AstroAnalytics.logLogin(method = "google", isSuccess = false)
-                    com.example.util.AstroAnalytics.recordNonFatal(err, "signInWithGoogleGate")
+                    if (!onSignInFailed(err, method = "google")) {
+                        com.example.util.AstroAnalytics.recordNonFatal(err, "signInWithGoogleGate")
+                    }
                 }
             _isAuthInProgress.value = false
         }
@@ -1521,10 +1568,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             _authError.value = null
             authService.signInWithEmail(email, password)
                 .onSuccess { onSignedIn(it, method = "email") }
-                .onFailure { err ->
-                    _authError.value = err.message
-                    com.example.util.AstroAnalytics.logLogin(method = "email", isSuccess = false)
-                }
+                .onFailure { err -> onSignInFailed(err, method = "email") }
             _isAuthInProgress.value = false
         }
     }
@@ -1563,12 +1607,23 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun signOutFirebase() {
         authService.signOut()
         _currentUser.value = null
+        _isAllowlisted.value = false
+        _isRestricted.value = false
+        _showAdmin.value = false
         _backupStatusMessage.value = LanguageManager.getString("साइन-आउट सफल। स्थानीय प्रोफाइल डिवाइस पर सुरक्षित हैं।", "Signed out. Your profiles stay on this device.")
     }
 
     fun syncCloudAndLocalProfiles() {
-        val user = _currentUser.value ?: return
+        if (_currentUser.value == null) return
         viewModelScope.launch {
+            refreshAccountStanding()
+            if (_isRestricted.value) {
+                _backupStatusMessage.value = LanguageManager.getString(
+                    "इस खाते पर रोक लगाई गई है, इसलिए क्लाउड बैकअप बंद है। आपकी प्रोफाइल इस फोन पर सुरक्षित हैं।",
+                    "This account has been restricted, so cloud backup is off. Your profiles on this phone are safe."
+                )
+                return@launch
+            }
             _isFirestoreSyncing.value = true
             try {
                 // 1. Fetch remote cloud profiles

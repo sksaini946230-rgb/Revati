@@ -38,3 +38,7 @@ debug.keystore
 # that can be regenerated, so only the config is tracked.
 goldie/out/
 goldie/hi/out/
+
+# Firestore rules test (firebase/)
+firebase/node_modules/
+firebase/*-debug.log

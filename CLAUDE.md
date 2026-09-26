@@ -1030,6 +1030,53 @@ two filled in.
 
 ---
 
+## Admin panel (26 Sep 2026)
+
+Users with ban and undo, the audit log, and where to send a message to
+everyone. Settings → Account & data controls → **Admin panel**, shown only to an
+allowlisted address. English only: the owner is the only reader.
+
+**The project is on the Spark plan, so `firebase/firestore.rules` is the whole
+server.** No Cloud Functions, so no Admin SDK: nothing can list accounts,
+disable one, set a custom claim or send a push. Everything is shaped by that:
+
+- **Admin is granted by email.** `allowlisted()` reads the `emails` array of
+  `config/admins` (eight addresses, the owner's, 26 Sep 2026: each one is an
+  admin whenever it signs up, with no further step). The list is entered in the
+  console, never in this public repository — a public list of admin addresses
+  is a phishing list. No client can read `config/`. It requires
+  `email_verified`, so an email sign-up must click the link first. There is no
+  second copy: the app asks for `admin_gate/probe` (a document that never
+  exists) and being allowed to ask is the answer.
+- **The panel needs an authenticator code too.** `isAdmin()` adds
+  `request.auth.token.firebase.sign_in_second_factor == 'totp'`, so a stolen
+  Gmail password alone opens nothing. TOTP needs the Identity Platform upgrade
+  and a one-off config call (`docs/ADMIN_SETUP.md`). Once an admin enrols,
+  **every** sign-in on that account stops half way: `FirebaseAuthService`
+  turns `FirebaseAuthMultiFactorException` into `CodeRequired`, and
+  AuthScreen's `SignInCodeCard` finishes it. A new sign-in path that catches
+  `Exception` before `FirebaseAuthMultiFactorException` locks the admin out.
+- **Users are listed from `directory/{uid}`**, which each signed-in app writes
+  at every sync (`touchDirectory`). The rules pin the email to the token's and
+  the time to the server's. An account shows up only after it has opened a
+  build with this code; the complete list is Firebase Console → Authentication.
+- **A ban is `bans/{uid}.banned`, never deleted, only switched off.** The rules
+  refuse a ban write without an `admin_audit` entry written in the same batch
+  (`getAfter`, same actor, same `request.time`), and refuse an audit entry that
+  has no ban beside it. A ban stops the account's backups in the rules; the app
+  reads it and says so. A banned account can still read and delete its data and
+  delete itself, on purpose. For a real lock-out, Firebase Console →
+  Authentication → the user → Disable account.
+- **Message everyone is Firebase Console → Messaging**, not the app: sending
+  FCM needs a server. The app carries `firebase-messaging` and
+  `AnnouncementService` only to show what arrives. No token is stored.
+  `PrivacyPolicyTest` fails if the policy stops naming Cloud Messaging.
+
+The rules are pasted into the console by hand; nothing deploys them. Test
+before pasting: `cd firebase && npm install && npm test` (emulator, 9 cases).
+
+---
+
 ## Where it stands
 
 Live on Play, production. **`versionCode 156` / `2.0` was uploaded by the owner

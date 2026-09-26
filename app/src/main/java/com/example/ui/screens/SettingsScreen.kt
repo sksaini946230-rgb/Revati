@@ -125,6 +125,7 @@ fun SettingsScreen(
     val festivalRemindersAlert by viewModel.festivalRemindersAlert.collectAsState()
     val muhuratAlertsEnabled by viewModel.muhuratAlertsEnabled.collectAsState()
     val currentUser by viewModel.currentUser.collectAsState()
+    val isAllowlisted by viewModel.isAllowlisted.collectAsState()
     val backupStatusMessage by viewModel.backupStatusMessage.collectAsState()
 
     var showRashiDialog by remember { mutableStateOf(false) }
@@ -1365,6 +1366,34 @@ fun SettingsScreen(
                                 style = MaterialTheme.typography.labelMedium.copy(
                                     color = MaterialTheme.colorScheme.primary,
                                     fontWeight = FontWeight.Normal,
+                                    fontSize = 12.sp
+                                )
+                            )
+                        }
+                    }
+
+                    // Only an address on the admin list ever sees this row; the
+                    // panel itself is guarded by firebase/firestore.rules.
+                    if (currentUser != null && isAllowlisted) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                                .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
+                                .clickable {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    viewModel.openAdmin()
+                                }
+                                .padding(vertical = 12.dp, horizontal = 14.dp)
+                                .testTag("settings_admin_button"),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Admin panel",
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Bold,
                                     fontSize = 12.sp
                                 )
                             )

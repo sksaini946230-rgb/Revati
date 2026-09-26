@@ -56,6 +56,7 @@
         <h2>2. Accounts Are Optional</h2>
         <p>You can use Revati without creating an account. An account adds one thing: a cloud backup of your saved profiles, so they survive a new phone or a reinstall.</p>
         <p>If you create one, you can sign in with Google Sign-In or with an email address and password, both through Firebase Authentication. We receive your name, your email address and an account identifier. Your password goes to Firebase Authentication, which stores it in hashed form; we cannot read it. Google Sign-In may also pass the address of your profile photo to Firebase; the app does not use it.</p>
+        <p>While you are signed in, the app also keeps one small record in Cloud Firestore so that we can see who has an account: your name, your email address, the date the account was created and the time the app last synced. Only our admin accounts can read it, and they need a second sign-in step (an authenticator code) to do so. We can use it to restrict an account that is misused; a restricted account keeps its profiles on the phone and can still be deleted, but its cloud backup stops. Each restriction is recorded with its reason and the admin who made it.</p>
         <h2>3. Information the App Handles</h2>
         <ul>
             <li><strong>Birth details.</strong> The name, date, time and place of birth you enter for a Kundali, a Guna Milan match or a saved profile. They are stored on your phone and leave it only as described in section 4.</li>
@@ -63,7 +64,7 @@
             <li><strong>Usage statistics.</strong> Firebase Analytics records how the app is used: app opens, the screens you visit and the features you use, with coarse results — the rashi whose horoscope you opened, a Guna Milan score, whether a match has a Manglik mismatch, the single-digit numerology numbers a calculation produced, how you signed in, whether you shared something, and whether a purchase was started, completed or failed. It records that you asked the AI a question and how long the question was, but not what it said. It also receives basic device information, an app-instance identifier, and your language, theme and whether you have PRO, and Google derives a coarse location from your device's IP address. It never receives names, dates, times or places of birth, and it is not linked to your name or email address.</li>
             <li><strong>Crash reports.</strong> Firebase Crashlytics collects a report when the app crashes or records an error: the device model, the Android version and a technical trace of what went wrong. Reports do not contain your birth details. If you are signed in, a report carries your account identifier so that a problem you tell us about can be matched to it.</li>
             <li><strong>Advertising identifier.</strong> See section 5.</li>
-            <li><strong>Notifications.</strong> Daily Panchang, festival and Muhurat reminders are scheduled and written on your phone. No push messaging service is used, and no notification token exists.</li>
+            <li><strong>Notifications.</strong> Daily Panchang, festival and Muhurat reminders are scheduled and written on your phone. Occasional announcements to everyone who has the app are sent through Firebase Cloud Messaging, which gives the app a notification token. The token identifies the installation, not you; we do not store it or link it to your account. You can turn announcements off in your phone's notification settings for Revati.</li>
         </ul>
         <h2>4. What Leaves Your Phone</h2>
         <p>Calculations happen on your phone and work without an internet connection. Your personal information is sent elsewhere only in these cases:</p>
@@ -94,6 +95,7 @@
             <li><strong>If you are signed in,</strong> Settings → Account &amp; data controls → Delete account &amp; all data removes your cloud profiles, the profiles, reports and recent searches on your phone, and your sign-in account. It cannot be undone. For your protection you may be asked to sign in again first; nothing is deleted until that check passes.</li>
             <li><strong>If you are not signed in,</strong> the same place offers Delete all saved data, which clears everything the app has stored on your phone. Uninstalling the app does the same.</li>
             <li>Or email us at the address below and we will delete your account and cloud data for you. Step-by-step instructions: <a href="https://github.com/sksaini946230-rgb/Revati/blob/main/docs/ACCOUNT_DELETION.md">https://github.com/sksaini946230-rgb/Revati/blob/main/docs/ACCOUNT_DELETION.md</a></li>
+            <li>The account record described in section 2 is deleted with your account. A restriction, if one was ever placed, and its entry in our admin log are kept as a record of what was done, by account identifier and email address.</li>
             <li>Usage statistics, crash reports and advertising data are kept by Google under its own retention periods. They are not linked to your name or email address.</li>
         </ul>
         <h2>9. Children</h2>
@@ -102,7 +104,8 @@
         <p>All of these are provided by Google, and each is covered by Google's privacy policy at <a href="https://policies.google.com/privacy">https://policies.google.com/privacy</a></p>
         <ul>
             <li><strong>Firebase Authentication</strong> and <strong>Google Sign-In</strong> — optional sign-in</li>
-            <li><strong>Cloud Firestore</strong> — optional cloud backup</li>
+            <li><strong>Cloud Firestore</strong> — optional cloud backup, and the account record</li>
+            <li><strong>Firebase Cloud Messaging</strong> — announcements to everyone who has the app</li>
             <li><strong>Firebase AI Logic</strong> — AI answers, Rashifal insights and astro news</li>
             <li><strong>Firebase Analytics</strong> — usage statistics</li>
             <li><strong>Firebase Crashlytics</strong> — crash reports</li>

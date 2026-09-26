@@ -48,15 +48,23 @@ If you have uninstalled the app or cannot reach your device:
   backup: names, dates of birth, times of birth, birth places and coordinates.
 * **Everything on the device** — saved profiles, saved reports and recent
   searches in the app's local database.
+* **The account record** — the name, email address, creation date and last-sync
+  time kept so the operator can see who has an account.
+
+## What is kept
+
+* **A restriction, if an admin ever placed one,** and its entry in the admin log
+  (account identifier, email address, reason, date, and which admin did it).
+  They are the record of what was done and are not deleted with the account.
 
 ## What the app does not hold, and so cannot delete
 
 Listed for accuracy, because an earlier version of this document promised to
 delete two things the app has never collected:
 
-* **Push notification tokens.** Revati has no push messaging. Notifications are
-  generated on your device by the app itself and are never sent from a server, so
-  there is no token anywhere.
+* **Notification tokens.** Announcements are sent through Firebase Cloud
+  Messaging, which gives each installation a token. Revati never stores it or
+  links it to an account; uninstalling the app ends it.
 * **AI conversation history.** Questions asked of the AI astrologer are sent to
   Google's model to be answered and are not stored by Revati — there is no chat
   history to delete.

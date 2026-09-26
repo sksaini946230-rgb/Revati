@@ -2,23 +2,135 @@ rules_version = '2';
 
 // Revati — Firestore security rules.
 //
-// This is a copy of what is deployed on astroveda-7126b, read from the console
-// on 3 Sep 2026 and verified to match. Nothing in this repository deploys it,
-// so if you change the data model, change the console too — and update this
-// file, or it stops being worth reading.
+// Deployed on astroveda-7126b by pasting this file into Firebase Console →
+// Firestore → Rules. Nothing in this repository deploys it, so a change here
+// means nothing until it is pasted there too. `firebase/rules.test.mjs` runs it
+// against the emulator: `cd firebase && npm test`.
 //
-// The app touches exactly one shape of data: a signed-in user's saved birth
-// profiles under users/{uid}/kundali_profiles/{profileId}. Birth details are
-// the most personal thing this app holds, so the rule is the strict one — you
-// may touch your own subtree and nothing else, only while signed in. The
-// recursive wildcard covers kundali_profiles and anything nested under it.
+// The project is on the Spark plan, so there is no server code — these rules
+// ARE the server. Everything the admin panel can do is decided here, never in
+// the app.
 //
-// Everything outside users/ is denied, because Firestore denies whatever no
+// Everything not matched below is denied, because Firestore denies whatever no
 // rule allows.
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    // Admin is granted by email, not by hand (the owner's list, 26 Sep 2026).
+    // An account on one of these addresses is an admin the moment its email is
+    // verified — a Google account already is, an email sign-up must click the
+    // link first — so a new one needs nobody to remember anything. Removing an
+    // address takes the panel away at once.
+    //
+    // The list is the `emails` array (lower case) of config/admins, entered in
+    // the console, not written here: this repository is public, and a public
+    // list of admin addresses is a list of accounts worth phishing. No client
+    // can read config/ — only these rules can.
+    function allowlisted() {
+      return signedIn()
+        && request.auth.token.email_verified == true
+        && request.auth.token.email.lower()
+          in get(/databases/$(database)/documents/config/admins).data.emails;
+    }
+
+    // ...and signed in with the authenticator code this time. The allowlist
+    // alone would make the Gmail password the only lock; the code is a
+    // separate physical thing.
+    function isAdmin() {
+      return allowlisted()
+        && request.auth.token.firebase.sign_in_second_factor == 'totp';
+    }
+
+    function banned(userId) {
+      let ban = /databases/$(database)/documents/bans/$(userId);
+      return exists(ban) && get(ban).data.banned == true;
+    }
+
+    // A signed-in user's saved birth profiles. Birth details are the most
+    // personal thing this app holds, so only the owner reaches them — the admin
+    // panel included. A banned account can still read and delete its own data
+    // (a ban must not trap anyone's data, and deleting the account must work);
+    // it can no longer back anything up.
     match /users/{userId}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, delete: if isOwner(userId);
+      allow create, update: if isOwner(userId) && !banned(userId);
+    }
+
+    // One row per account, written by the account itself, because Firebase
+    // gives a phone no way to list accounts and the admin panel needs one.
+    // The email is pinned to the sign-in's own, so nobody can list themselves
+    // under somebody else's address.
+    match /directory/{userId} {
+      allow read: if isAdmin();
+      allow create, update: if isOwner(userId)
+        && request.resource.data.keys().hasOnly(['email', 'name', 'createdAt', 'lastSeenAt'])
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.name is string
+        && request.resource.data.name.size() <= 100
+        && request.resource.data.createdAt is int
+        && request.resource.data.lastSeenAt == request.time;
+      allow delete: if isOwner(userId);
+    }
+
+    // What the app reads to decide whether to show the Admin row. The document
+    // never exists; being allowed to ask is the answer.
+    match /admin_gate/{doc} {
+      allow get: if allowlisted();
+    }
+
+    // A ban is never deleted, only switched off, so every change carries an
+    // audit entry written in the same batch: the rule reads that entry back as
+    // it will be after the batch and refuses the write without it.
+    match /bans/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      allow create, update: if isAdmin()
+        && userId != request.auth.uid
+        && request.resource.data.keys().hasOnly(['banned', 'reason', 'by', 'at', 'auditId'])
+        && request.resource.data.banned is bool
+        && request.resource.data.reason is string
+        && request.resource.data.reason.size() <= 500
+        && (request.resource.data.banned == false || request.resource.data.reason.size() > 0)
+        && request.resource.data.by == request.auth.uid
+        && request.resource.data.at == request.time
+        && auditedHere(
+          request.resource.data.auditId,
+          request.resource.data.banned ? 'ban' : 'unban',
+          userId
+        );
+    }
+
+    function auditedHere(auditId, action, targetUid) {
+      let entry = getAfter(/databases/$(database)/documents/admin_audit/$(auditId)).data;
+      return entry.action == action
+        && entry.targetUid == targetUid
+        && entry.actor == request.auth.uid
+        && entry.at == request.time;
+    }
+
+    // Append-only. Written by the admin's phone, but only alongside the change
+    // it records, stamped with the server's clock, under the admin's own uid.
+    match /admin_audit/{entryId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasOnly(['actor', 'actorEmail', 'action', 'targetUid', 'targetEmail', 'detail', 'at'])
+        && request.resource.data.actor == request.auth.uid
+        && request.resource.data.actorEmail == request.auth.token.email
+        && request.resource.data.action in ['ban', 'unban']
+        && request.resource.data.targetUid is string
+        && request.resource.data.targetEmail is string
+        && request.resource.data.detail is string
+        && request.resource.data.detail.size() <= 500
+        && request.resource.data.at == request.time
+        && getAfter(/databases/$(database)/documents/bans/$(request.resource.data.targetUid)).data.auditId == entryId;
     }
   }
 }

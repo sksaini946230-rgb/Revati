@@ -41,6 +41,15 @@ Authentication, which stores it in hashed form; we cannot read it. Google
 Sign-In may also pass the address of your profile photo to Firebase; the app
 does not use it.
 
+While you are signed in, the app also keeps one small record in Cloud Firestore
+so that we can see who has an account: your name, your email address, the date
+the account was created and the time the app last synced. Only our admin
+accounts can read it, and they need a second sign-in step (an authenticator
+code) to do so. We can use it to restrict an account that is misused; a
+restricted account keeps its profiles on the phone and can still be deleted,
+but its cloud backup stops. Each restriction is recorded with its reason and
+the admin who made it.
+
 ---
 
 ## 3. Information the App Handles
@@ -76,8 +85,11 @@ does not use it.
   that a problem you tell us about can be matched to it.
 - **Advertising identifier.** See section 5.
 - **Notifications.** Daily Panchang, festival and Muhurat reminders are
-  scheduled and written on your phone. No push messaging service is used, and
-  no notification token exists.
+  scheduled and written on your phone. Occasional announcements to everyone
+  who has the app are sent through Firebase Cloud Messaging, which gives the
+  app a notification token. The token identifies the installation, not you; we
+  do not store it or link it to your account. You can turn announcements off
+  in your phone's notification settings for Revati.
 
 ---
 
@@ -176,6 +188,9 @@ left one.
 - Or email us at the address below and we will delete your account and cloud
   data for you. Step-by-step instructions:
   https://github.com/sksaini946230-rgb/Revati/blob/main/docs/ACCOUNT_DELETION.md
+- The account record described in section 2 is deleted with your account. A
+  restriction, if one was ever placed, and its entry in our admin log are kept
+  as a record of what was done, by account identifier and email address.
 - Usage statistics, crash reports and advertising data are kept by Google under
   its own retention periods. They are not linked to your name or email address.
 
@@ -195,7 +210,8 @@ All of these are provided by Google, and each is covered by Google's privacy
 policy at https://policies.google.com/privacy
 
 - **Firebase Authentication** and **Google Sign-In** — optional sign-in
-- **Cloud Firestore** — optional cloud backup
+- **Cloud Firestore** — optional cloud backup, and the account record
+- **Firebase Cloud Messaging** — announcements to everyone who has the app
 - **Firebase AI Logic** — AI answers, Rashifal insights and astro news
 - **Firebase Analytics** — usage statistics
 - **Firebase Crashlytics** — crash reports
