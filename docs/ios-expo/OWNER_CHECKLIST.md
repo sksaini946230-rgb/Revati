@@ -88,7 +88,7 @@ bataunga. Phone par check bhi **aap** karoge.
 | E6 | ✅ **Ho gaya 26 Sep 2026** — app ID `ca-app-pub-5513456541171739~8016051305`. AdMob me **iOS app** jodo (abhi store se link nahi hoga, wo launch ke baad) |
 | E7 | ✅ **Ho gaya 26 Sep 2026** — IDs `SERVICES.md` §7 me. Chaar **iOS ad units** banao: Banner, Interstitial, App open, Rewarded. Banner ka auto-refresh **45 second** rakhna. Chaaron IDs mujhe bhejo (ye password nahi hain) |
 
-**App Store Connect (paise wala hissa):**
+**App Store Connect (paise wala hissa):** ⏸ **Owner, 26 Sep 2026: abhi SKIP.** E8–E12 baad me; tab tak iPhone par PRO nahi banega. Yaad dilana hai.
 
 | # | Kaam |
 |---|---|
@@ -102,7 +102,7 @@ bataunga. Phone par check bhi **aap** karoge.
 
 | # | Kaam |
 |---|---|
-| E13 | iPhone ke liye privacy policy ke naye hisse padh kar **haan** bolna (Apple sign-in, tracking/ATT, AI consent, RevenueCat). Uske baad main website par push karunga |
+| E13 | ✅ **Haan, 26 Sep 2026** — policy me §11 "The iPhone App" joda, sirf wahi jo app aaj karta hai; sign-in/ads/AI/PRO aane se pehle phir update. iPhone ke liye privacy policy ke naye hisse padh kar **haan** bolna (Apple sign-in, tracking/ATT, AI consent, RevenueCat). Uske baad main website par push karunga |
 
 ## F. Charan 5 — testing (aapke iPhone par)
 
@@ -141,4 +141,5 @@ bataunga. Phone par check bhi **aap** karoge.
 - Location permission ka text: **English hi** (owner: "As u wish"; Hindi haath se nahi likhte, Kotlin me source nahi).
 - Saved Reports: **hatao** — Play se hata diya (`f0b670d`), Expo me bana hi nahi.
 - Home-screen widget: **abhi nahi**.
-- TestFlight build: **baad me**, owner bolega tab.
+- TestFlight build: owner ne 26 Sep ko maangi (Step 7 testing ke liye).
+- App Store Connect ka paise wala kaam (E8–E12): **skip, baad me**.

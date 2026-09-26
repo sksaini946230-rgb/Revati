@@ -1,10 +1,11 @@
 # Privacy Policy for Revati
 
-**Effective:** July 24, 2026 · **Last updated:** September 11, 2026
+**Effective:** July 24, 2026 · **Last updated:** September 26, 2026
 
 Revati ("we", "our", "us") is published by Msunjay Enterprises. This policy
 explains what the **Revati : Kundli & Panchang** Android app collects, where it
-goes, and how you can delete it.
+goes, and how you can delete it. The iPhone app, which is newer and does less,
+is covered in section 11.
 
 *This app was previously published as "AstroVeda". It is the same app under a
 new name.*
@@ -206,14 +207,44 @@ policy at https://policies.google.com/privacy
 
 ---
 
-## 11. Changes
+## 11. The iPhone App
+
+The iPhone version of Revati does less than the Android app today, so it
+handles less:
+
+- **No sign-in, cloud backup, AI answers, ads, purchases, usage statistics or
+  crash reports.** Neither Firebase nor AdMob is in it. The parts of sections
+  2, 4, 5, 6 and 10 about those features apply to the iPhone only once they
+  arrive there, and this section will be updated before they do.
+- **Your settings and saved profiles stay on your iPhone.** Profiles are kept
+  in a database encrypted with a key held in the iPhone's Keychain for this
+  device only: never in iCloud Keychain and never in a backup.
+- **Location, only when you ask for it.** When you tap "Use my location", the
+  app asks for permission while it is in use. To name the town, the
+  coordinates (or the name you type in a place search) are sent to Apple's
+  geocoding service, covered by Apple's privacy policy at
+  <https://www.apple.com/legal/privacy/>. Revati keeps only the town and its
+  coordinates, on the phone.
+- **Reminders are scheduled on the phone.** There is no push service and no
+  notification token.
+- **App updates.** When it opens, the app asks Expo's update service
+  (expo.dev) whether a fix to its own code is available. That request carries
+  the app's version, the platform and a random identifier Expo makes for this
+  installation, and none of your data.
+- **Sharing is yours to start.** A chart picture, a Guna Milan PDF or a
+  profile file leaves the phone only when you share it through the iPhone's
+  share sheet, to the app you pick.
+
+---
+
+## 12. Changes
 
 If this policy changes materially, we will update the date at the top and,
 where the change is significant, tell you in the app.
 
 ---
 
-## 12. Contact
+## 13. Contact
 
 - **Developer / Organisation:** Msunjay Enterprises
 - **Email:** supportrevati@gmail.com
