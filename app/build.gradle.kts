@@ -101,7 +101,7 @@ android {
     // built — so a code cannot repeat unless history is rewritten, which is
     // what VERSION_CODE_FLOOR is for.
     versionCode = resolvedVersionCode
-    versionName = "2.3"
+    versionName = "2.4"
 
     val envProperties = Properties()
     val envFile = rootProject.file(".env")

@@ -222,9 +222,9 @@ handles less:
 - **Location, only when you ask for it.** When you tap "Use my location", the
   app asks for permission while it is in use. To name the town, the
   coordinates (or the name you type in a place search) are sent to Apple's
-  geocoding service, covered by Apple's privacy policy at
-  <https://www.apple.com/legal/privacy/>. Revati keeps only the town and its
-  coordinates, on the phone.
+  geocoding service. Revati keeps only the town and its coordinates, on the
+  phone. Apple's privacy policy covers that service:
+  https://www.apple.com/legal/privacy/
 - **Reminders are scheduled on the phone.** There is no push service and no
   notification token.
 - **App updates.** When it opens, the app asks Expo's update service
