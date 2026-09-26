@@ -87,7 +87,7 @@ Legend: `[ ]` not started · `[~]` built, not device-checked · `[x]` checked on
 | 4.13 | Dosha cards: Manglik (for the real place), Bhakoot (all three: 2/12, 5/9, 6/8), Nadi | `MatchingDoshaCards`, `BhakootDoshaTest` | [ ] | [ ] |
 | 4.14 | Birth attribute comparison (Varna, Vashya, Yoni, Gana, Nadi…), summary card, eight-koot breakdown grid | `BirthAttributeComparisonCard`, `MatchingSummaryCard`, `KootBreakdownGrid` | [ ] | [ ] |
 | 4.15 | PDF report: export/share/print; free users get "Watch ad" or "Just make it" — both produce the report; PRO sees no ad. *(Expo, 26 Sep 2026: built without the ad step until AdMob iOS exists — the same report "Just make it" gives. Two differences on purpose: no "Certified Report" subtitle, since nobody certifies it; and the koot table and reading follow the app language — the Play PDF prints them in Hindi even in English mode, a Play bug.)* | `service/MatchingPdfReportService.kt`, `service/RewardedAdManager.kt` | [ ] | [ ] |
-| 4.16 | Saved astrology reports. **Play app bug:** `MainViewModel.saveReport` has no caller anywhere, so this list is always empty for every user. Not built in Expo — an empty list is not a feature. Decide what should be saved first. | `data/local/SavedReport*` | [ ] | [ ] |
+| 4.16 | ~~Saved astrology reports~~ **Removed, owner 26 Sep 2026.** `saveReport` had no caller, so the list was always empty. Gone from the Play app (`f0b670d`, table kept for the schema) and not built in Expo. | — | — | — |
 | 4.17 | **Numerology**: name + DOB (fields start EMPTY), Moolank + ruling planet, Bhagyank, name number (Chaldean), friendly/enemy numbers, reading | `ui/screens/NumerologyScreen.kt`, `astro/NumerologyCalculator.kt`, `NumerologyValidator.kt` | [ ] | [ ] |
 | 4.18 | Birth-date validation follows today, never a fixed year | `NumerologyValidator.kt`, `NumerologyValidatorDateTest` | [ ] | [ ] |
 | 4.19 | "Ask your question" AI box, PRO only; sample questions; context = today's date + numerology + "Birth chart: name, DOB; Lagna"; never time/place of birth; answer in app language | `NumerologyScreen.kt`, `MainViewModel.askAiAstrologer`, `data/ai/GeminiAstroService.kt` | [ ] | [ ] |
@@ -107,7 +107,7 @@ Legend: `[ ]` not started · `[~]` built, not device-checked · `[x]` checked on
 |---|---|---|---|---|
 | 6.1 | Saved profiles list; add, edit, delete (confirm); "Generate chart" from a profile; Use Boy / Use Girl for Guna Milan. **Fixed in the Play app 26 Sep 2026:** Add, Edit and "Save" on a chart used to store the Settings city's coordinates whatever the birth place (`MainViewModel.saveNewProfile`), so the lagna of every such profile was wrong. All three now take the place from the geocoder list (`ui/components/BirthPlaceField.kt`) and keep its coordinates, as the Expo app does. Profiles saved before the fix keep their old coordinates until re-picked in Edit. | `ui/screens/SavedProfilesScreen.kt`, `data/local/Kundali*` | [ ] | [ ] |
 | 6.2 | Profile identity is `uuid`, never a row id | `data/local/ProfileMerge.kt`, `ProfileMergeTest` | [ ] | [ ] |
-| 6.3 | Saved reports list and delete — always empty in the Play app, see 4.16 | `SavedProfilesScreen.kt` | [ ] | [ ] |
+| 6.3 | ~~Saved reports list and delete~~ removed, see 4.16 | — | — | — |
 | 6.4 | Cloud backup card: sign in, back up, restore, online/offline state, sign out (confirm) | `SavedProfilesScreen.kt`, `service/FirebaseAuthService.kt` | [ ] | [ ] |
 | 6.5 | Export profiles to a file ("send profile") and import from a file; format `revati-profiles` v1 — **the Expo app must read and write the same format** | `data/local/ProfileTransfer.kt`, `ProfileTransferTest` | [ ] | [ ] |
 | 6.6 | Delete account and all data (cloud + local), with token refresh first | `FirebaseAuthService.deleteUserDataAndAccount` | [ ] | [ ] |
@@ -151,7 +151,7 @@ Legend: `[ ]` not started · `[~]` built, not device-checked · `[x]` checked on
 | 8.17 | Daily Panchang notification (localised, city-aware) | `worker/AstroNotificationWorker.kt` | [ ] | [ ] |
 | 8.18 | Muhurat notification | `worker/MuhuratNotificationWorker.kt` | [ ] | [ ] |
 | 8.19 | Festival notification (ISO date built locale-safe) | `worker/FestivalNotificationWorker.kt` | [ ] | [ ] |
-| 8.20 | Home-screen widget: Panchang (sunrise, sunset, tithi… localised labels). *(iOS needs a WidgetKit extension written in Swift plus an App Group so the app can hand it the day's data; the App Group has to be registered on the Apple team. Not started — owner's go-ahead needed.)* | `widget/PanchangWidgetProvider.kt`, `res/layout/panchang_widget.xml` | [ ] | [ ] |
+| 8.20 | Home-screen widget: Panchang (sunrise, sunset, tithi… localised labels). *(iOS needs a WidgetKit extension written in Swift plus an App Group so the app can hand it the day's data; the App Group has to be registered on the Apple team. Owner, 26 Sep 2026: **not now**.)* | `widget/PanchangWidgetProvider.kt`, `res/layout/panchang_widget.xml` | [ ] | [ ] |
 | 8.21 | Home-screen widget: Tithi & Nakshatra | `widget/TithiNakshatraWidgetProvider.kt` | [ ] | [ ] |
 | 8.22 | Widgets and notifications speak the chosen language even after reboot | `RevatiApp.kt`, `LanguageInitTest` | [ ] | [ ] |
 | 8.23 | In-app review request | `RateUsDialog.kt` (Play Review) | [ ] | [ ] |

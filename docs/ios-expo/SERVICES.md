@@ -106,6 +106,16 @@ Either way:
 | Test units in development, release refuses test ids (port `AdIds`) | Claude |
 | Same frequency rules as Android (`FEATURE_PARITY.md` 8.12) | Claude |
 
+**iOS IDs (created 26 Sep 2026, publisher matches Android's):**
+
+| | ID |
+|---|---|
+| App | `ca-app-pub-5513456541171739~8016051305` |
+| Banner (refresh 45 s) | `ca-app-pub-5513456541171739/9620777015` |
+| Interstitial | `ca-app-pub-5513456541171739/4212362652` |
+| Rewarded | `ca-app-pub-5513456541171739/7461517530` |
+| App open | `ca-app-pub-5513456541171739/6994613670` |
+
 Ads on iPhone are on unless the owner says otherwise (a question in
 `OWNER_CHECKLIST.md`).
 

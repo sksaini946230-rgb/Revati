@@ -52,7 +52,7 @@ bataunga. Phone par check bhi **aap** karoge.
 | B4 | App Store Connect me **naya app** banao: platform iOS, naam "Revati : Kundli & Panchang", primary language English, Bundle ID (A2), SKU `revati-ios` | Main screen-by-screen bataunga |
 | B5 | ✅ **Ho gaya** — Key ID `5M6CRWLM5B`, file `~/secure-credentials/revati/` me. App Store Connect **API key** banao (Users and Access → Integrations → App Store Connect API, role "App Manager"). `.p8` file download karke `~/secure-credentials/revati/` me rakho. Key ID aur Issuer ID mujhe batao | Ye `eas submit` ke kaam aayegi |
 | B6 | Jab EAS pehli baar Apple login maange, to **aap khud** login karna (2FA code aapke phone par aayega) | Certificate aur profile EAS khud banayega |
-| B7 | Aadha ho gaya — iPhone 16. **iOS version abhi batana baaki hai** (Settings → General → About → Software Version) | Liquid Glass ke liye iOS 26 chahiye |
+| B7 | ✅ **Ho gaya** — iPhone 16, **iOS 27** (26 Sep 2026) | Liquid Glass ke liye iOS 26 chahiye |
 | B8 | ✅ TestFlight pehle se hai. Batao ki kaunsi Apple ID tester banegi. iPhone par **TestFlight** app install karo, aur batao ki kaunsi Apple ID email tester banegi | — |
 | B9 | Expo slug ✅ `revati` kar diya. Expo par **Billing** page dekh kar batao ki free plan me har mahine kitni iOS builds milti hain | Builds ka hisaab rakhne ke liye |
 
@@ -75,7 +75,7 @@ bataunga. Phone par check bhi **aap** karoge.
 
 | # | Kaam |
 |---|---|
-| E1 | **iOS app jodo** (Bundle ID A2; debug project me `.debug` laga kar). Dono `GoogleService-Info.plist` download karke folder me rakho |
+| E1 | ✅ **Ho gaya 26 Sep 2026** — dono plist sahi (`app.revati.jyotish` / `astroveda-7126b`, `app.revati.jyotish.debug` / `revati-debug`), `~/secure-credentials/revati/firebase/` me. **iOS app jodo** (Bundle ID A2; debug project me `.debug` laga kar). Dono `GoogleService-Info.plist` download karke folder me rakho |
 | E2 | Firebase jo **iOS API key** banayega, use "iOS apps" + Bundle ID tak seemit karna. Android wali key ko haath nahi lagana |
 | E3 | **App Check → App Attest** iOS app ke liye chalu karna |
 | E4 | **Sign in with Apple** chalu karna: Apple par Services ID aur Key (.p8) banana, phir Firebase → Authentication → Apple me Services ID, Team ID, Key ID aur key file daalni. Main har kadam bataunga |
@@ -85,8 +85,8 @@ bataunga. Phone par check bhi **aap** karoge.
 
 | # | Kaam |
 |---|---|
-| E6 | AdMob me **iOS app** jodo (abhi store se link nahi hoga, wo launch ke baad) |
-| E7 | Chaar **iOS ad units** banao: Banner, Interstitial, App open, Rewarded. Banner ka auto-refresh **45 second** rakhna. Chaaron IDs mujhe bhejo (ye password nahi hain) |
+| E6 | ✅ **Ho gaya 26 Sep 2026** — app ID `ca-app-pub-5513456541171739~8016051305`. AdMob me **iOS app** jodo (abhi store se link nahi hoga, wo launch ke baad) |
+| E7 | ✅ **Ho gaya 26 Sep 2026** — IDs `SERVICES.md` §7 me. Chaar **iOS ad units** banao: Banner, Interstitial, App open, Rewarded. Banner ka auto-refresh **45 second** rakhna. Chaaron IDs mujhe bhejo (ye password nahi hain) |
 
 **App Store Connect (paise wala hissa):**
 
@@ -135,3 +135,10 @@ bataunga. Phone par check bhi **aap** karoge.
 - Play ka **Licensing key**, jo `.env` me `PLAY_LICENSE_KEY` banegi
 - Play par **2.3 / 202** upload, aur upload ke baad ads check karna
 - Agli Android build me: FCM se sabko message, aur admin panel (scope aapse poochhna hai)
+
+## I. Faisle, 26 Sep 2026
+
+- Location permission ka text: **English hi** (owner: "As u wish"; Hindi haath se nahi likhte, Kotlin me source nahi).
+- Saved Reports: **hatao** — Play se hata diya (`f0b670d`), Expo me bana hi nahi.
+- Home-screen widget: **abhi nahi**.
+- TestFlight build: **baad me**, owner bolega tab.
