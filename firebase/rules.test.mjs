@@ -16,10 +16,10 @@ after(() => env.cleanup());
 beforeEach(async () => {
   await env.clearFirestore();
   await env.withSecurityRulesDisabled((ctx) =>
-    setDoc(doc(ctx.firestore(), 'config/admins'), { emails: ['sksaini3019@gmail.com'] }));
+    setDoc(doc(ctx.firestore(), 'config/admins'), { emails: ['admin@example.com'] }));
 });
 
-const ADMIN = { email: 'sksaini3019@gmail.com', email_verified: true, firebase: { sign_in_second_factor: 'totp' } };
+const ADMIN = { email: 'admin@example.com', email_verified: true, firebase: { sign_in_second_factor: 'totp' } };
 const as = (uid, token = {}) => env.authenticatedContext(uid, token).firestore();
 const admin = () => as('admin', ADMIN);
 
@@ -40,8 +40,8 @@ test('an owner reaches their own profiles and nobody else does, not even an admi
 });
 
 test('the gate opens for a verified allowlisted address, without the code yet', async () => {
-  await assertSucceeds(getDoc(doc(as('a', { email: 'SKSAINI3019@gmail.com', email_verified: true }), 'admin_gate/probe')));
-  await assertFails(getDoc(doc(as('a', { email: 'sksaini3019@gmail.com', email_verified: false }), 'admin_gate/probe')));
+  await assertSucceeds(getDoc(doc(as('a', { email: 'ADMIN@example.com', email_verified: true }), 'admin_gate/probe')));
+  await assertFails(getDoc(doc(as('a', { email: 'admin@example.com', email_verified: false }), 'admin_gate/probe')));
   await assertFails(getDoc(doc(as('b', { email: 'someone@gmail.com', email_verified: true }), 'admin_gate/probe')));
 });
 
