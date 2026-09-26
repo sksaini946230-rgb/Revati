@@ -111,7 +111,7 @@ Either way:
 | | ID |
 |---|---|
 | App | `ca-app-pub-5513456541171739~8016051305` |
-| Banner (refresh 45 s) | `ca-app-pub-5513456541171739/9620777015` |
+| Banner (refresh 45 s, owner confirmed) | `ca-app-pub-5513456541171739/9620777015` |
 | Interstitial | `ca-app-pub-5513456541171739/4212362652` |
 | Rewarded | `ca-app-pub-5513456541171739/7461517530` |
 | App open | `ca-app-pub-5513456541171739/6994613670` |

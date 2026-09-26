@@ -75,7 +75,7 @@ bataunga. Phone par check bhi **aap** karoge.
 
 | # | Kaam |
 |---|---|
-| E1 | ✅ **Ho gaya 26 Sep 2026** — dono plist sahi (`app.revati.jyotish` / `astroveda-7126b`, `app.revati.jyotish.debug` / `revati-debug`), `~/secure-credentials/revati/firebase/` me. **iOS app jodo** (Bundle ID A2; debug project me `.debug` laga kar). Dono `GoogleService-Info.plist` download karke folder me rakho |
+| E1 | ✅ **Ho gaya 26 Sep 2026** — dono plist sahi (`app.revati.jyotish` / `astroveda-7126b`, `app.revati.jyotish.debug` / `revati-debug`), `Revati-Expo/firebase/` me (commit 26 Sep). **iOS app jodo** (Bundle ID A2; debug project me `.debug` laga kar). Dono `GoogleService-Info.plist` download karke folder me rakho |
 | E2 | Firebase jo **iOS API key** banayega, use "iOS apps" + Bundle ID tak seemit karna. Android wali key ko haath nahi lagana |
 | E3 | **App Check → App Attest** iOS app ke liye chalu karna |
 | E4 | **Sign in with Apple** chalu karna: Apple par Services ID aur Key (.p8) banana, phir Firebase → Authentication → Apple me Services ID, Team ID, Key ID aur key file daalni. Main har kadam bataunga |
