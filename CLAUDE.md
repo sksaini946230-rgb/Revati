@@ -3,6 +3,16 @@
 An Android Vedic astrology app: daily Panchang, Rashifal, birth charts, Guna
 Milan, Muhurat, numerology. Hindi and English throughout. Live on Google Play.
 
+> **Retired, 27 Sep 2026.** The owner: "Kotlin waali App ko bhul jaao, hame
+> Expo waali App hi chahiye iOS & Android dono ke liye." Revati is now the Expo
+> app in `~/Revati-Expo`, on both stores; its first Play upload replaces this
+> one (versionCode 203 over this app's 202). Do no new work here. What still
+> lives here and is used: `firebase/firestore.rules` and the Firebase console
+> setup in `docs/ADMIN_SETUP.md` (done 27 Sep 2026, for the Expo admin panel
+> to reuse), the Play upload key `upload-keystore.jks`, and the reference docs
+> under `docs/ios-expo/`. The privacy policy's source moved to
+> `~/Revati-Expo/docs/PRIVACY_POLICY.md`.
+
 **Read this whole file before changing anything.** Several of the notes below
 record bugs that shipped once already.
 
