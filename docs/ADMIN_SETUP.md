@@ -44,14 +44,18 @@ rahega.
 
 1. https://console.cloud.google.com → upar project **astroveda-7126b** chuno.
 2. Upar-daayein **>_** icon (Activate Cloud Shell) → neeche terminal khulega.
-   Authorize maange to Authorize.
+   Authorize maange to Authorize. Console ke andar "refused to connect" aaye to
+   naye tab me `https://shell.cloud.google.com/?project=astroveda-7126b` kholo.
+   `CREDENTIALS_MISSING` aaye to pehle `gcloud auth login` (link → account →
+   code wapas paste), phir command dobara.
 3. Ye poori line paste karke Enter:
 
 ```
 curl -X PATCH "https://identitytoolkit.googleapis.com/admin/v2/projects/astroveda-7126b/config?updateMask=mfa" -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "Content-Type: application/json" -H "X-Goog-User-Project: astroveda-7126b" -d '{"mfa":{"providerConfigs":[{"state":"ENABLED","totpProviderConfig":{"adjacentIntervals":5}}]}}'
 ```
 
-4. Jawab me `"totpProviderConfig"` dikhe to ho gaya. Error aaye to screenshot bhejo.
+4. Jawab me `"totpProviderConfig"` … `"state": "ENABLED"` dikhe to ho gaya (upar wala
+   `"state": "DISABLED"` SMS ka hai, use chhod do). Error aaye to screenshot bhejo.
 
 ## 4. Build ke baad, phone par
 
