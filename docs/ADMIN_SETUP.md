@@ -1,5 +1,10 @@
 # Admin panel — owner setup (one time)
 
+> **27 Sep 2026: Play par ab Expo app jaayegi (owner ka faisla).** Ye admin
+> panel sirf Kotlin app me hai, aur Expo app me abhi sign-in hi nahi hai. Isliye
+> jab tak Expo me sign-in aur admin nahi aata, ye steps kisi user tak nahi
+> pahunchte. Rules daalna phir bhi safe hai; purani Kotlin app ka backup waise hi chalta hai.
+
 Chaar kaam console me, aapke haath se. Maine kuch nahi badla hai. Har step ke
 baad screenshot bhejna ho to bhej dena.
 
