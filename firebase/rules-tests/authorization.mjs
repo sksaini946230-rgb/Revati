@@ -6,6 +6,7 @@ const env = await initializeTestEnvironment({
   projectId: 'demo-revati',
   firestore: { host: '127.0.0.1', port: 8089, rules: readFileSync(process.argv[2], 'utf8') },
 });
+await env.clearFirestore(); // each suite starts from an empty database
 await env.withSecurityRulesDisabled(async (c) => {
   const db = c.firestore();
   await setDoc(doc(db, 'config/admins'), { emails: ['admin@revati.test'] });
@@ -38,6 +39,8 @@ const row = (email) => ({ email, name: 'A', createdAt: 1, lastSeenAt: serverTime
 await t('owner writes own directory row', assertSucceeds(setDoc(doc(u1, 'directory/u1'), row('u1@revati.test'))));
 await t('directory row with another email refused', assertFails(setDoc(doc(u1, 'directory/u1'), row('admin@revati.test'))));
 await t('directory row for another uid refused', assertFails(setDoc(doc(u1, 'directory/u2'), row('u1@revati.test'))));
+const notVerified = env.authenticatedContext('u3', { email: 'victim@revati.test', email_verified: false }).firestore();
+await t('directory row with an unverified email refused', assertFails(setDoc(doc(notVerified, 'directory/u3'), row('victim@revati.test'))));
 await t('directory extra field refused', assertFails(setDoc(doc(u1, 'directory/u1'), { ...row('u1@revati.test'), role: 'admin' })));
 await t('user cannot list directory', assertFails(getDocs(collection(u1, 'directory'))));
 await t('allowlisted without TOTP cannot list directory', assertFails(getDocs(collection(allowNoCode, 'directory'))));

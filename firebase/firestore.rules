@@ -100,13 +100,15 @@ service cloud.firestore {
 
     // One row per account, written by the account itself, because Firebase
     // gives a phone no way to list accounts and the admin panel needs one.
-    // The email is pinned to the sign-in's own, so nobody can list themselves
-    // under somebody else's address.
+    // The email is pinned to the sign-in's own, and must be verified (3 Oct
+    // 2026): otherwise an email sign-up with someone else's address would put
+    // that address in the admin panel against the wrong account.
     match /directory/{userId} {
       allow read: if isAdmin();
       allow create, update: if isOwner(userId)
         && request.resource.data.keys().hasOnly(['email', 'name', 'createdAt', 'lastSeenAt'])
         && request.resource.data.email == request.auth.token.email
+        && request.auth.token.email_verified == true
         && request.resource.data.name is string
         && request.resource.data.name.size() <= 100
         && request.resource.data.createdAt is int

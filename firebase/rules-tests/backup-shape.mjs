@@ -6,6 +6,7 @@ const env = await initializeTestEnvironment({
   projectId: 'demo-revati',
   firestore: { host: '127.0.0.1', port: 8089, rules: readFileSync(process.argv[2], 'utf8') },
 });
+await env.clearFirestore(); // each suite starts from an empty database
 const me = env.authenticatedContext('u1', { email: 'a@b.c', email_verified: true }).firestore();
 const other = env.authenticatedContext('u2').firestore();
 const profile = { uuid: 'x-1', name: 'राम', gender: 'MALE', dateOfBirth: '25/08/1994', timeOfBirth: '14:15',
