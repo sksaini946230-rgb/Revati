@@ -59,9 +59,43 @@ service cloud.firestore {
     // panel included. A banned account can still read and delete its own data
     // (a ban must not trap anyone's data, and deleting the account must work);
     // it can no longer back anything up.
-    match /users/{userId}/{document=**} {
+    //
+    // The only thing either app writes here is kundali_profiles (3 Oct 2026),
+    // so that is the only thing that can be written, and only in the shape
+    // both apps write: their ten fields, each text field under 1,000
+    // characters (both apps cut text at 255). Before this a signed-in script
+    // could fill its own space without limit, on the project's bill.
+    match /users/{userId} {
       allow read, delete: if isOwner(userId);
-      allow create, update: if isOwner(userId) && !banned(userId);
+
+      match /kundali_profiles/{profileId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId) && !banned(userId)
+          && validProfile(request.resource.data);
+      }
+    }
+
+    function shortText(p, field, max) {
+      return !(field in p) || (p[field] is string && p[field].size() <= max);
+    }
+
+    function isNumberIfPresent(p, field) {
+      return !(field in p) || p[field] is number;
+    }
+
+    function validProfile(p) {
+      return p.keys().hasOnly(['uuid', 'name', 'gender', 'dateOfBirth', 'timeOfBirth',
+          'placeOfBirth', 'latitude', 'longitude', 'notes', 'createdAt'])
+        && shortText(p, 'uuid', 100)
+        && shortText(p, 'name', 1000)
+        && shortText(p, 'gender', 20)
+        && shortText(p, 'dateOfBirth', 40)
+        && shortText(p, 'timeOfBirth', 40)
+        && shortText(p, 'placeOfBirth', 1000)
+        && shortText(p, 'notes', 1000)
+        && isNumberIfPresent(p, 'latitude')
+        && isNumberIfPresent(p, 'longitude')
+        && isNumberIfPresent(p, 'createdAt');
     }
 
     // One row per account, written by the account itself, because Firebase
